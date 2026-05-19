@@ -1627,11 +1627,17 @@ h2 {
     min-height: 210px;
   }
 }
-/* PLINKO */
+   PLINKO FINAL
+
+.plinko-card {
+  overflow: hidden;
+}
+
 .plinko-layout {
   display: grid;
   grid-template-columns: 320px 1fr;
   gap: 20px;
+  align-items: start;
 }
 
 .plinko-side {
@@ -1668,6 +1674,11 @@ h2 {
   outline: none;
 }
 
+.plinko-config select:focus {
+  border-color: rgba(250,204,21,0.65);
+  box-shadow: 0 0 0 5px rgba(250,204,21,0.12);
+}
+
 .plinko-result-box {
   display: grid;
   gap: 12px;
@@ -1698,13 +1709,13 @@ h2 {
 
 .plinko-board-header {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 14px;
 }
 
 .plinko-stage-wrap {
   background:
-    radial-gradient(circle at top, rgba(250,204,21,0.08), transparent 28%),
+    radial-gradient(circle at top, rgba(250,204,21,0.1), transparent 32%),
     linear-gradient(135deg, #0f172a, #020617);
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 28px;
@@ -1712,6 +1723,9 @@ h2 {
   min-height: 700px;
   overflow: hidden;
   position: relative;
+  box-shadow:
+    inset 0 0 55px rgba(0,0,0,0.45),
+    0 18px 45px rgba(0,0,0,0.22);
 }
 
 .plinko-stage {
@@ -1720,16 +1734,20 @@ h2 {
   position: relative;
 }
 
+/* CLAVIJAS */
 .plinko-peg {
   position: absolute;
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #cbd5e1;
-  box-shadow: 0 0 10px rgba(255,255,255,0.25);
+  background: #e2e8f0;
+  box-shadow:
+    0 0 10px rgba(255,255,255,0.35),
+    0 0 18px rgba(96,165,250,0.25);
   transform: translate(-50%, -50%);
 }
 
+/* CASILLAS DE MULTIPLICADORES */
 .plinko-slot {
   position: absolute;
   bottom: 0;
@@ -1745,7 +1763,7 @@ h2 {
 }
 
 .plinko-slot.low {
-  background: linear-gradient(135deg, #e11d48, #f97316);
+  background: linear-gradient(135deg, #e11d48, #7f1d1d);
 }
 
 .plinko-slot.mid {
@@ -1755,21 +1773,25 @@ h2 {
 
 .plinko-slot.high {
   background: linear-gradient(135deg, #10b981, #22c55e);
+  color: #052e16;
 }
 
+/* BOLA */
 .plinko-ball {
   position: absolute;
-  width: 18px;
-  height: 18px;
+  width: 19px;
+  height: 19px;
   border-radius: 50%;
-  background: radial-gradient(circle at top left, #ffffff, #60a5fa 55%, #1d4ed8);
+  background:
+    radial-gradient(circle at 30% 25%, #ffffff, #93c5fd 28%, #2563eb 65%, #1e3a8a);
   box-shadow:
-    0 0 12px rgba(96,165,250,0.5),
-    0 8px 18px rgba(0,0,0,0.35);
+    0 0 16px rgba(96,165,250,0.75),
+    0 12px 22px rgba(0,0,0,0.42);
   transform: translate(-50%, -50%);
   z-index: 20;
 }
 
+/* LÍNEAS GUÍA SUAVES */
 .plinko-guide-line {
   position: absolute;
   top: 0;
@@ -1778,8 +1800,49 @@ h2 {
   background: rgba(255,255,255,0.04);
 }
 
+/* FICHAS NUEVAS */
+.c1000 {
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255,255,255,0.38), transparent 35%),
+    linear-gradient(135deg, #38bdf8, #1d4ed8);
+  color: white;
+  border: 5px dashed rgba(255,255,255,0.85);
+}
+
+.c5000 {
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255,255,255,0.35), transparent 35%),
+    linear-gradient(135deg, #ec4899, #7c3aed);
+  color: white;
+  border: 5px dashed rgba(255,255,255,0.85);
+}
+
+.allin-chip {
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255,255,255,0.45), transparent 35%),
+    linear-gradient(135deg, #fde047, #f59e0b, #b45309);
+  color: #111827;
+  border: 5px dashed rgba(255,255,255,0.95);
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  text-shadow: none;
+}
+
+.c1000:hover:not(:disabled),
+.c5000:hover:not(:disabled),
+.allin-chip:hover:not(:disabled) {
+  transform: translateY(-4px) scale(1.06);
+  box-shadow:
+    0 0 0 5px rgba(255,255,255,0.08),
+    0 12px 24px rgba(0,0,0,0.35);
+}
+
+/* RESPONSIVE */
 @media (max-width: 1050px) {
-  .plinko-layout,
+  .plinko-layout {
+    grid-template-columns: 1fr;
+  }
+
   .plinko-board-header {
     grid-template-columns: 1fr;
   }
@@ -1796,6 +1859,7 @@ h2 {
 @media (max-width: 650px) {
   .plinko-stage-wrap {
     padding: 10px;
+    min-height: 540px;
   }
 
   .plinko-stage {
@@ -1805,5 +1869,15 @@ h2 {
   .plinko-slot {
     font-size: 11px;
     height: 42px;
+  }
+
+  .plinko-peg {
+    width: 8px;
+    height: 8px;
+  }
+
+  .plinko-ball {
+    width: 17px;
+    height: 17px;
   }
 }

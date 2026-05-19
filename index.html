@@ -33,6 +33,7 @@
       <div class="menu-grid">
         <button class="menu-card" data-screen="plinko-screen">
   <div class="menu-icon">🔵</div>
+  
   <h3>Plinko</h3>
   <p>Soltá una bola, rebota entre clavijas y ganá según el multiplicador donde caiga.</p>
 </button>
@@ -527,15 +528,18 @@
 
   <div class="game-card plinko-card">
     <div class="status-row">
-      <p id="pl-message" class="message">Elegí fichas, configurá el tablero y soltá la bola.</p>
+      <p id="pl-message" class="message">
+        Elegí fichas, configurá el tablero y soltá la bola.
+      </p>
 
       <div class="bet-box">
-        <span>Apuesta</span>
+        <span>Apuesta total</span>
         <strong id="pl-bet">$0</strong>
       </div>
     </div>
 
     <div class="plinko-layout">
+      <!-- PANEL IZQUIERDO -->
       <aside class="plinko-side">
         <div class="panel">
           <h4>Configuración</h4>
@@ -553,9 +557,20 @@
             <label>
               <span>Filas</span>
               <select id="pl-rows">
-                <option value="8">8</option>
-                <option value="10" selected>10</option>
-                <option value="12">12</option>
+                <option value="8">8 filas</option>
+                <option value="10" selected>10 filas</option>
+                <option value="12">12 filas</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Cantidad de bolas</span>
+              <select id="pl-balls">
+                <option value="1" selected>1 bola</option>
+                <option value="3">3 bolas</option>
+                <option value="5">5 bolas</option>
+                <option value="10">10 bolas</option>
+                <option value="20">20 bolas</option>
               </select>
             </label>
           </div>
@@ -563,24 +578,30 @@
 
         <div class="panel">
           <h4>Fichas</h4>
+
           <div class="chips">
             <button class="chip pl-chip c25" data-value="25">$25</button>
             <button class="chip pl-chip c50" data-value="50">$50</button>
             <button class="chip pl-chip c100" data-value="100">$100</button>
             <button class="chip pl-chip c500" data-value="500">$500</button>
+            <button class="chip pl-chip c1000" data-value="1000">$1K</button>
+            <button class="chip pl-chip c5000" data-value="5000">$5K</button>
+            <button class="chip pl-chip allin-chip" data-allin="true">ALL IN</button>
           </div>
         </div>
 
         <div class="panel">
           <h4>Acciones</h4>
+
           <div class="actions">
-            <button id="pl-clear" class="btn secondary">Limpiar</button>
+            <button id="pl-clear" class="btn secondary">Limpiar apuesta</button>
             <button id="pl-drop" class="btn primary">Soltar bola</button>
           </div>
         </div>
 
         <div class="panel">
           <h4>Resultado</h4>
+
           <div class="plinko-result-box">
             <div>
               <span>Último multiplicador</span>
@@ -595,6 +616,7 @@
         </div>
       </aside>
 
+      <!-- TABLERO DERECHO -->
       <div class="plinko-board-area">
         <div class="plinko-board-header">
           <div class="info-pill">
@@ -605,6 +627,11 @@
           <div class="info-pill">
             <span>Filas activas</span>
             <strong id="pl-rows-label">10</strong>
+          </div>
+
+          <div class="info-pill">
+            <span>Bolas</span>
+            <strong id="pl-balls-label">1</strong>
           </div>
         </div>
 
@@ -619,4 +646,5 @@
 
   <script src="script.js"></script>
 </body>
+
 </html>

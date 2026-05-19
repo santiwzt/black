@@ -1913,11 +1913,13 @@ crEls.start.addEventListener("click", crStartGame);
 crEls.go.addEventListener("click", crGoForward);
 crEls.cashout.addEventListener("click", () => crCashout(false));
 
+
 /* PLINKO */
 const pl = {
   bet: 0,
   rows: 10,
   risk: "medium",
+  balls: 1,
   dropping: false,
   lastMultiplier: 0,
   lastWin: 0
@@ -1928,8 +1930,10 @@ const plEls = {
   bet: document.getElementById("pl-bet"),
   risk: document.getElementById("pl-risk"),
   rows: document.getElementById("pl-rows"),
+  balls: document.getElementById("pl-balls"),
   riskLabel: document.getElementById("pl-risk-label"),
   rowsLabel: document.getElementById("pl-rows-label"),
+  ballsLabel: document.getElementById("pl-balls-label"),
   lastMultiplier: document.getElementById("pl-last-multiplier"),
   lastWin: document.getElementById("pl-last-win"),
   stage: document.getElementById("plinko-stage"),
@@ -1940,26 +1944,29 @@ const plEls = {
 
 const plinkoTables = {
   8: {
-    low:    [5.6, 2.1, 1.1, 0.7, 0.5, 0.7, 1.1, 2.1, 5.6],
-    medium: [9,   3,   1.6, 0.9, 0.5, 0.9, 1.6, 3,   9],
-    high:   [18,  5,   2,   0.4, 0.2, 0.4, 2,   5,   18]
+    low: [5.6, 2.1, 1.1, 0.7, 0.5, 0.7, 1.1, 2.1, 5.6],
+    medium: [9, 3, 1.6, 0.9, 0.5, 0.9, 1.6, 3, 9],
+    high: [16, 5, 2, 0.5, 0.2, 0.5, 2, 5, 16]
   },
   10: {
-    low:    [8, 3, 1.5, 1.1, 0.8, 0.5, 0.8, 1.1, 1.5, 3, 8],
+    low: [8, 3, 1.5, 1.1, 0.8, 0.5, 0.8, 1.1, 1.5, 3, 8],
     medium: [12, 5, 2, 1.4, 0.9, 0.5, 0.9, 1.4, 2, 5, 12],
-    high:   [24, 8, 3, 1.3, 0.6, 0.2, 0.6, 1.3, 3, 8, 24]
+    high: [20, 8, 3, 1.3, 0.6, 0.2, 0.6, 1.3, 3, 8, 20]
   },
   12: {
-    low:    [10, 4, 2, 1.5, 1.1, 0.8, 0.5, 0.8, 1.1, 1.5, 2, 4, 10],
-    medium: [16, 6, 3, 1.8, 1.2, 0.7, 0.4, 0.7, 1.2, 1.8, 3, 6, 16],
-    high:   [33, 11, 5, 2, 1, 0.5, 0.2, 0.5, 1, 2, 5, 11, 33]
+    low: [10, 4, 2, 1.5, 1.1, 0.8, 0.5, 0.8, 1.1, 1.5, 2, 4, 10],
+    medium: [14, 6, 3, 1.8, 1.2, 0.7, 0.4, 0.7, 1.2, 1.8, 3, 6, 14],
+    high: [18, 10, 5, 2, 1, 0.5, 0.2, 0.5, 1, 2, 5, 10, 18]
   }
 };
 
 function plMoney(value) {
   let rounded = Number(value.toFixed(2));
 
-  if (Number.isInteger(rounded)) return "$" + rounded;
+  if (Number.isInteger(rounded)) {
+    return "$" + rounded;
+  }
+
   return "$" + rounded.toFixed(2);
 }
 
@@ -1977,6 +1984,7 @@ function updatePlinkoInfo() {
   plEls.bet.textContent = plMoney(pl.bet);
   plEls.riskLabel.textContent = getRiskLabel(pl.risk);
   plEls.rowsLabel.textContent = String(pl.rows);
+  plEls.ballsLabel.textContent = String(pl.balls);
   plEls.lastMultiplier.textContent = "x" + pl.lastMultiplier.toFixed(2);
   plEls.lastWin.textContent = plMoney(pl.lastWin);
 }
@@ -1989,8 +1997,10 @@ function updatePlinkoButtons() {
 
   plEls.clear.disabled = pl.dropping || pl.bet === 0;
   plEls.drop.disabled = pl.dropping || pl.bet === 0;
+
   plEls.risk.disabled = pl.dropping;
   plEls.rows.disabled = pl.dropping;
+  plEls.balls.disabled = pl.dropping;
 }
 
 function getSlotClass(multiplier) {
@@ -1999,56 +2009,84 @@ function getSlotClass(multiplier) {
   return "low";
 }
 
-function renderPlinkoBoard() {
-  if (!plEls.stage) return;
-
-  plEls.stage.innerHTML = "";
-
+function getPlinkoGeometry() {
   const stage = plEls.stage;
   const width = stage.clientWidth || 760;
   const height = stage.clientHeight || 660;
 
   const rows = pl.rows;
+  const slotCount = rows + 1;
+
+  const topPadding = 45;
+  const bottomPadding = 90;
+  const usableHeight = height - topPadding - bottomPadding;
+
+  const centerX = width / 2;
+  const boardWidth = Math.min(width * 0.92, width - 30);
+
+  const slotStep = boardWidth / rows;
+  const startSlotX = centerX - boardWidth / 2;
+
+  const rowGap = usableHeight / rows;
+  const slotWidth = Math.min(76, Math.max(36, boardWidth / slotCount - 6));
+
+  return {
+    width,
+    height,
+    rows,
+    slotCount,
+    topPadding,
+    bottomPadding,
+    usableHeight,
+    centerX,
+    boardWidth,
+    slotStep,
+    startSlotX,
+    rowGap,
+    slotWidth
+  };
+}
+
+function renderPlinkoBoard() {
+  if (!plEls.stage) return;
+
+  plEls.stage.innerHTML = "";
+
+  const geo = getPlinkoGeometry();
   const multipliers = getPlinkoMultipliers();
 
-  const topPadding = 40;
-  const bottomPadding = 80;
-  const usableHeight = height - topPadding - bottomPadding;
-  const rowGap = usableHeight / rows;
-  const centerX = width / 2;
-
-  for (let row = 0; row < rows; row++) {
+  for (let row = 0; row < geo.rows; row++) {
     const pegsInRow = row + 1;
-    const spread = Math.min(width * 0.72, 80 + row * 46);
-    const startX = centerX - spread / 2;
+    const rowWidth = geo.slotStep * row;
+    const startX = geo.centerX - rowWidth / 2;
+    const y = geo.topPadding + geo.rowGap * row;
 
     for (let i = 0; i < pegsInRow; i++) {
       const peg = document.createElement("div");
       peg.className = "plinko-peg";
-      peg.style.left = (pegsInRow === 1 ? centerX : startX + (spread / (pegsInRow - 1)) * i) + "px";
-      peg.style.top = (topPadding + rowGap * row + 25) + "px";
-      stage.appendChild(peg);
+      peg.style.left = (pegsInRow === 1 ? geo.centerX : startX + geo.slotStep * i) + "px";
+      peg.style.top = y + "px";
+      plEls.stage.appendChild(peg);
     }
   }
 
-  const slotsCount = multipliers.length;
-  const slotY = height - 52;
-  const slotWidth = width / slotsCount;
+  for (let i = 0; i < geo.slotCount; i++) {
+    const center = geo.startSlotX + i * geo.slotStep;
 
-  for (let i = 0; i < slotsCount; i++) {
     const slot = document.createElement("div");
     slot.className = "plinko-slot " + getSlotClass(multipliers[i]);
-    slot.style.left = (i * slotWidth + 2) + "px";
-    slot.style.width = (slotWidth - 4) + "px";
+    slot.style.left = (center - geo.slotWidth / 2) + "px";
+    slot.style.width = geo.slotWidth + "px";
     slot.textContent = "x" + multipliers[i];
-    stage.appendChild(slot);
+
+    plEls.stage.appendChild(slot);
   }
 
-  for (let i = 1; i < slotsCount; i++) {
+  for (let i = 0; i < geo.slotCount - 1; i++) {
     const line = document.createElement("div");
     line.className = "plinko-guide-line";
-    line.style.left = i * slotWidth + "px";
-    stage.appendChild(line);
+    line.style.left = (geo.startSlotX + i * geo.slotStep + geo.slotStep / 2) + "px";
+    plEls.stage.appendChild(line);
   }
 
   updatePlinkoInfo();
@@ -2064,7 +2102,7 @@ function plPlaceChip(value) {
   updatePlinkoInfo();
   updatePlinkoButtons();
 
-  setMessage(plEls.message, "Apostaste " + plMoney(pl.bet) + ". Ya podés soltar la bola.");
+  setMessage(plEls.message, "Apostaste " + plMoney(pl.bet) + ". Ya podés soltar.");
 }
 
 function plClearBet() {
@@ -2081,144 +2119,200 @@ function plClearBet() {
 }
 
 function getPlinkoPath() {
-  const stage = plEls.stage;
-  const width = stage.clientWidth || 760;
-  const height = stage.clientHeight || 660;
-  const rows = pl.rows;
+  const geo = getPlinkoGeometry();
 
-  const topPadding = 40;
-  const bottomPadding = 80;
-  const usableHeight = height - topPadding - bottomPadding;
-  const rowGap = usableHeight / rows;
-  const centerX = width / 2;
-
-  let x = centerX;
   let rights = 0;
+  let path = [];
 
-  const path = [];
-  path.push({ x: centerX, y: 14 });
+  path.push({
+    x: geo.centerX,
+    y: 18
+  });
 
-  for (let row = 0; row < rows; row++) {
-    const stepSize = Math.min(22 + row * 3.5, 42);
-    const goRight = Math.random() < 0.5;
+  for (let row = 0; row < geo.rows; row++) {
+    let goRight = Math.random() < 0.5;
 
     if (goRight) {
-      x += stepSize;
       rights++;
-    } else {
-      x -= stepSize;
     }
 
-    const y = topPadding + rowGap * row + 25;
-    path.push({ x, y });
+    let x = geo.centerX + (rights - (row + 1) / 2) * geo.slotStep;
+
+    let jitter = (Math.random() - 0.5) * geo.slotStep * 0.14;
+    let y = geo.topPadding + geo.rowGap * row;
+
+    path.push({
+      x: x + jitter,
+      y
+    });
   }
 
-  const slotIndex = rights;
-  const slotCount = rows + 1;
-  const slotWidth = width / slotCount;
-  const finalX = slotIndex * slotWidth + slotWidth / 2;
-  const finalY = height - 26;
+  let finalX = geo.startSlotX + rights * geo.slotStep;
+  let finalY = geo.height - 26;
 
-  path.push({ x: finalX, y: finalY });
+  path.push({
+    x: finalX,
+    y: finalY
+  });
 
   return {
     path,
-    slotIndex
+    slotIndex: rights
   };
 }
 
-function animateBall(path, onDone) {
-  const stage = plEls.stage;
-  const ball = document.createElement("div");
-  ball.className = "plinko-ball";
-  stage.appendChild(ball);
+function animateBall(path, delay = 0) {
+  return new Promise(resolve => {
+    const stage = plEls.stage;
+    const ball = document.createElement("div");
 
-  let index = 0;
-  let progress = 0;
-  const speed = 0.06;
+    ball.className = "plinko-ball";
+    stage.appendChild(ball);
 
-  function step() {
-    if (index >= path.length - 1) {
-      ball.style.left = path[path.length - 1].x + "px";
-      ball.style.top = path[path.length - 1].y + "px";
+    ball.style.left = path[0].x + "px";
+    ball.style.top = path[0].y + "px";
 
-      setTimeout(() => {
-        ball.remove();
-        onDone();
-      }, 180);
-      return;
+    setTimeout(() => {
+      runSegment(0);
+    }, delay);
+
+    function runSegment(index) {
+      if (index >= path.length - 1) {
+        ball.style.left = path[path.length - 1].x + "px";
+        ball.style.top = path[path.length - 1].y + "px";
+
+        setTimeout(() => {
+          ball.remove();
+          resolve();
+        }, 350);
+
+        return;
+      }
+
+      let from = path[index];
+      let to = path[index + 1];
+
+      let duration = 95 + Math.random() * 45 + index * 3;
+      let startTime = null;
+      let wave = Math.random() * Math.PI * 2;
+      let amplitude = 3 + Math.random() * 5;
+
+      function frame(time) {
+        if (!startTime) startTime = time;
+
+        let progress = (time - startTime) / duration;
+
+        if (progress > 1) {
+          progress = 1;
+        }
+
+        let eased = progress < 0.5
+          ? 2 * progress * progress
+          : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+        let wiggle = Math.sin(progress * Math.PI * 2 + wave) * amplitude;
+        let bounce = Math.sin(progress * Math.PI) * 6;
+
+        let x = from.x + (to.x - from.x) * eased + wiggle;
+        let y = from.y + (to.y - from.y) * eased - bounce;
+
+        ball.style.left = x + "px";
+        ball.style.top = y + "px";
+
+        if (progress < 1) {
+          requestAnimationFrame(frame);
+        } else {
+          runSegment(index + 1);
+        }
+      }
+
+      requestAnimationFrame(frame);
     }
-
-    const a = path[index];
-    const b = path[index + 1];
-
-    progress += speed;
-
-    if (progress >= 1) {
-      progress = 0;
-      index++;
-    }
-
-    const currentA = path[index];
-    const currentB = path[Math.min(index + 1, path.length - 1)];
-
-    const x = currentA.x + (currentB.x - currentA.x) * progress;
-    const y = currentA.y + (currentB.y - currentA.y) * progress;
-
-    ball.style.left = x + "px";
-    ball.style.top = y + "px";
-
-    requestAnimationFrame(step);
-  }
-
-  step();
+  });
 }
 
-function plDropBall() {
+async function plDropBall() {
   if (pl.dropping || pl.bet <= 0) return;
 
   pl.dropping = true;
   updatePlinkoButtons();
 
-  const { path, slotIndex } = getPlinkoPath();
-  const multipliers = getPlinkoMultipliers();
+  let totalBet = pl.bet;
+  let ballCount = pl.balls;
+  let betPerBall = totalBet / ballCount;
 
-  animateBall(path, () => {
-    const multiplier = multipliers[slotIndex];
-    const payout = Number((pl.bet * multiplier).toFixed(2));
+  let multipliers = getPlinkoMultipliers();
+  let drops = [];
+  let results = [];
 
-    balance = Number((balance + payout).toFixed(2));
-    pl.lastMultiplier = multiplier;
-    pl.lastWin = payout;
+  setMessage(
+    plEls.message,
+    "Soltando " + ballCount + " bola/s de " + plMoney(betPerBall) + " cada una..."
+  );
 
-    updateBalance();
-    updatePlinkoInfo();
+  for (let i = 0; i < ballCount; i++) {
+    let drop = getPlinkoPath();
+    let multiplier = multipliers[drop.slotIndex];
+    let payout = Number((betPerBall * multiplier).toFixed(2));
 
-    if (multiplier >= 1) {
-      setMessage(
-        plEls.message,
-        "La bola cayó en x" + multiplier + ". Cobraste " + plMoney(payout) + ".",
-        "win"
-      );
-    } else {
-      setMessage(
-        plEls.message,
-        "La bola cayó en x" + multiplier + ". Cobraste " + plMoney(payout) + ".",
-        "push"
-      );
-    }
+    results.push({
+      multiplier,
+      payout
+    });
 
-    pl.bet = 0;
-    pl.dropping = false;
+    drops.push(animateBall(drop.path, i * 130));
+  }
 
-    updatePlinkoInfo();
-    updatePlinkoButtons();
-  });
+  await Promise.all(drops);
+
+  let totalPayout = results.reduce((sum, result) => {
+    return sum + result.payout;
+  }, 0);
+
+  totalPayout = Number(totalPayout.toFixed(2));
+
+  let effectiveMultiplier = totalPayout / totalBet;
+
+  balance = Number((balance + totalPayout).toFixed(2));
+
+  pl.lastMultiplier = Number(effectiveMultiplier.toFixed(2));
+  pl.lastWin = totalPayout;
+
+  pl.bet = 0;
+  pl.dropping = false;
+
+  updateBalance();
+  updatePlinkoInfo();
+  updatePlinkoButtons();
+
+  if (totalPayout > totalBet) {
+    setMessage(
+      plEls.message,
+      "Ganaste. Multiplicador efectivo x" + pl.lastMultiplier.toFixed(2) + ". Cobraste " + plMoney(totalPayout) + ".",
+      "win"
+    );
+  } else if (totalPayout < totalBet) {
+    setMessage(
+      plEls.message,
+      "Perdiste parte de la apuesta. Multiplicador efectivo x" + pl.lastMultiplier.toFixed(2) + ". Cobraste " + plMoney(totalPayout) + ".",
+      "lose"
+    );
+  } else {
+    setMessage(
+      plEls.message,
+      "Empataste. Recuperaste " + plMoney(totalPayout) + ".",
+      "push"
+    );
+  }
 }
 
 plEls.chips.forEach(chip => {
   chip.addEventListener("click", () => {
-    plPlaceChip(Number(chip.dataset.value));
+    const amount = chip.dataset.allin === "true"
+      ? balance
+      : Number(chip.dataset.value);
+
+    plPlaceChip(amount);
   });
 });
 
@@ -2231,9 +2325,15 @@ plEls.risk.addEventListener("change", () => {
   updatePlinkoInfo();
 });
 
+
 plEls.rows.addEventListener("change", () => {
   pl.rows = Number(plEls.rows.value);
   renderPlinkoBoard();
+  updatePlinkoInfo();
+});
+
+plEls.balls.addEventListener("change", () => {
+  pl.balls = Number(plEls.balls.value);
   updatePlinkoInfo();
 });
 
@@ -2244,49 +2344,6 @@ window.addEventListener("resize", () => {
 renderPlinkoBoard();
 updatePlinkoInfo();
 updatePlinkoButtons();
-/* RESET GENERAL */
-resetCasinoBtn.addEventListener("click", () => {
-  balance = 1000;
-
-  bj.bet = 0;
-  bj.active = false;
-  bj.dealer = [];
-  bj.player = [];
-  bj.hidden = true;
-
-  pk.bet = 0;
-  pk.phase = "betting";
-  pk.player = [];
-  pk.dealer = [];
-  pk.reveal = false;
-  pk.selected.clear();
-
-  rt.bet = 0;
-  rt.target = null;
-  rt.spinning = false;
-
-  document.querySelectorAll(".selected").forEach(el => {
-    el.classList.remove("selected");
-  });
-
-  updateBalance();
-
-  renderBlackjack();
-  updateBlackjackButtons();
-  setMessage(bjEls.message, "Elegí fichas y tocá Repartir.");
-
-  renderPoker();
-  updatePokerButtons();
-  pkEls.playerName.textContent = "—";
-  pkEls.dealerName.textContent = "—";
-  setMessage(pkEls.message, "Elegí fichas y tocá Repartir mano.");
-
-  updateRouletteInfo();
-  updateRouletteButtons();
-  rtEls.result.textContent = "?";
-  setMessage(rtEls.message, "Elegí una apuesta, cargá fichas y girá.");
-});
-
 /* INICIO */
 updateBalance();
 
