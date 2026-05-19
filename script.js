@@ -957,14 +957,30 @@ const rouletteOrder = [
   29, 7, 28, 12, 35, 3, 26
 ];
 
+const rouletteBoardOrder = [
+  0,
+  3, 2, 1,
+  6, 5, 4,
+  9, 8, 7,
+  12, 11, 10,
+  15, 14, 13,
+  18, 17, 16,
+  21, 20, 19,
+  24, 23, 22,
+  27, 26, 25,
+  30, 29, 28,
+  33, 32, 31,
+  36, 35, 34
+];
+
 const redNumbers = new Set([
   1, 3, 5, 7, 9, 12, 14, 16, 18,
   19, 21, 23, 25, 27, 30, 32, 34, 36
 ]);
 
 const rt = {
-  bet: 0,
-  target: null,
+  bets: {},
+  selectedTargets: {},
   spinning: false,
   rotation: 0
 };
@@ -973,6 +989,7 @@ const rtEls = {
   message: document.getElementById("rt-message"),
   bet: document.getElementById("rt-bet"),
   target: document.getElementById("rt-target"),
+  betsList: document.getElementById("rt-bets-list"),
   result: document.getElementById("roulette-result"),
   rotor: document.getElementById("roulette-rotor"),
   labels: document.getElementById("roulette-labels"),
@@ -983,100 +1000,230 @@ const rtEls = {
   quickBets: document.querySelectorAll(".quick-bet")
 };
 
+function rouletteMoney(value) {
+  let rounded = Number(value.toFixed(2));
+
+  if (Number.isInteger(rounded)) {
+    return "$" + rounded;
+  }
+
+  return "$" + rounded.toFixed(2);
+}
+
 function rouletteColor(number) {
   if (number === 0) return "green";
   return redNumbers.has(number) ? "red" : "black";
 }
 
-function updateRouletteInfo() {
-  rtEls.bet.textContent = "$" + rt.bet;
-  rtEls.target.textContent = getTargetName(rt.target);
+function rouletteBetKey(target) {
+  return target.type + "-" + target.value;
 }
 
-function getTargetName(target) {
+function rouletteTargetName(target) {
   if (!target) return "Ninguna";
 
   if (target.type === "number") return "Número " + target.value;
+
+  if (target.type === "dozen") {
+    if (target.value === 1) return "1 - 12";
+    if (target.value === 2) return "13 - 24";
+    if (target.value === 3) return "25 - 36";
+  }
 
   let names = {
     red: "Rojo",
     black: "Negro",
     even: "Par",
-    odd: "Impar",
-    low: "1 - 18",
-    high: "19 - 36"
+    odd: "Impar"
   };
 
   return names[target.value];
 }
 
-function updateRouletteButtons() {
-  rtEls.chips.forEach(chip => {
-    let value = Number(chip.dataset.value);
-    chip.disabled = rt.spinning || !rt.target || balance < value;
-  });
-
-  rtEls.clear.disabled = rt.spinning || rt.bet === 0;
-  rtEls.spin.disabled = rt.spinning || rt.bet === 0 || !rt.target;
+function rouletteMultiplier(target) {
+  if (target.type === "number") return 36;
+  if (target.type === "dozen") return 3;
+  return 2;
 }
 
-function selectRouletteTarget(type, value, element) {
-  document.querySelectorAll(".quick-bet, .num-btn").forEach(btn => {
-    btn.classList.remove("selected");
+function rouletteTotalBet() {
+  return Object.values(rt.bets).reduce((total, bet) => {
+    return total + bet.amount;
+  }, 0);
+}
+
+function selectedTargetsArray() {
+  return Object.values(rt.selectedTargets);
+}
+
+function updateRouletteInfo() {
+  let total = rouletteTotalBet();
+  let selected = selectedTargetsArray();
+
+  rtEls.bet.textContent = rouletteMoney(total);
+
+  if (selected.length === 0) {
+    rtEls.target.textContent = "Ninguna";
+  } else {
+    rtEls.target.textContent = selected.map(rouletteTargetName).join(", ");
+  }
+
+  if (!rtEls.betsList) return;
+
+  let bets = Object.values(rt.bets);
+
+  if (bets.length === 0) {
+    rtEls.betsList.textContent = "Sin apuestas";
+    return;
+  }
+
+  rtEls.betsList.innerHTML = "";
+
+  bets.forEach(bet => {
+    let item = document.createElement("div");
+    item.className = "rt-bet-item";
+
+    item.innerHTML = `
+      <span>${rouletteTargetName(bet.target)}</span>
+      <strong>${rouletteMoney(bet.amount)}</strong>
+    `;
+
+    rtEls.betsList.appendChild(item);
+  });
+}
+
+function updateRouletteButtons() {
+  let selectedCount = selectedTargetsArray().length;
+
+  rtEls.chips.forEach(chip => {
+    let value = Number(chip.dataset.value);
+    let totalCost = value * selectedCount;
+
+    chip.disabled = rt.spinning || selectedCount === 0 || balance < totalCost;
   });
 
-  element.classList.add("selected");
+  rtEls.clear.disabled = rt.spinning || rouletteTotalBet() === 0;
+  rtEls.spin.disabled = rt.spinning || rouletteTotalBet() === 0;
 
-  rt.target = {
+  markRouletteButtons();
+}
+
+function toggleRouletteTarget(type, value, element) {
+  if (rt.spinning) return;
+
+  let target = {
     type,
-    value: type === "number" ? Number(value) : value
+    value: type === "number" || type === "dozen" ? Number(value) : value
   };
+
+  let key = rouletteBetKey(target);
+
+  if (rt.selectedTargets[key]) {
+    delete rt.selectedTargets[key];
+    element.classList.remove("selected");
+  } else {
+    rt.selectedTargets[key] = target;
+    element.classList.add("selected");
+  }
 
   updateRouletteInfo();
   updateRouletteButtons();
-  setMessage(rtEls.message, "Apuesta elegida: " + getTargetName(rt.target) + ".");
+
+  let selectedCount = selectedTargetsArray().length;
+
+  if (selectedCount === 0) {
+    setMessage(rtEls.message, "No hay selecciones. Marcá números u opciones para apostar.");
+  } else {
+    setMessage(
+      rtEls.message,
+      "Tenés " + selectedCount + " selección/es. Tocá una ficha para apostar en todas."
+    );
+  }
 }
 
 function rtPlaceChip(value) {
-  if (rt.spinning || !rt.target || balance < value) return;
+  if (rt.spinning) return;
 
-  balance -= value;
-  rt.bet += value;
+  let selected = selectedTargetsArray();
+
+  if (selected.length === 0) {
+    setMessage(rtEls.message, "Primero seleccioná uno o más números u opciones.", "push");
+    return;
+  }
+
+  let totalCost = value * selected.length;
+
+  if (balance < totalCost) {
+    setMessage(rtEls.message, "No tenés saldo suficiente para apostar esa ficha en todas las selecciones.", "lose");
+    return;
+  }
+
+  balance -= totalCost;
+
+  selected.forEach(target => {
+    let key = rouletteBetKey(target);
+
+    if (!rt.bets[key]) {
+      rt.bets[key] = {
+        target: { ...target },
+        amount: 0
+      };
+    }
+
+    rt.bets[key].amount += value;
+  });
 
   updateBalance();
   updateRouletteInfo();
   updateRouletteButtons();
-  setMessage(rtEls.message, "Cargaste $" + rt.bet + " a " + getTargetName(rt.target) + ".");
+
+  setMessage(
+    rtEls.message,
+    "Apostaste " + rouletteMoney(value) + " en cada selección. Total: " + rouletteMoney(totalCost) + "."
+  );
 }
 
 function rtClearBet() {
   if (rt.spinning) return;
 
-  balance += rt.bet;
-  rt.bet = 0;
+  let total = rouletteTotalBet();
+
+  balance += total;
+  rt.bets = {};
+  rt.selectedTargets = {};
+
+  document.querySelectorAll(".quick-bet, .num-btn").forEach(button => {
+    button.classList.remove("selected", "has-bet");
+  });
 
   updateBalance();
   updateRouletteInfo();
   updateRouletteButtons();
-  setMessage(rtEls.message, "Apuesta limpiada.");
+
+  setMessage(rtEls.message, "Apuestas limpiadas.");
 }
 
-function isRouletteWin(number) {
-  if (!rt.target) return false;
+function isRouletteWin(target, number) {
+  if (target.type === "number") {
+    return number === target.value;
+  }
 
-  if (rt.target.type === "number") return number === rt.target.value;
-  if (rt.target.value === "red") return rouletteColor(number) === "red";
-  if (rt.target.value === "black") return rouletteColor(number) === "black";
-  if (rt.target.value === "even") return number !== 0 && number % 2 === 0;
-  if (rt.target.value === "odd") return number % 2 === 1;
-  if (rt.target.value === "low") return number >= 1 && number <= 18;
-  if (rt.target.value === "high") return number >= 19 && number <= 36;
+  if (target.type === "dozen") {
+    if (target.value === 1) return number >= 1 && number <= 12;
+    if (target.value === 2) return number >= 13 && number <= 24;
+    if (target.value === 3) return number >= 25 && number <= 36;
+  }
+
+  if (target.value === "red") return rouletteColor(number) === "red";
+  if (target.value === "black") return rouletteColor(number) === "black";
+  if (target.value === "even") return number !== 0 && number % 2 === 0;
+  if (target.value === "odd") return number % 2 === 1;
 
   return false;
 }
 
 function rtSpin() {
-  if (rt.spinning || rt.bet <= 0 || !rt.target) return;
+  if (rt.spinning || rouletteTotalBet() <= 0) return;
 
   rt.spinning = true;
   updateRouletteButtons();
@@ -1098,23 +1245,54 @@ function rtSpin() {
 
   rtEls.rotor.style.transform = "rotate(" + rt.rotation + "deg)";
   rtEls.result.textContent = "?";
+
   setMessage(rtEls.message, "La ruleta está girando...");
 
   setTimeout(() => {
     rtEls.result.textContent = winnerNumber;
 
-    if (isRouletteWin(winnerNumber)) {
-      let multiplier = rt.target.type === "number" ? 36 : 2;
-      let pay = rt.bet * multiplier;
+    let totalBet = rouletteTotalBet();
+    let totalPayout = 0;
+    let wonBets = [];
 
-      balance += pay;
-      setMessage(rtEls.message, "Salió " + winnerNumber + ". Ganaste $" + (pay - rt.bet) + ".", "win");
+    Object.values(rt.bets).forEach(bet => {
+      if (isRouletteWin(bet.target, winnerNumber)) {
+        let multiplier = rouletteMultiplier(bet.target);
+        let payout = bet.amount * multiplier;
+
+        totalPayout += payout;
+
+        wonBets.push(
+          rouletteTargetName(bet.target) + " +" + rouletteMoney(payout - bet.amount)
+        );
+      }
+    });
+
+    if (totalPayout > 0) {
+      balance += totalPayout;
+
+      let net = totalPayout - totalBet;
+
+      setMessage(
+        rtEls.message,
+        "Salió " + winnerNumber + ". Ganaste: " + wonBets.join(", ") + ". Neto: " + rouletteMoney(net) + ".",
+        "win"
+      );
     } else {
-      setMessage(rtEls.message, "Salió " + winnerNumber + ". Perdiste la apuesta.", "lose");
+      setMessage(
+        rtEls.message,
+        "Salió " + winnerNumber + ". Perdiste " + rouletteMoney(totalBet) + ".",
+        "lose"
+      );
     }
 
-    rt.bet = 0;
+    rt.bets = {};
+    rt.selectedTargets = {};
     rt.spinning = false;
+
+    document.querySelectorAll(".quick-bet, .num-btn").forEach(button => {
+      button.classList.remove("selected", "has-bet");
+    });
 
     updateBalance();
     updateRouletteInfo();
@@ -1169,29 +1347,59 @@ function buildRouletteLabels() {
 function buildNumberBoard() {
   rtEls.board.innerHTML = "";
 
-  for (let i = 0; i <= 36; i++) {
+  rouletteBoardOrder.forEach(number => {
     let btn = document.createElement("button");
-    let color = rouletteColor(i);
+    let color = rouletteColor(number);
 
     btn.className = "num-btn " + color;
-    btn.textContent = i;
+    btn.textContent = number;
+    btn.dataset.type = "number";
+    btn.dataset.value = number;
+
+    if (number === 0) {
+      btn.classList.add("zero");
+    }
 
     btn.addEventListener("click", () => {
-      selectRouletteTarget("number", i, btn);
+      toggleRouletteTarget("number", number, btn);
     });
 
     rtEls.board.appendChild(btn);
-  }
+  });
+}
+
+function markRouletteButtons() {
+  document.querySelectorAll(".quick-bet, .num-btn").forEach(button => {
+    button.classList.remove("has-bet");
+
+    let type = button.dataset.type;
+    let value = button.dataset.value;
+
+    if (!type || value === undefined) return;
+
+    let target = {
+      type,
+      value: type === "number" || type === "dozen" ? Number(value) : value
+    };
+
+    let key = rouletteBetKey(target);
+
+    if (rt.bets[key]) {
+      button.classList.add("has-bet");
+    }
+  });
 }
 
 rtEls.quickBets.forEach(button => {
   button.addEventListener("click", () => {
-    selectRouletteTarget(button.dataset.type, button.dataset.value, button);
+    toggleRouletteTarget(button.dataset.type, button.dataset.value, button);
   });
 });
 
 rtEls.chips.forEach(chip => {
-  chip.addEventListener("click", () => rtPlaceChip(Number(chip.dataset.value)));
+  chip.addEventListener("click", () => {
+    rtPlaceChip(Number(chip.dataset.value));
+  });
 });
 
 rtEls.clear.addEventListener("click", rtClearBet);
@@ -1200,7 +1408,7 @@ rtEls.spin.addEventListener("click", rtSpin);
 window.addEventListener("resize", () => {
   buildRouletteLabels();
 });
-/* COIN MINER */
+/* COIN MINER / GOLD MINER */
 const cm = {
   bet: 0,
   baseBet: 0,
@@ -1498,6 +1706,544 @@ cmEls.clear.addEventListener("click", cmClearBet);
 cmEls.start.addEventListener("click", cmStartGame);
 cmEls.cashout.addEventListener("click", () => cmCashout(false));
 
+cm.board = createEmptyMinerBoard();
+renderCoinMiner();
+updateCoinMinerButtons();
+/* CHICKEN ROAD */
+const cr = {
+  bet: 0,
+  active: false,
+  step: 0,
+  crashedLane: null
+};
+
+const crMultipliers = [1.20, 1.45, 1.75, 2.10, 2.65, 3.30, 4.20, 5.40, 7.00, 10.00];
+
+const crLoseChances = [0.18, 0.23, 0.28, 0.34, 0.40, 0.47, 0.54, 0.61, 0.68, 0.75];
+const crEls = {
+  message: document.getElementById("cr-message"),
+  bet: document.getElementById("cr-bet"),
+  multiplier: document.getElementById("cr-multiplier"),
+  cash: document.getElementById("cr-cash"),
+  step: document.getElementById("cr-step"),
+  road: document.getElementById("cr-road"),
+  chips: document.querySelectorAll(".cr-chip"),
+  clear: document.getElementById("cr-clear"),
+  start: document.getElementById("cr-start"),
+  go: document.getElementById("cr-go"),
+  cashout: document.getElementById("cr-cashout")
+};
+
+function crMoney(value) {
+  return "$" + Math.round(value);
+}
+
+function crCurrentMultiplier() {
+  if (cr.step <= 0) return 1;
+  return crMultipliers[cr.step - 1];
+}
+
+function crCashValue() {
+  if (cr.step <= 0) return 0;
+  return Math.round(cr.bet * crCurrentMultiplier());
+}
+
+function renderChickenRoad() {
+  crEls.road.innerHTML = "";
+
+  crMultipliers.forEach((multi, index) => {
+    let lane = document.createElement("div");
+    lane.className = "road-lane";
+
+    let icon = "🚗";
+
+    if (cr.crashedLane === index) {
+      lane.classList.add("crash");
+      icon = "💥";
+    } else if (index < cr.step) {
+      lane.classList.add("safe");
+      icon = "✅";
+    } else if (cr.active && index === cr.step) {
+      lane.classList.add("current");
+      icon = "🐔";
+    } else {
+      lane.classList.add("car");
+      icon = "🚗";
+    }
+
+    lane.innerHTML = `
+      <div class="lane-multiplier">x${multi.toFixed(2)}</div>
+      <div class="lane-road-lines"></div>
+      <div class="lane-icon">${icon}</div>
+    `;
+
+    crEls.road.appendChild(lane);
+  });
+
+  crEls.bet.textContent = crMoney(cr.bet);
+  crEls.multiplier.textContent = "x" + crCurrentMultiplier().toFixed(2);
+  crEls.cash.textContent = crMoney(crCashValue());
+  crEls.step.textContent = cr.step + "/" + crMultipliers.length;
+}
+
+function updateChickenButtons() {
+  crEls.chips.forEach(chip => {
+    let value = Number(chip.dataset.value);
+    chip.disabled = cr.active || balance < value;
+  });
+
+  crEls.clear.disabled = cr.active || cr.bet === 0;
+  crEls.start.disabled = cr.active || cr.bet === 0;
+  crEls.go.disabled = !cr.active;
+  crEls.cashout.disabled = !cr.active || cr.step === 0;
+}
+
+function crPlaceChip(value) {
+  if (cr.active || balance < value) return;
+
+  balance -= value;
+  cr.bet += value;
+
+  updateBalance();
+  renderChickenRoad();
+  updateChickenButtons();
+
+  setMessage(crEls.message, "Apostaste " + crMoney(cr.bet) + ". Tocá Iniciar para jugar.");
+}
+
+function crClearBet() {
+  if (cr.active) return;
+
+  balance += cr.bet;
+
+  cr.bet = 0;
+  cr.step = 0;
+  cr.crashedLane = null;
+
+  updateBalance();
+  renderChickenRoad();
+  updateChickenButtons();
+
+  setMessage(crEls.message, "Apuesta limpiada.");
+}
+
+function crStartGame() {
+  if (cr.active || cr.bet <= 0) return;
+
+  cr.active = true;
+  cr.step = 0;
+  cr.crashedLane = null;
+
+  renderChickenRoad();
+  updateChickenButtons();
+
+  setMessage(crEls.message, "El pollito está listo. Tocá Avanzar para cruzar.");
+}
+
+function crGoForward() {
+  if (!cr.active) return;
+
+  let crashChance = crLoseChances[cr.step] || 0.75;
+  let crashed = Math.random() < crashChance;
+
+  if (crashed) {
+    crCrash();
+    return;
+  }
+
+  cr.step++;
+
+  renderChickenRoad();
+  updateChickenButtons();
+
+  if (cr.step >= crMultipliers.length) {
+    crCashout(true);
+    return;
+  }
+
+  setMessage(
+    crEls.message,
+    "Cruzaste bien. Multiplicador actual: x" + crCurrentMultiplier().toFixed(2) + ". Podés seguir o cobrar.",
+    "win"
+  );
+}
+function crCrash() {
+  let lost = cr.bet;
+
+  cr.crashedLane = cr.step;
+  cr.active = false;
+  cr.bet = 0;
+
+  renderChickenRoad();
+  updateChickenButtons();
+
+  setMessage(crEls.message, "💥 Pasó un auto. Perdiste " + crMoney(lost) + ".", "lose");
+}
+
+function crCashout(perfect = false) {
+  if (!cr.active) return;
+
+  let payout = crCashValue();
+
+  balance += payout;
+
+  cr.active = false;
+  cr.bet = 0;
+  cr.crashedLane = null;
+
+  updateBalance();
+  renderChickenRoad();
+  updateChickenButtons();
+
+  if (perfect) {
+    setMessage(crEls.message, "¡Cruzaste todo! Cobraste " + crMoney(payout) + ".", "win");
+  } else {
+    setMessage(crEls.message, "Cobraste " + crMoney(payout) + ". Te salvaste a tiempo.", "win");
+  }
+}
+
+crEls.chips.forEach(chip => {
+  chip.addEventListener("click", () => {
+    crPlaceChip(Number(chip.dataset.value));
+  });
+});
+
+crEls.clear.addEventListener("click", crClearBet);
+crEls.start.addEventListener("click", crStartGame);
+crEls.go.addEventListener("click", crGoForward);
+crEls.cashout.addEventListener("click", () => crCashout(false));
+
+/* PLINKO */
+const pl = {
+  bet: 0,
+  rows: 10,
+  risk: "medium",
+  dropping: false,
+  lastMultiplier: 0,
+  lastWin: 0
+};
+
+const plEls = {
+  message: document.getElementById("pl-message"),
+  bet: document.getElementById("pl-bet"),
+  risk: document.getElementById("pl-risk"),
+  rows: document.getElementById("pl-rows"),
+  riskLabel: document.getElementById("pl-risk-label"),
+  rowsLabel: document.getElementById("pl-rows-label"),
+  lastMultiplier: document.getElementById("pl-last-multiplier"),
+  lastWin: document.getElementById("pl-last-win"),
+  stage: document.getElementById("plinko-stage"),
+  chips: document.querySelectorAll(".pl-chip"),
+  clear: document.getElementById("pl-clear"),
+  drop: document.getElementById("pl-drop")
+};
+
+const plinkoTables = {
+  8: {
+    low:    [5.6, 2.1, 1.1, 0.7, 0.5, 0.7, 1.1, 2.1, 5.6],
+    medium: [9,   3,   1.6, 0.9, 0.5, 0.9, 1.6, 3,   9],
+    high:   [18,  5,   2,   0.4, 0.2, 0.4, 2,   5,   18]
+  },
+  10: {
+    low:    [8, 3, 1.5, 1.1, 0.8, 0.5, 0.8, 1.1, 1.5, 3, 8],
+    medium: [12, 5, 2, 1.4, 0.9, 0.5, 0.9, 1.4, 2, 5, 12],
+    high:   [24, 8, 3, 1.3, 0.6, 0.2, 0.6, 1.3, 3, 8, 24]
+  },
+  12: {
+    low:    [10, 4, 2, 1.5, 1.1, 0.8, 0.5, 0.8, 1.1, 1.5, 2, 4, 10],
+    medium: [16, 6, 3, 1.8, 1.2, 0.7, 0.4, 0.7, 1.2, 1.8, 3, 6, 16],
+    high:   [33, 11, 5, 2, 1, 0.5, 0.2, 0.5, 1, 2, 5, 11, 33]
+  }
+};
+
+function plMoney(value) {
+  let rounded = Number(value.toFixed(2));
+
+  if (Number.isInteger(rounded)) return "$" + rounded;
+  return "$" + rounded.toFixed(2);
+}
+
+function getPlinkoMultipliers() {
+  return plinkoTables[pl.rows][pl.risk];
+}
+
+function getRiskLabel(value) {
+  if (value === "low") return "Riesgo bajo";
+  if (value === "high") return "Riesgo alto";
+  return "Riesgo medio";
+}
+
+function updatePlinkoInfo() {
+  plEls.bet.textContent = plMoney(pl.bet);
+  plEls.riskLabel.textContent = getRiskLabel(pl.risk);
+  plEls.rowsLabel.textContent = String(pl.rows);
+  plEls.lastMultiplier.textContent = "x" + pl.lastMultiplier.toFixed(2);
+  plEls.lastWin.textContent = plMoney(pl.lastWin);
+}
+
+function updatePlinkoButtons() {
+  plEls.chips.forEach(chip => {
+    let value = Number(chip.dataset.value);
+    chip.disabled = pl.dropping || balance < value;
+  });
+
+  plEls.clear.disabled = pl.dropping || pl.bet === 0;
+  plEls.drop.disabled = pl.dropping || pl.bet === 0;
+  plEls.risk.disabled = pl.dropping;
+  plEls.rows.disabled = pl.dropping;
+}
+
+function getSlotClass(multiplier) {
+  if (multiplier >= 3) return "high";
+  if (multiplier >= 1) return "mid";
+  return "low";
+}
+
+function renderPlinkoBoard() {
+  if (!plEls.stage) return;
+
+  plEls.stage.innerHTML = "";
+
+  const stage = plEls.stage;
+  const width = stage.clientWidth || 760;
+  const height = stage.clientHeight || 660;
+
+  const rows = pl.rows;
+  const multipliers = getPlinkoMultipliers();
+
+  const topPadding = 40;
+  const bottomPadding = 80;
+  const usableHeight = height - topPadding - bottomPadding;
+  const rowGap = usableHeight / rows;
+  const centerX = width / 2;
+
+  for (let row = 0; row < rows; row++) {
+    const pegsInRow = row + 1;
+    const spread = Math.min(width * 0.72, 80 + row * 46);
+    const startX = centerX - spread / 2;
+
+    for (let i = 0; i < pegsInRow; i++) {
+      const peg = document.createElement("div");
+      peg.className = "plinko-peg";
+      peg.style.left = (pegsInRow === 1 ? centerX : startX + (spread / (pegsInRow - 1)) * i) + "px";
+      peg.style.top = (topPadding + rowGap * row + 25) + "px";
+      stage.appendChild(peg);
+    }
+  }
+
+  const slotsCount = multipliers.length;
+  const slotY = height - 52;
+  const slotWidth = width / slotsCount;
+
+  for (let i = 0; i < slotsCount; i++) {
+    const slot = document.createElement("div");
+    slot.className = "plinko-slot " + getSlotClass(multipliers[i]);
+    slot.style.left = (i * slotWidth + 2) + "px";
+    slot.style.width = (slotWidth - 4) + "px";
+    slot.textContent = "x" + multipliers[i];
+    stage.appendChild(slot);
+  }
+
+  for (let i = 1; i < slotsCount; i++) {
+    const line = document.createElement("div");
+    line.className = "plinko-guide-line";
+    line.style.left = i * slotWidth + "px";
+    stage.appendChild(line);
+  }
+
+  updatePlinkoInfo();
+}
+
+function plPlaceChip(value) {
+  if (pl.dropping || balance < value) return;
+
+  balance -= value;
+  pl.bet += value;
+
+  updateBalance();
+  updatePlinkoInfo();
+  updatePlinkoButtons();
+
+  setMessage(plEls.message, "Apostaste " + plMoney(pl.bet) + ". Ya podés soltar la bola.");
+}
+
+function plClearBet() {
+  if (pl.dropping) return;
+
+  balance += pl.bet;
+  pl.bet = 0;
+
+  updateBalance();
+  updatePlinkoInfo();
+  updatePlinkoButtons();
+
+  setMessage(plEls.message, "Apuesta limpiada.");
+}
+
+function getPlinkoPath() {
+  const stage = plEls.stage;
+  const width = stage.clientWidth || 760;
+  const height = stage.clientHeight || 660;
+  const rows = pl.rows;
+
+  const topPadding = 40;
+  const bottomPadding = 80;
+  const usableHeight = height - topPadding - bottomPadding;
+  const rowGap = usableHeight / rows;
+  const centerX = width / 2;
+
+  let x = centerX;
+  let rights = 0;
+
+  const path = [];
+  path.push({ x: centerX, y: 14 });
+
+  for (let row = 0; row < rows; row++) {
+    const stepSize = Math.min(22 + row * 3.5, 42);
+    const goRight = Math.random() < 0.5;
+
+    if (goRight) {
+      x += stepSize;
+      rights++;
+    } else {
+      x -= stepSize;
+    }
+
+    const y = topPadding + rowGap * row + 25;
+    path.push({ x, y });
+  }
+
+  const slotIndex = rights;
+  const slotCount = rows + 1;
+  const slotWidth = width / slotCount;
+  const finalX = slotIndex * slotWidth + slotWidth / 2;
+  const finalY = height - 26;
+
+  path.push({ x: finalX, y: finalY });
+
+  return {
+    path,
+    slotIndex
+  };
+}
+
+function animateBall(path, onDone) {
+  const stage = plEls.stage;
+  const ball = document.createElement("div");
+  ball.className = "plinko-ball";
+  stage.appendChild(ball);
+
+  let index = 0;
+  let progress = 0;
+  const speed = 0.06;
+
+  function step() {
+    if (index >= path.length - 1) {
+      ball.style.left = path[path.length - 1].x + "px";
+      ball.style.top = path[path.length - 1].y + "px";
+
+      setTimeout(() => {
+        ball.remove();
+        onDone();
+      }, 180);
+      return;
+    }
+
+    const a = path[index];
+    const b = path[index + 1];
+
+    progress += speed;
+
+    if (progress >= 1) {
+      progress = 0;
+      index++;
+    }
+
+    const currentA = path[index];
+    const currentB = path[Math.min(index + 1, path.length - 1)];
+
+    const x = currentA.x + (currentB.x - currentA.x) * progress;
+    const y = currentA.y + (currentB.y - currentA.y) * progress;
+
+    ball.style.left = x + "px";
+    ball.style.top = y + "px";
+
+    requestAnimationFrame(step);
+  }
+
+  step();
+}
+
+function plDropBall() {
+  if (pl.dropping || pl.bet <= 0) return;
+
+  pl.dropping = true;
+  updatePlinkoButtons();
+
+  const { path, slotIndex } = getPlinkoPath();
+  const multipliers = getPlinkoMultipliers();
+
+  animateBall(path, () => {
+    const multiplier = multipliers[slotIndex];
+    const payout = Number((pl.bet * multiplier).toFixed(2));
+
+    balance = Number((balance + payout).toFixed(2));
+    pl.lastMultiplier = multiplier;
+    pl.lastWin = payout;
+
+    updateBalance();
+    updatePlinkoInfo();
+
+    if (multiplier >= 1) {
+      setMessage(
+        plEls.message,
+        "La bola cayó en x" + multiplier + ". Cobraste " + plMoney(payout) + ".",
+        "win"
+      );
+    } else {
+      setMessage(
+        plEls.message,
+        "La bola cayó en x" + multiplier + ". Cobraste " + plMoney(payout) + ".",
+        "push"
+      );
+    }
+
+    pl.bet = 0;
+    pl.dropping = false;
+
+    updatePlinkoInfo();
+    updatePlinkoButtons();
+  });
+}
+
+plEls.chips.forEach(chip => {
+  chip.addEventListener("click", () => {
+    plPlaceChip(Number(chip.dataset.value));
+  });
+});
+
+plEls.clear.addEventListener("click", plClearBet);
+plEls.drop.addEventListener("click", plDropBall);
+
+plEls.risk.addEventListener("change", () => {
+  pl.risk = plEls.risk.value;
+  renderPlinkoBoard();
+  updatePlinkoInfo();
+});
+
+plEls.rows.addEventListener("change", () => {
+  pl.rows = Number(plEls.rows.value);
+  renderPlinkoBoard();
+  updatePlinkoInfo();
+});
+
+window.addEventListener("resize", () => {
+  renderPlinkoBoard();
+});
+
+renderPlinkoBoard();
+updatePlinkoInfo();
+updatePlinkoButtons();
 /* RESET GENERAL */
 resetCasinoBtn.addEventListener("click", () => {
   balance = 1000;

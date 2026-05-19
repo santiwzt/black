@@ -31,6 +31,16 @@
       </div>
 
       <div class="menu-grid">
+        <button class="menu-card" data-screen="plinko-screen">
+  <div class="menu-icon">🔵</div>
+  <h3>Plinko</h3>
+  <p>Soltá una bola, rebota entre clavijas y ganá según el multiplicador donde caiga.</p>
+</button>
+        <button class="menu-card" data-screen="chicken-screen">
+  <div class="menu-icon">🐔</div>
+  <h3>Chicken Road</h3>
+  <p>Cruzá la calle, subí el multiplicador y cobrá antes de que pase un auto.</p>
+</button>
         <button class="menu-card" data-screen="blackjack-screen">
           <div class="menu-icon">🂡</div>
           <h3>Blackjack</h3>
@@ -222,88 +232,107 @@
 </section>
     </section>
 
-    <section id="roulette-screen" class="screen">
-      <div class="top-line">
-        <button class="back-btn">← Menú</button>
+   <section id="roulette-screen" class="screen">
+  <div class="top-line">
+    <button class="back-btn">← Menú</button>
+    <div>
+      <p class="kicker">Juego</p>
+      <h2>Ruleta Deluxe</h2>
+    </div>
+  </div>
+
+  <div class="game-card roulette-casino-card">
+    <div class="roulette-main-casino">
+      
+      <!-- IZQUIERDA: RULETA -->
+      <div class="roulette-left">
+        <p id="rt-message" class="message">Elegí una apuesta, cargá fichas y girá.</p>
+
+        <div class="wheel-card">
+          <div class="pointer"></div>
+
+          <div class="roulette-wheel">
+            <div id="roulette-rotor" class="roulette-rotor">
+              <div id="roulette-labels"></div>
+            </div>
+
+            <div class="wheel-center">
+              <span id="roulette-result">?</span>
+              <small>Resultado</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DERECHA: APUESTAS, FICHAS Y ACCIONES -->
+      <aside class="roulette-right">
+        <div class="roulette-box">
+          <span>Apuesta total</span>
+          <strong id="rt-bet">$0</strong>
+        </div>
+
+        <div class="roulette-box">
+          <span>Selecciones marcadas</span>
+          <strong id="rt-target">Ninguna</strong>
+        </div>
+
+        <div class="roulette-box">
+          <span>Apuestas activas</span>
+          <div id="rt-bets-list" class="rt-bets-list">Sin apuestas</div>
+        </div>
+
+        <div class="panel roulette-inner-panel">
+          <h4>Apuestas rápidas</h4>
+
+          <div class="quick-bets">
+            <button class="quick-bet red-bet" data-type="outside" data-value="red">Rojo</button>
+            <button class="quick-bet black-bet" data-type="outside" data-value="black">Negro</button>
+            <button class="quick-bet normal-bet" data-type="outside" data-value="even">Par</button>
+            <button class="quick-bet normal-bet" data-type="outside" data-value="odd">Impar</button>
+
+            <button class="quick-bet normal-bet" data-type="dozen" data-value="1">1 - 12</button>
+            <button class="quick-bet normal-bet" data-type="dozen" data-value="2">13 - 24</button>
+            <button class="quick-bet normal-bet" data-type="dozen" data-value="3">25 - 36</button>
+          </div>
+        </div>
+
+        <div class="panel roulette-inner-panel">
+          <h4>Fichas</h4>
+
+          <div class="chips">
+            <button class="chip rt-chip c25" data-value="25">$25</button>
+            <button class="chip rt-chip c50" data-value="50">$50</button>
+            <button class="chip rt-chip c100" data-value="100">$100</button>
+            <button class="chip rt-chip c500" data-value="500">$500</button>
+          </div>
+        </div>
+
+        <div class="panel roulette-inner-panel">
+          <h4>Acciones</h4>
+
+          <div class="actions">
+            <button id="rt-clear" class="btn secondary">Limpiar</button>
+            <button id="rt-spin" class="btn primary">Girar ruleta</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- ABAJO: TABLA HORIZONTAL DE NÚMEROS -->
+    <div class="roulette-numbers-bottom">
+      <div class="number-title-row">
         <div>
-          <p class="kicker">Juego</p>
-          <h2>Ruleta Deluxe</h2>
+          <p class="kicker">Mesa de apuestas</p>
+          <h3>Números</h3>
         </div>
+
+        <p>Seleccioná uno o varios números. Después tocá una ficha para apostar en todos.</p>
       </div>
 
-      <div class="roulette-layout">
-        <div class="game-card">
-          <div class="status-row">
-            <p id="rt-message" class="message">Elegí una apuesta, cargá fichas y girá.</p>
-            <div class="bet-box">
-              <span>Apuesta</span>
-              <strong id="rt-bet">$0</strong>
-            </div>
-          </div>
-
-          <div class="roulette-zone">
-            <div class="wheel-card">
-              <div class="pointer"></div>
-
-              <div class="roulette-wheel">
-                <div id="roulette-rotor" class="roulette-rotor">
-                  <div id="roulette-labels"></div>
-                </div>
-
-                <div class="wheel-center">
-                  <span id="roulette-result">?</span>
-                  <small>Resultado</small>
-                </div>
-              </div>
-            </div>
-
-            <div class="selected-bet">
-              <span>Apuesta elegida</span>
-              <strong id="rt-target">Ninguna</strong>
-            </div>
-          </div>
-
-          <div class="controls one">
-            <div class="panel">
-              <h4>Fichas</h4>
-              <div class="chips">
-                <button class="chip rt-chip c25" data-value="25">$25</button>
-                <button class="chip rt-chip c50" data-value="50">$50</button>
-                <button class="chip rt-chip c100" data-value="100">$100</button>
-                <button class="chip rt-chip c500" data-value="500">$500</button>
-              </div>
-            </div>
-
-            <div class="panel">
-              <h4>Acciones</h4>
-              <div class="actions">
-                <button id="rt-clear" class="btn secondary">Limpiar</button>
-                <button id="rt-spin" class="btn primary">Girar ruleta</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="game-card">
-          <div class="panel">
-            <h4>Apuestas rápidas</h4>
-            <div class="quick-bets">
-              <button class="quick-bet red-bet" data-type="outside" data-value="red">Rojo</button>
-              <button class="quick-bet black-bet" data-type="outside" data-value="black">Negro</button>
-              <button class="quick-bet normal-bet" data-type="outside" data-value="even">Par</button>
-              <button class="quick-bet normal-bet" data-type="outside" data-value="odd">Impar</button>
-              <button class="quick-bet normal-bet" data-type="outside" data-value="low">1 - 18</button>
-              <button class="quick-bet normal-bet" data-type="outside" data-value="high">19 - 36</button>
-            </div>
-          </div>
-
-          <div class="panel">
-            <h4>Números</h4>
-            <div id="number-board" class="number-board"></div>
-          </div>
-        </div>
-      </div>
-    </section>
+      <div id="number-board" class="number-board casino-horizontal-board"></div>
+    </div>
+  </div>
+</section>
     <section id="miner-screen" class="screen">
   <div class="top-line">
     <button class="back-btn">← Menú</button>
@@ -410,6 +439,180 @@
         recibís $120.
       </p>
     </aside>
+  </div>
+</section><section id="chicken-screen" class="screen">
+  <div class="top-line">
+    <button class="back-btn">← Menú</button>
+    <div>
+      <p class="kicker">Juego</p>
+      <h2>Chicken Road</h2>
+    </div>
+  </div>
+
+  <div class="game-card chicken-card">
+    <div class="status-row">
+      <p id="cr-message" class="message">Elegí fichas y tocá Iniciar.</p>
+
+      <div class="bet-box">
+        <span>Apuesta</span>
+        <strong id="cr-bet">$0</strong>
+      </div>
+    </div>
+
+    <div class="chicken-layout">
+      <div class="chicken-road-area">
+        <div class="chicken-topbar">
+          <div>
+            <span>Multiplicador actual</span>
+            <strong id="cr-multiplier">x1.00</strong>
+          </div>
+
+          <div>
+            <span>Si cobrás ahora</span>
+            <strong id="cr-cash">$0</strong>
+          </div>
+
+          <div>
+            <span>Cruces seguros</span>
+            <strong id="cr-step">0</strong>
+          </div>
+        </div>
+
+        <div class="road-wrapper">
+          <div id="cr-road" class="chicken-road"></div>
+        </div>
+      </div>
+
+      <aside class="chicken-side">
+        <div class="panel">
+          <h4>Fichas</h4>
+          <div class="chips">
+            <button class="chip cr-chip c25" data-value="25">$25</button>
+            <button class="chip cr-chip c50" data-value="50">$50</button>
+            <button class="chip cr-chip c100" data-value="100">$100</button>
+            <button class="chip cr-chip c500" data-value="500">$500</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h4>Acciones</h4>
+          <div class="actions chicken-actions">
+            <button id="cr-clear" class="btn secondary">Limpiar</button>
+            <button id="cr-start" class="btn primary">Iniciar</button>
+            <button id="cr-go" class="btn">Avanzar</button>
+            <button id="cr-cashout" class="btn primary">Cobrar</button>
+          </div>
+        </div>
+
+        <div class="panel chicken-rules">
+          <h4>Reglas</h4>
+          <p>
+            Cada vez que avanzás, el multiplicador sube. Si cruzás bien, podés seguir
+            o cobrar. Si te toca auto, perdés la apuesta.
+          </p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section id="plinko-screen" class="screen">
+  <div class="top-line">
+    <button class="back-btn">← Menú</button>
+    <div>
+      <p class="kicker">Juego</p>
+      <h2>Plinko</h2>
+    </div>
+  </div>
+
+  <div class="game-card plinko-card">
+    <div class="status-row">
+      <p id="pl-message" class="message">Elegí fichas, configurá el tablero y soltá la bola.</p>
+
+      <div class="bet-box">
+        <span>Apuesta</span>
+        <strong id="pl-bet">$0</strong>
+      </div>
+    </div>
+
+    <div class="plinko-layout">
+      <aside class="plinko-side">
+        <div class="panel">
+          <h4>Configuración</h4>
+
+          <div class="plinko-config">
+            <label>
+              <span>Riesgo</span>
+              <select id="pl-risk">
+                <option value="low">Bajo</option>
+                <option value="medium" selected>Medio</option>
+                <option value="high">Alto</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Filas</span>
+              <select id="pl-rows">
+                <option value="8">8</option>
+                <option value="10" selected>10</option>
+                <option value="12">12</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h4>Fichas</h4>
+          <div class="chips">
+            <button class="chip pl-chip c25" data-value="25">$25</button>
+            <button class="chip pl-chip c50" data-value="50">$50</button>
+            <button class="chip pl-chip c100" data-value="100">$100</button>
+            <button class="chip pl-chip c500" data-value="500">$500</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h4>Acciones</h4>
+          <div class="actions">
+            <button id="pl-clear" class="btn secondary">Limpiar</button>
+            <button id="pl-drop" class="btn primary">Soltar bola</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h4>Resultado</h4>
+          <div class="plinko-result-box">
+            <div>
+              <span>Último multiplicador</span>
+              <strong id="pl-last-multiplier">x0.00</strong>
+            </div>
+
+            <div>
+              <span>Último premio</span>
+              <strong id="pl-last-win">$0</strong>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <div class="plinko-board-area">
+        <div class="plinko-board-header">
+          <div class="info-pill">
+            <span>Multiplicadores</span>
+            <strong id="pl-risk-label">Riesgo medio</strong>
+          </div>
+
+          <div class="info-pill">
+            <span>Filas activas</span>
+            <strong id="pl-rows-label">10</strong>
+          </div>
+        </div>
+
+        <div class="plinko-stage-wrap">
+          <div id="plinko-stage" class="plinko-stage"></div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
   </main>
