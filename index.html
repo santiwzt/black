@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Royal Casino Deluxe</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="main-header">
+      <div>
+        <p class="kicker">Royal Neon Casino</p>
+        <h1>Casino Deluxe</h1>
+      </div>
+
+      <div class="header-actions">
+        <div class="wallet">
+          <span>Saldo total</span>
+          <strong id="global-balance">$1000</strong>
+        </div>
+        <button id="reset-casino" class="small-btn">Reiniciar saldo</button>
+      </div>
+    </header>
+
+    <section id="menu-screen" class="screen active">
+      <div class="hero">
+        <p class="kicker">Menú principal</p>
+        <h2>Elegí tu juego</h2>
+        <p>Casino completo con Blackjack, Poker y Ruleta. Todos los juegos comparten el mismo saldo.</p>
+      </div>
+
+      <div class="menu-grid">
+        <button class="menu-card" data-screen="blackjack-screen">
+          <div class="menu-icon">🂡</div>
+          <h3>Blackjack</h3>
+          <p>Llegá a 21 sin pasarte y ganale al dealer.</p>
+        </button>
+
+        <button class="menu-card" data-screen="poker-screen">
+          <div class="menu-icon">♠</div>
+          <h3>Poker</h3>
+          <p>5 Card Draw: apostás, cambiás cartas y gana la mejor mano.</p>
+        </button>
+
+        <button class="menu-card" data-screen="roulette-screen">
+          <div class="menu-icon">🎡</div>
+          <h3>Ruleta</h3>
+          <p>Apostá a color, número, par, impar o rango.</p>
+        </button>
+      </div>
+      <button class="menu-card" data-screen="miner-screen">
+  <div class="menu-icon">💰</div>
+  <h3>Coin Miner</h3>
+  <p>Da vuelta cartas. Si sale moneda ganás 5%. Si sale bomba perdés.</p>
+</button>
+    </section>
+
+    <section id="blackjack-screen" class="screen">
+      <div class="top-line">
+        <button class="back-btn">← Menú</button>
+        <div>
+          <p class="kicker">Juego</p>
+          <h2>Blackjack</h2>
+        </div>
+      </div>
+
+      <div class="game-card">
+        <div class="status-row">
+          <p id="bj-message" class="message">Elegí fichas y tocá Repartir.</p>
+          <div class="bet-box">
+            <span>Apuesta</span>
+            <strong id="bj-bet">$0</strong>
+          </div>
+        </div>
+
+        <div class="table">
+          <div class="hand-head">
+            <h3>Dealer</h3>
+            <p>Puntos: <span id="bj-dealer-score">0</span></p>
+          </div>
+          <div id="bj-dealer-cards" class="cards"></div>
+
+          <div class="divider"></div>
+
+          <div class="hand-head">
+            <h3>Jugador</h3>
+            <p>Puntos: <span id="bj-player-score">0</span></p>
+          </div>
+          <div id="bj-player-cards" class="cards"></div>
+        </div>
+
+        <div class="controls">
+          <div class="panel">
+            <h4>Fichas</h4>
+            <div class="chips">
+              <button class="chip bj-chip c25" data-value="25">$25</button>
+              <button class="chip bj-chip c50" data-value="50">$50</button>
+              <button class="chip bj-chip c100" data-value="100">$100</button>
+              <button class="chip bj-chip c500" data-value="500">$500</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h4>Acciones</h4>
+            <div class="actions">
+              <button id="bj-clear" class="btn secondary">Limpiar</button>
+              <button id="bj-deal" class="btn primary">Repartir</button>
+              <button id="bj-hit" class="btn">Pedir</button>
+              <button id="bj-stand" class="btn">Plantarse</button>
+              <button id="bj-double" class="btn">Doblar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+   <section id="poker-screen" class="screen">
+  <div class="top-line">
+    <button class="back-btn">← Menú</button>
+    <div>
+      <p class="kicker">Juego</p>
+      <h2>Poker Texas Hold'em</h2>
+    </div>
+  </div>
+
+  <div class="poker-layout">
+    <div class="game-card">
+      <div class="status-row">
+        <p id="pk-message" class="message">Elegí fichas y tocá Repartir mano.</p>
+        <div class="bet-box">
+          <span>Tu apuesta</span>
+          <strong id="pk-bet">$0</strong>
+        </div>
+      </div>
+
+     <div class="poker-info-row">
+  <div class="info-pill">
+    <span>Pozo</span>
+    <strong id="pk-pot">$0</strong>
+  </div>
+
+  <div class="info-pill">
+    <span>Apuesta dealer</span>
+    <strong id="pk-dealer-bet">$0</strong>
+  </div>
+
+  <div class="info-pill">
+    <span>Etapa</span>
+    <strong id="pk-stage">Esperando apuesta</strong>
+  </div>
+</div>
+
+      <div class="table poker-table">
+        <div class="hand-head">
+          <div>
+            <h3>Dealer</h3>
+            <small id="pk-dealer-name">Cartas ocultas</small>
+          </div>
+        </div>
+        <div id="pk-dealer-cards" class="cards"></div>
+
+        <div class="community-area">
+          <h3>Cartas del medio</h3>
+          <div id="pk-community-cards" class="cards community-cards"></div>
+        </div>
+
+        <div class="hand-head">
+          <div>
+            <h3>Jugador</h3>
+            <small id="pk-player-name">Tus cartas</small>
+          </div>
+        </div>
+        <div id="pk-player-cards" class="cards"></div>
+      </div>
+
+      <div class="controls">
+        <div class="panel">
+          <h4>Fichas</h4>
+          <div class="chips">
+            <button class="chip pk-chip c25" data-value="25">$25</button>
+            <button class="chip pk-chip c50" data-value="50">$50</button>
+            <button class="chip pk-chip c100" data-value="100">$100</button>
+            <button class="chip pk-chip c500" data-value="500">$500</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h4>Acciones</h4>
+          <div class="actions">
+            <button id="pk-clear" class="btn secondary">Limpiar</button>
+            <button id="pk-deal" class="btn primary">Repartir mano</button>
+            <button id="pk-draw" class="btn">Pasar / Confirmar</button>
+            <button id="pk-stand" class="btn">Retirarse</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="game-card rules-card">
+      <h3>Reglas del Poker</h3>
+      <p>
+        Este modo es <strong>Texas Hold'em</strong>. Vos y el dealer reciben 2 cartas.
+        En el medio aparecen 5 cartas comunitarias.
+      </p>
+
+      <h4>Cómo avanza</h4>
+      <ol>
+        <li>Primero se muestran 3 cartas del medio.</li>
+        <li>Decidís si apostás más o pasás.</li>
+        <li>Se muestra la cuarta carta.</li>
+        <li>Volvés a decidir si apostás más.</li>
+        <li>Se muestra la quinta carta.</li>
+        <li>Última decisión y después se revelan las cartas.</li>
+      </ol>
+
+      <p class="tip">
+        El dealer actúa solo: puede pagar tu apuesta, pasar o retirarse si su mano es mala.
+      </p>
+    </aside>
+  </div>
+</section>
+    </section>
+
+    <section id="roulette-screen" class="screen">
+      <div class="top-line">
+        <button class="back-btn">← Menú</button>
+        <div>
+          <p class="kicker">Juego</p>
+          <h2>Ruleta Deluxe</h2>
+        </div>
+      </div>
+
+      <div class="roulette-layout">
+        <div class="game-card">
+          <div class="status-row">
+            <p id="rt-message" class="message">Elegí una apuesta, cargá fichas y girá.</p>
+            <div class="bet-box">
+              <span>Apuesta</span>
+              <strong id="rt-bet">$0</strong>
+            </div>
+          </div>
+
+          <div class="roulette-zone">
+            <div class="wheel-card">
+              <div class="pointer"></div>
+
+              <div class="roulette-wheel">
+                <div id="roulette-rotor" class="roulette-rotor">
+                  <div id="roulette-labels"></div>
+                </div>
+
+                <div class="wheel-center">
+                  <span id="roulette-result">?</span>
+                  <small>Resultado</small>
+                </div>
+              </div>
+            </div>
+
+            <div class="selected-bet">
+              <span>Apuesta elegida</span>
+              <strong id="rt-target">Ninguna</strong>
+            </div>
+          </div>
+
+          <div class="controls one">
+            <div class="panel">
+              <h4>Fichas</h4>
+              <div class="chips">
+                <button class="chip rt-chip c25" data-value="25">$25</button>
+                <button class="chip rt-chip c50" data-value="50">$50</button>
+                <button class="chip rt-chip c100" data-value="100">$100</button>
+                <button class="chip rt-chip c500" data-value="500">$500</button>
+              </div>
+            </div>
+
+            <div class="panel">
+              <h4>Acciones</h4>
+              <div class="actions">
+                <button id="rt-clear" class="btn secondary">Limpiar</button>
+                <button id="rt-spin" class="btn primary">Girar ruleta</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="game-card">
+          <div class="panel">
+            <h4>Apuestas rápidas</h4>
+            <div class="quick-bets">
+              <button class="quick-bet red-bet" data-type="outside" data-value="red">Rojo</button>
+              <button class="quick-bet black-bet" data-type="outside" data-value="black">Negro</button>
+              <button class="quick-bet normal-bet" data-type="outside" data-value="even">Par</button>
+              <button class="quick-bet normal-bet" data-type="outside" data-value="odd">Impar</button>
+              <button class="quick-bet normal-bet" data-type="outside" data-value="low">1 - 18</button>
+              <button class="quick-bet normal-bet" data-type="outside" data-value="high">19 - 36</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h4>Números</h4>
+            <div id="number-board" class="number-board"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section id="miner-screen" class="screen">
+  <div class="top-line">
+    <button class="back-btn">← Menú</button>
+    <div>
+      <p class="kicker">Juego</p>
+      <h2>Coin Miner</h2>
+    </div>
+  </div>
+
+  <div class="miner-layout">
+    <div class="game-card">
+      <div class="status-row">
+        <p id="cm-message" class="message">Elegí fichas y tocá Iniciar partida.</p>
+        <div class="bet-box">
+          <span>Apuesta</span>
+          <strong id="cm-bet">$0</strong>
+        </div>
+      </div>
+
+    <div class="miner-stats">
+  <div class="info-pill">
+    <span>Ganancia actual</span>
+    <strong id="cm-profit">$0</strong>
+  </div>
+
+  <div class="info-pill">
+    <span>Si cobrás ahora</span>
+    <strong id="cm-total">$0</strong>
+  </div>
+
+  <div class="info-pill">
+    <span>Próxima moneda</span>
+    <strong id="cm-next">+0%</strong>
+  </div>
+
+  <div class="info-pill">
+    <span>Cartas seguras</span>
+    <strong id="cm-safe">0</strong>
+  </div>
+</div>
+
+<div class="bomb-selector">
+  <h4>Cantidad exacta de bombas</h4>
+
+  <div class="bomb-exact-row">
+    <input id="cm-bombs-input" type="number" min="1" max="24" value="3" />
+    <button id="cm-bombs-apply" class="btn primary">Aplicar</button>
+  </div>
+
+  <p>
+    Podés elegir de 1 a 24 bombas. Más bombas = más riesgo, pero también más porcentaje de ganancia.
+  </p>
+</div>
+        <div class="info-pill">
+          <span>Si cobrás ahora</span>
+          <strong id="cm-total">$0</strong>
+        </div>
+
+        <div class="info-pill">
+          <span>Cartas seguras</span>
+          <strong id="cm-safe">0</strong>
+        </div>
+      </div>
+
+      <div class="miner-board-wrap">
+        <div id="cm-board" class="miner-board"></div>
+      </div>
+
+      <div class="controls">
+        <div class="panel">
+          <h4>Fichas</h4>
+          <div class="chips">
+            <button class="chip cm-chip c25" data-value="25">$25</button>
+            <button class="chip cm-chip c50" data-value="50">$50</button>
+            <button class="chip cm-chip c100" data-value="100">$100</button>
+            <button class="chip cm-chip c500" data-value="500">$500</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h4>Acciones</h4>
+          <div class="actions">
+            <button id="cm-clear" class="btn secondary">Limpiar</button>
+            <button id="cm-start" class="btn primary">Iniciar partida</button>
+            <button id="cm-cashout" class="btn">Cobrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="game-card rules-card">
+      <h3>Reglas de Coin Miner</h3>
+      <p>
+        Hay 25 tarjetas. Dentro hay <strong>3 bombas</strong>. Cada vez que das vuelta una
+        tarjeta con moneda, sumás un <strong>5% de tu apuesta inicial</strong>.
+      </p>
+
+      <p>
+        Podés cobrar cuando quieras. Si te toca bomba, perdés la apuesta y la ganancia acumulada.
+      </p>
+
+      <p class="tip">
+        Ejemplo: si apostás $100, cada moneda suma $5. Si cobrás después de 4 monedas,
+        recibís $120.
+      </p>
+    </aside>
+  </div>
+</section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
