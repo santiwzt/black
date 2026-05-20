@@ -82,6 +82,11 @@
       </button>
     </div>
   </div>
+  <button class="menu-card" data-screen="aviator-screen">
+  <div class="menu-icon">✈️</div>
+  <h3>Aviator</h3>
+  <p>Apostá, mirá cómo sube el multiplicador y cobrá antes de que el avión desaparezca.</p>
+</button>
 </section>
     <section id="blackjack-screen" class="screen">
       <div class="top-line">
@@ -655,6 +660,119 @@
           <div id="plinko-stage" class="plinko-stage"></div>
         </div>
       </div>
+    </div>
+  </div>
+</section>
+<section id="aviator-screen" class="screen">
+  <div class="top-line">
+    <button class="back-btn">← Menú</button>
+    <div>
+      <p class="kicker">Juego</p>
+      <h2>Aviator</h2>
+    </div>
+  </div>
+
+  <div class="game-card aviator-card">
+    <div class="status-row">
+      <p id="av-message" class="message">Elegí fichas y tocá Iniciar vuelo.</p>
+
+      <div class="bet-box">
+        <span>Apuesta</span>
+        <strong id="av-bet">$0</strong>
+      </div>
+    </div>
+
+    <div class="aviator-layout">
+      <!-- IZQUIERDA -->
+      <div class="aviator-stage-area">
+        <div class="aviator-topbar">
+          <div class="info-pill">
+            <span>Multiplicador actual</span>
+            <strong id="av-multiplier">1.00x</strong>
+          </div>
+
+          <div class="info-pill">
+            <span>Si cobrás ahora</span>
+            <strong id="av-cash">$0</strong>
+          </div>
+
+          <div class="info-pill">
+            <span>Último crash</span>
+            <strong id="av-last-crash">-</strong>
+          </div>
+
+          <div class="info-pill">
+            <span>Último premio</span>
+            <strong id="av-last-win">$0</strong>
+          </div>
+        </div>
+
+        <div class="aviator-stage-wrap">
+          <div class="aviator-stage">
+            <svg
+              class="aviator-graph"
+              viewBox="0 0 800 400"
+              preserveAspectRatio="none"
+            >
+              <defs>
+                <linearGradient id="aviatorFillGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="rgba(220,38,38,0.65)"></stop>
+                  <stop offset="100%" stop-color="rgba(220,38,38,0.05)"></stop>
+                </linearGradient>
+              </defs>
+
+              <path id="av-fill-path" fill="rgba(220,38,38,0.18)"></path>
+              <path
+                id="av-line-path"
+                fill="none"
+                stroke="#ef4444"
+                stroke-width="8"
+                stroke-linecap="round"
+              ></path>
+            </svg>
+
+            <div id="av-plane" class="aviator-plane">✈️</div>
+            <div id="av-multiplier-big" class="aviator-big-multiplier">1.00x</div>
+            <div id="av-status" class="aviator-status-tag">Esperando</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DERECHA -->
+      <aside class="aviator-side">
+        <div class="panel">
+          <h4>Fichas</h4>
+
+          <div class="chips">
+            <button class="chip av-chip c25" data-value="25">$25</button>
+            <button class="chip av-chip c50" data-value="50">$50</button>
+            <button class="chip av-chip c100" data-value="100">$100</button>
+            <button class="chip av-chip c500" data-value="500">$500</button>
+            <button class="chip av-chip c1000" data-value="1000">$1K</button>
+            <button class="chip av-chip c5000" data-value="5000">$5K</button>
+            <button class="chip av-chip allin-chip" data-allin="true">ALL IN</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h4>Acciones</h4>
+
+          <div class="actions aviator-actions">
+            <button id="av-clear" class="btn secondary">Limpiar</button>
+            <button id="av-start" class="btn primary">Iniciar vuelo</button>
+            <button id="av-cashout" class="btn">Cobrar</button>
+          </div>
+        </div>
+
+        <div class="panel aviator-rules">
+          <h4>Reglas</h4>
+          <p>
+            El multiplicador empieza en <strong>x1.00</strong> y va subiendo a medida
+            que el avión despega. Si cobrás antes del crash, ganás
+            <strong>apuesta × multiplicador</strong>. Si no, perdés la apuesta.
+          </p>
+        </div>
+      </aside>
     </div>
   </div>
 </section>

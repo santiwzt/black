@@ -2358,9 +2358,284 @@ buildRouletteWheel();
 buildNumberBoard();
 updateRouletteInfo();
 updateRouletteButtons();
+/* AVIATOR */
+const av = {
+  bet: 0,
+  active: false,
+  cashedOut: false,
+  multiplier: 1,
+  crashAt: 0,
+  lastCrash: 0,
+  lastWin: 0,
+  cashedMultiplier: 0,
+  startedAt: 0,
+  growthRate: 0.00028,
+  raf: null
+};
+
+const avEls = {
+  message: document.getElementById("av-message"),
+  bet: document.getElementById("av-bet"),
+  multiplier: document.getElementById("av-multiplier"),
+  cash: document.getElementById("av-cash"),
+  lastCrash: document.getElementById("av-last-crash"),
+  lastWin: document.getElementById("av-last-win"),
+  multiplierBig: document.getElementById("av-multiplier-big"),
+  plane: document.getElementById("av-plane"),
+  status: document.getElementById("av-status"),
+  linePath: document.getElementById("av-line-path"),
+  fillPath: document.getElementById("av-fill-path"),
+  chips: document.querySelectorAll(".av-chip"),
+  clear: document.getElementById("av-clear"),
+  start: document.getElementById("av-start"),
+  cashout: document.getElementById("av-cashout")
+};
+
+function avMoney(value) {
+  let rounded = Number(value.toFixed(2));
+
+  if (Number.isInteger(rounded)) {
+    return "$" + rounded;
+  }
+
+  return "$" + rounded.toFixed(2);
+}
+
+function avGenerateCrash() {
+  const r = Math.random();
+
+  if (r < 0.28) return Number((1 + Math.random() * 0.35).toFixed(2));
+  if (r < 0.56) return Number((1.35 + Math.random() * 0.85).toFixed(2));
+  if (r < 0.78) return Number((2.2 + Math.random() * 1.8).toFixed(2));
+  if (r < 0.92) return Number((4 + Math.random() * 4).toFixed(2));
+  if (r < 0.985) return Number((8 + Math.random() * 12).toFixed(2));
+
+  return Number((20 + Math.random() * 25).toFixed(2));
+}
+
+function avCashNow() {
+  if (!av.active) return 0;
+  return Number((av.bet * av.multiplier).toFixed(2));
+}
+
+function updateAviatorInfo() {
+  avEls.bet.textContent = avMoney(av.bet);
+  avEls.multiplier.textContent = av.multiplier.toFixed(2) + "x";
+  avEls.cash.textContent = avMoney(avCashNow());
+  avEls.lastCrash.textContent = av.lastCrash > 0 ? av.lastCrash.toFixed(2) + "x" : "-";
+  avEls.lastWin.textContent = avMoney(av.lastWin);
+  avEls.multiplierBig.textContent = av.multiplier.toFixed(2) + "x";
+}
+
+function updateAviatorStatus(text, cls = "") {
+  avEls.status.textContent = text;
+  avEls.status.className = "aviator-status-tag" + (cls ? " " + cls : "");
+}
+
+function updateAviatorButtons() {
+  avEls.chips.forEach(chip => {
+    let value = chip.dataset.allin === "true" ? balance : Number(chip.dataset.value);
+    chip.disabled = av.active || balance <= 0 || balance < value;
+  });
+
+  avEls.clear.disabled = av.active || av.bet === 0;
+  avEls.start.disabled = av.active || av.bet === 0;
+  avEls.cashout.disabled = !av.active || av.cashedOut;
+}
+
+function renderAviatorGraph() {
+  if (!avEls.linePath || !avEls.fillPath || !avEls.plane) return;
+
+  const startX = 42;
+  const startY = 342;
+
+  let activeMultiplier = Math.max(av.multiplier, 1);
+  let maxDisplay = Math.max(3, Math.min(25, Math.max(av.crashAt || 3, activeMultiplier + 1.5)));
+
+  let progress = 0;
+  if (activeMultiplier > 1) {
+    progress = Math.log(activeMultiplier) / Math.log(maxDisplay);
+  }
+
+  progress = Math.max(0, Math.min(progress, 1));
+
+  const x = startX + 700 * progress;
+  const yLift = 250 * Math.pow(progress, 0.82);
+  const y = startY - yLift;
+
+  const c1x = startX + 140 * progress + 20;
+  const c1y = startY;
+  const c2x = Math.max(startX + 40, x - 150);
+  const c2y = y + 58;
+
+  const line = `M ${startX} ${startY} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x} ${y}`;
+  const fill = `${line} L ${x} ${startY} L ${startX} ${startY} Z`;
+
+  avEls.linePath.setAttribute("d", line);
+  avEls.fillPath.setAttribute("d", fill);
+  avEls.fillPath.setAttribute("fill", "rgba(220,38,38,0.22)");
+
+  avEls.plane.style.left = (x / 800) * 100 + "%";
+  avEls.plane.style.top = (y / 400) * 100 + "%";
+}
+
+function avPlaceChip(value) {
+  if (av.active || balance < value || value <= 0) return;
+
+  balance -= value;
+  av.bet += value;
+
+  updateBalance();
+  updateAviatorInfo();
+  updateAviatorButtons();
+
+  setMessage(avEls.message, "Apostaste " + avMoney(av.bet) + ". Ya podés iniciar el vuelo.");
+}
+
+function avClearBet() {
+  if (av.active) return;
+
+  balance += av.bet;
+  av.bet = 0;
+
+  updateBalance();
+  updateAviatorInfo();
+  updateAviatorButtons();
+
+  setMessage(avEls.message, "Apuesta limpiada.");
+}
+
+function avStartRound() {
+  if (av.active || av.bet <= 0) return;
+
+  if (av.raf) {
+    cancelAnimationFrame(av.raf);
+    av.raf = null;
+  }
+
+  av.active = true;
+  av.cashedOut = false;
+  av.cashedMultiplier = 0;
+  av.multiplier = 1;
+  av.crashAt = avGenerateCrash();
+  av.lastWin = 0;
+  av.startedAt = 0;
+
+  updateAviatorInfo();
+  renderAviatorGraph();
+  updateAviatorButtons();
+  updateAviatorStatus("En vuelo", "flying");
+
+  setMessage(avEls.message, "El avión despegó. Cobrá antes de que desaparezca.");
+
+  av.raf = requestAnimationFrame(avTick);
+}
+
+function avTick(timestamp) {
+  if (!av.active) return;
+
+  if (!av.startedAt) {
+    av.startedAt = timestamp;
+  }
+
+  const elapsed = timestamp - av.startedAt;
+
+  av.multiplier = Number(Math.max(1, Math.exp(av.growthRate * elapsed)).toFixed(2));
+
+  renderAviatorGraph();
+  updateAviatorInfo();
+
+  if (av.multiplier >= av.crashAt) {
+    avFinishCrash();
+    return;
+  }
+
+  av.raf = requestAnimationFrame(avTick);
+}
+
+function avCashout() {
+  if (!av.active || av.cashedOut) return;
+
+  const payout = Number((av.bet * av.multiplier).toFixed(2));
+
+  balance = Number((balance + payout).toFixed(2));
+  av.lastWin = payout;
+  av.cashedOut = true;
+  av.cashedMultiplier = av.multiplier;
+
+  updateBalance();
+  updateAviatorInfo();
+  updateAviatorButtons();
+  updateAviatorStatus("Cobrado", "cashed");
+
+  setMessage(
+    avEls.message,
+    "Cobraste a " + av.multiplier.toFixed(2) + "x y recibiste " + avMoney(payout) + ".",
+    "win"
+  );
+}
+
+function avFinishCrash() {
+  if (av.raf) {
+    cancelAnimationFrame(av.raf);
+    av.raf = null;
+  }
+
+  av.multiplier = av.crashAt;
+  av.lastCrash = av.crashAt;
+  av.active = false;
+
+  renderAviatorGraph();
+  updateAviatorInfo();
+
+  if (av.cashedOut) {
+    updateAviatorStatus("Se fue", "crashed");
+    setMessage(
+      avEls.message,
+      "El avión desapareció en " + av.crashAt.toFixed(2) + "x. Ya habías cobrado en " + av.cashedMultiplier.toFixed(2) + "x.",
+      "win"
+    );
+  } else {
+    av.lastWin = 0;
+    updateAviatorStatus("Crash", "crashed");
+    setMessage(
+      avEls.message,
+      "El avión desapareció en " + av.crashAt.toFixed(2) + "x. Perdiste " + avMoney(av.bet) + ".",
+      "lose"
+    );
+  }
+
+  av.bet = 0;
+  av.cashedOut = false;
+  av.cashedMultiplier = 0;
+
+  updateAviatorInfo();
+  updateAviatorButtons();
+}
+
+avEls.chips.forEach(chip => {
+  chip.addEventListener("click", () => {
+    const amount = chip.dataset.allin === "true"
+      ? balance
+      : Number(chip.dataset.value);
+
+    avPlaceChip(amount);
+  });
+});
+
+avEls.clear.addEventListener("click", avClearBet);
+avEls.start.addEventListener("click", avStartRound);
+avEls.cashout.addEventListener("click", avCashout);
+
+updateAviatorInfo();
+updateAviatorButtons();
+updateAviatorStatus("Esperando");
+renderAviatorGraph();
+//reset general
 
 resetCasinoBtn.addEventListener("click", () => {
   balance = 5000;
   updateBalance();
+
 
 });
