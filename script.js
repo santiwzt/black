@@ -1,4 +1,4 @@
-let balance = 1000;
+let balance = 5000;
 
 const globalBalanceEl = document.getElementById("global-balance");
 const resetCasinoBtn = document.getElementById("reset-casino");
@@ -1922,7 +1922,8 @@ const pl = {
   balls: 1,
   dropping: false,
   lastMultiplier: 0,
-  lastWin: 0
+  lastWin: 0,
+  hitSlots: []
 };
 
 const plEls = {
@@ -2357,3 +2358,9 @@ buildRouletteWheel();
 buildNumberBoard();
 updateRouletteInfo();
 updateRouletteButtons();
+
+resetCasinoBtn.addEventListener("click", () => {
+  balance = 5000;
+  updateBalance();
+
+});

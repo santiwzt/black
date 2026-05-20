@@ -19,54 +19,70 @@
           <span>Saldo total</span>
           <strong id="global-balance">$1000</strong>
         </div>
-        <button id="reset-casino" class="small-btn">Reiniciar saldo</button>
+        <button id="reset-casino" class="btn secondary">Reiniciar saldo</button>
       </div>
     </header>
 
-    <section id="menu-screen" class="screen active">
-      <div class="hero">
-        <p class="kicker">Menú principal</p>
-        <h2>Elegí tu juego</h2>
-        <p>Casino completo con Blackjack, Poker y Ruleta. Todos los juegos comparten el mismo saldo.</p>
+   <section id="menu-screen" class="screen active">
+  <div class="menu-shell">
+    <div class="menu-hero">
+      <div class="menu-hero-top">
+        <div>
+          <p class="menu-kicker">MENÚ PRINCIPAL</p>
+          <h1>Elegí tu juego</h1>
+          <p class="menu-subtitle">
+            Casino completo con Blackjack, Poker, Ruleta, Coin Miner, Chicken Road y Plinko.
+            Todos los juegos comparten el mismo saldo.
+          </p>
+        </div>
+
+        <div class="menu-balance-card">
+          <span>Saldo total</span>
+          <strong id="global-balance">$5000</strong>
+          <button id="reset-casino" class="btn secondary">Reiniciar saldo</button>
+        </div>
       </div>
+    </div>
 
-      <div class="menu-grid">
-        <button class="menu-card" data-screen="plinko-screen">
-  <div class="menu-icon">🔵</div>
-  
-  <h3>Plinko</h3>
-  <p>Soltá una bola, rebota entre clavijas y ganá según el multiplicador donde caiga.</p>
-</button>
-        <button class="menu-card" data-screen="chicken-screen">
-  <div class="menu-icon">🐔</div>
-  <h3>Chicken Road</h3>
-  <p>Cruzá la calle, subí el multiplicador y cobrá antes de que pase un auto.</p>
-</button>
-        <button class="menu-card" data-screen="blackjack-screen">
-          <div class="menu-icon">🂡</div>
-          <h3>Blackjack</h3>
-          <p>Llegá a 21 sin pasarte y ganale al dealer.</p>
-        </button>
+    <div class="menu-grid">
+      <button class="menu-card" data-screen="blackjack-screen">
+        <div class="menu-icon">🂡</div>
+        <h3>Blackjack</h3>
+        <p>Llegá a 21 sin pasarte y ganale al dealer.</p>
+      </button>
 
-        <button class="menu-card" data-screen="poker-screen">
-          <div class="menu-icon">♠</div>
-          <h3>Poker</h3>
-          <p>5 Card Draw: apostás, cambiás cartas y gana la mejor mano.</p>
-        </button>
+      <button class="menu-card" data-screen="poker-screen">
+        <div class="menu-icon">♠</div>
+        <h3>Poker</h3>
+        <p>Apostá, subí y enfrentate al dealer en una mano completa.</p>
+      </button>
 
-        <button class="menu-card" data-screen="roulette-screen">
-          <div class="menu-icon">🎡</div>
-          <h3>Ruleta</h3>
-          <p>Apostá a color, número, par, impar o rango.</p>
-        </button>
-      </div>
+      <button class="menu-card" data-screen="roulette-screen">
+        <div class="menu-icon">🎡</div>
+        <h3>Ruleta</h3>
+        <p>Apostá a números, color, paridad o docenas.</p>
+      </button>
+
       <button class="menu-card" data-screen="miner-screen">
-  <div class="menu-icon">💰</div>
-  <h3>Coin Miner</h3>
-  <p>Da vuelta cartas. Si sale moneda ganás 5%. Si sale bomba perdés.</p>
-</button>
-    </section>
+        <div class="menu-icon">💰</div>
+        <h3>Coin Miner</h3>
+        <p>Destapá cartas, evitá bombas y cobrá antes de perder.</p>
+      </button>
 
+      <button class="menu-card" data-screen="chicken-screen">
+        <div class="menu-icon">🐔</div>
+        <h3>Chicken Road</h3>
+        <p>Cruzá la calle, subí el multiplicador y cobrá antes del choque.</p>
+      </button>
+
+      <button class="menu-card" data-screen="plinko-screen">
+        <div class="menu-icon">🔵</div>
+        <h3>Plinko</h3>
+        <p>Soltá bolas, rebotá entre clavijas y ganá según el multiplicador.</p>
+      </button>
+    </div>
+  </div>
+</section>
     <section id="blackjack-screen" class="screen">
       <div class="top-line">
         <button class="back-btn">← Menú</button>
