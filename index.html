@@ -8,85 +8,98 @@
 </head>
 <body>
   <main class="app">
-    <header class="main-header">
-      <div>
-        <p class="kicker">Royal Neon Casino</p>
-        <h1>Casino Deluxe</h1>
-      </div>
+   <header class="casino-topbar">
+  <div class="topbar-left">
+    <div class="brand-mark">RN</div>
+    <div class="brand-text">
+      <span>Royal Neon</span>
+      <strong>Casino</strong>
+    </div>
+  </div>
 
-      <div class="header-actions">
-        <div class="wallet">
-          <span>Saldo total</span>
-          <strong id="global-balance">$1000</strong>
-        </div>
-        <button id="reset-casino" class="btn secondary">Reiniciar saldo</button>
-      </div>
-    </header>
+  <div class="topbar-right">
+    <button class="topbar-icon" title="Buscar">🔍</button>
+    <button class="topbar-icon" title="Música">🎵</button>
+    <button class="topbar-icon" title="Opciones">⚙️</button>
 
-   <section id="menu-screen" class="screen active">
-  <div class="menu-shell">
-    <div class="menu-hero">
-      <div class="menu-hero-top">
-        <div>
-          <p class="menu-kicker">MENÚ PRINCIPAL</p>
-          <h1>Elegí tu juego</h1>
-          <p class="menu-subtitle">
-            Casino completo con Blackjack, Poker, Ruleta, Coin Miner, Chicken Road y Plinko.
-            Todos los juegos comparten el mismo saldo.
-          </p>
-        </div>
-
-        <div class="menu-balance-card">
-          <span>Saldo total</span>
-          <strong id="global-balance">$5000</strong>
-          <button id="reset-casino" class="btn secondary">Reiniciar saldo</button>
-        </div>
-      </div>
+    <div class="topbar-wallet">
+      <span>Saldo</span>
+      <strong id="global-balance">$5000</strong>
     </div>
 
-    <div class="menu-grid">
-      <button class="menu-card" data-screen="blackjack-screen">
-        <div class="menu-icon">🂡</div>
+    <button id="reset-casino" class="btn secondary topbar-reset">Reiniciar</button>
+
+    <button class="profile-chip" title="Perfil">SW</button>
+  </div>
+</header>
+
+<section id="menu-screen" class="screen active">
+  <div class="menu-minimal">
+    <div class="casino-title-block">
+      <p class="casino-mini-label">ROYAL NEON CASINO</p>
+      <h1>Casino Deluxe</h1>
+    </div>
+
+    <div class="menu-grid modern-grid">
+      <button class="menu-card modern-card card-blackjack" data-screen="blackjack-screen">
+        <div class="modern-icon">🂡</div>
         <h3>Blackjack</h3>
-        <p>Llegá a 21 sin pasarte y ganale al dealer.</p>
+        <p>21 contra el dealer.</p>
+        <span>Entrar →</span>
       </button>
 
-      <button class="menu-card" data-screen="poker-screen">
-        <div class="menu-icon">♠</div>
+      <button class="menu-card modern-card card-poker" data-screen="poker-screen">
+        <div class="modern-icon">♠</div>
         <h3>Poker</h3>
-        <p>Apostá, subí y enfrentate al dealer en una mano completa.</p>
+        <p>Cartas, apuesta y showdown.</p>
+        <span>Entrar →</span>
       </button>
 
-      <button class="menu-card" data-screen="roulette-screen">
-        <div class="menu-icon">🎡</div>
+      <button class="menu-card modern-card card-roulette" data-screen="roulette-screen">
+        <div class="modern-icon">🎡</div>
         <h3>Ruleta</h3>
-        <p>Apostá a números, color, paridad o docenas.</p>
+        <p>Números, color y rangos.</p>
+        <span>Entrar →</span>
       </button>
 
-      <button class="menu-card" data-screen="miner-screen">
-        <div class="menu-icon">💰</div>
+      <button class="menu-card modern-card card-miner" data-screen="miner-screen">
+        <div class="modern-icon">💰</div>
         <h3>Coin Miner</h3>
-        <p>Destapá cartas, evitá bombas y cobrá antes de perder.</p>
+        <p>Monedas o bombas.</p>
+        <span>Entrar →</span>
       </button>
 
-      <button class="menu-card" data-screen="chicken-screen">
-        <div class="menu-icon">🐔</div>
+      <button class="menu-card modern-card card-chicken" data-screen="chicken-screen">
+        <div class="modern-icon">🐔</div>
         <h3>Chicken Road</h3>
-        <p>Cruzá la calle, subí el multiplicador y cobrá antes del choque.</p>
+        <p>Cruzá y cobrá a tiempo.</p>
+        <span>Entrar →</span>
       </button>
 
-      <button class="menu-card" data-screen="plinko-screen">
-        <div class="menu-icon">🔵</div>
+      <button class="menu-card modern-card card-plinko" data-screen="plinko-screen">
+        <div class="modern-icon">🔵</div>
         <h3>Plinko</h3>
-        <p>Soltá bolas, rebotá entre clavijas y ganá según el multiplicador.</p>
+        <p>Soltá bolas y multiplicá.</p>
+        <span>Entrar →</span>
+      </button>
+
+      <button class="menu-card modern-card card-aviator" data-screen="aviator-screen">
+        <div class="modern-icon">✈️</div>
+        <h3>Aviator</h3>
+        <p>Cobrá antes del crash.</p>
+        <span>Entrar →</span>
+      </button>
+
+      <button class="menu-card modern-card card-horse" data-screen="horse-screen">
+        <div class="modern-icon">🏇</div>
+        <h3>Carrera</h3>
+        <p>Apostá al caballo ganador.</p>
+        <span>Entrar →</span>
       </button>
     </div>
   </div>
-  <button class="menu-card" data-screen="aviator-screen">
-  <div class="menu-icon">✈️</div>
-  <h3>Aviator</h3>
-  <p>Apostá, mirá cómo sube el multiplicador y cobrá antes de que el avión desaparezca.</p>
-</button>
+</section>
+
 </section>
     <section id="blackjack-screen" class="screen">
       <div class="top-line">
@@ -773,6 +786,97 @@
           </p>
         </div>
       </aside>
+    </div>
+  </div>
+</section>
+>
+<section id="horse-screen" class="screen">
+  <div class="top-line">
+    <button class="back-btn">← Menú</button>
+    <div>
+      <p class="kicker">Juego</p>
+      <h2>Carrera de Caballos</h2>
+    </div>
+  </div>
+
+  <div class="game-card horse-card">
+    <div class="status-row">
+      <p id="hr-message" class="message">Elegí un caballo, poné fichas y empezá la carrera.</p>
+
+      <div class="bet-box">
+        <span>Apuesta</span>
+        <strong id="hr-bet">$0</strong>
+      </div>
+    </div>
+
+    <div class="horse-layout">
+      <aside class="horse-side">
+        <div class="panel">
+          <h4>Tipo de apuesta</h4>
+
+          <div class="horse-config">
+            <label>
+              <span>Modo</span>
+              <select id="hr-bet-type">
+                <option value="winner" selected>Ganador</option>
+                <option value="podium">Podio / Top 3</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h4>Caballos</h4>
+          <div id="hr-horse-list" class="horse-list"></div>
+        </div>
+
+        <div class="panel">
+          <h4>Fichas</h4>
+
+          <div class="chips">
+            <button class="chip hr-chip c25" data-value="25">$25</button>
+            <button class="chip hr-chip c50" data-value="50">$50</button>
+            <button class="chip hr-chip c100" data-value="100">$100</button>
+            <button class="chip hr-chip c500" data-value="500">$500</button>
+            <button class="chip hr-chip c1000" data-value="1000">$1K</button>
+            <button class="chip hr-chip c5000" data-value="5000">$5K</button>
+            <button class="chip hr-chip allin-chip" data-allin="true">ALL IN</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h4>Acciones</h4>
+
+          <div class="actions">
+            <button id="hr-clear" class="btn secondary">Limpiar</button>
+            <button id="hr-start" class="btn primary">Empezar carrera</button>
+          </div>
+        </div>
+      </aside>
+
+      <div class="horse-track-area">
+        <div class="horse-topbar">
+          <div class="info-pill">
+            <span>Caballo elegido</span>
+            <strong id="hr-selected">Ninguno</strong>
+          </div>
+
+          <div class="info-pill">
+            <span>Último ganador</span>
+            <strong id="hr-last-winner">-</strong>
+          </div>
+
+          <div class="info-pill">
+            <span>Último premio</span>
+            <strong id="hr-last-win">$0</strong>
+          </div>
+        </div>
+
+        <div class="horse-track-wrap">
+          <div class="horse-finish-sign">META</div>
+          <div id="hr-track" class="horse-track"></div>
+        </div>
+      </div>
     </div>
   </div>
 </section>

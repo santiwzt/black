@@ -2631,6 +2631,399 @@ updateAviatorInfo();
 updateAviatorButtons();
 updateAviatorStatus("Esperando");
 renderAviatorGraph();
+/* CARRERA DE CABALLOS */
+const hrHorseTemplates = [
+  { id: 1, name: "Relámpago", odds: 2.0, weight: 30, color: "#dc2626" },
+  { id: 2, name: "Tornado", odds: 2.6, weight: 24, color: "#2563eb" },
+  { id: 3, name: "Trueno", odds: 3.4, weight: 18, color: "#16a34a" },
+  { id: 4, name: "Furia", odds: 4.5, weight: 14, color: "#f97316" },
+  { id: 5, name: "Centella", odds: 6.5, weight: 9, color: "#9333ea" },
+  { id: 6, name: "Fantasma", odds: 10.0, weight: 5, color: "#64748b" }
+];
+
+const hr = {
+  bet: 0,
+  selectedHorse: null,
+  betType: "winner",
+  racing: false,
+  horses: [],
+  winner: null,
+  podium: [],
+  lastPayout: 0
+};
+
+const hrEls = {
+  message: document.getElementById("hr-message"),
+  bet: document.getElementById("hr-bet"),
+  selected: document.getElementById("hr-selected"),
+  lastWinner: document.getElementById("hr-last-winner"),
+  lastWin: document.getElementById("hr-last-win"),
+  horseList: document.getElementById("hr-horse-list"),
+  track: document.getElementById("hr-track"),
+  betType: document.getElementById("hr-bet-type"),
+  chips: document.querySelectorAll(".hr-chip"),
+  clear: document.getElementById("hr-clear"),
+  start: document.getElementById("hr-start")
+};
+
+function hrMoney(value) {
+  let rounded = Number(value.toFixed(2));
+
+  if (Number.isInteger(rounded)) {
+    return "$" + rounded;
+  }
+
+  return "$" + rounded.toFixed(2);
+}
+
+function getHorseById(id) {
+  return hr.horses.find(horse => horse.id === id);
+}
+
+function getHorsePodiumMultiplier(horse) {
+  return Number(Math.max(1.25, horse.odds * 0.42).toFixed(2));
+}
+
+function resetHorsePositions() {
+  hr.horses = hrHorseTemplates.map(horse => ({
+    ...horse,
+    runnerEl: null,
+    areaEl: null
+  }));
+
+  renderHorseRaceBoard();
+}
+
+function renderHorseList() {
+  hrEls.horseList.innerHTML = "";
+
+  hr.horses.forEach(horse => {
+    const button = document.createElement("button");
+    button.className = "horse-option";
+
+    if (hr.selectedHorse === horse.id) {
+      button.classList.add("selected");
+    }
+
+    button.disabled = hr.racing;
+    button.style.setProperty("--horse-color", horse.color);
+
+    button.innerHTML = `
+      <div class="horse-option-top">
+        <span class="horse-name">${horse.name}</span>
+        <span class="horse-number-pill">${horse.id}</span>
+      </div>
+
+      <div class="horse-odds">
+        Ganador: x${horse.odds.toFixed(2)}<br>
+        Podio: x${getHorsePodiumMultiplier(horse).toFixed(2)}
+      </div>
+    `;
+
+    button.addEventListener("click", () => {
+      if (hr.racing) return;
+
+      hr.selectedHorse = horse.id;
+
+      renderHorseList();
+      updateHorseInfo();
+      updateHorseButtons();
+
+      setMessage(hrEls.message, "Elegiste a " + horse.name + ". Ahora poné fichas.");
+    });
+
+    hrEls.horseList.appendChild(button);
+  });
+}
+
+function renderHorseRaceBoard() {
+  hrEls.track.innerHTML = "";
+
+  hr.horses.forEach(horse => {
+    const lane = document.createElement("div");
+    lane.className = "race-lane";
+    lane.style.setProperty("--horse-color", horse.color);
+
+    lane.innerHTML = `
+      <div class="race-lane-label">
+        <strong>${horse.id}</strong>
+      </div>
+
+      <div class="race-lane-area">
+        <div class="race-runner">
+          <div class="runner-body">🏇</div>
+        </div>
+      </div>
+    `;
+
+    const area = lane.querySelector(".race-lane-area");
+    const runner = lane.querySelector(".race-runner");
+
+    horse.areaEl = area;
+    horse.runnerEl = runner;
+
+    hrEls.track.appendChild(lane);
+  });
+}
+
+function updateHorseInfo() {
+  const selectedHorse = getHorseById(hr.selectedHorse);
+
+  hrEls.bet.textContent = hrMoney(hr.bet);
+  hrEls.selected.textContent = selectedHorse ? selectedHorse.name : "Ninguno";
+  hrEls.lastWinner.textContent = hr.winner ? getHorseById(hr.winner)?.name || "-" : "-";
+  hrEls.lastWin.textContent = hrMoney(hr.lastPayout);
+}
+
+function updateHorseButtons() {
+  hrEls.chips.forEach(chip => {
+    const value = chip.dataset.allin === "true"
+      ? balance
+      : Number(chip.dataset.value);
+
+    chip.disabled = hr.racing || !hr.selectedHorse || balance <= 0 || balance < value;
+  });
+
+  hrEls.clear.disabled = hr.racing || hr.bet === 0;
+  hrEls.start.disabled = hr.racing || hr.bet === 0 || !hr.selectedHorse;
+  hrEls.betType.disabled = hr.racing;
+}
+
+function hrPlaceChip(value) {
+  if (hr.racing || !hr.selectedHorse || balance < value || value <= 0) return;
+
+  balance -= value;
+  hr.bet += value;
+
+  updateBalance();
+  updateHorseInfo();
+  updateHorseButtons();
+
+  setMessage(hrEls.message, "Apostaste " + hrMoney(hr.bet) + ".");
+}
+
+function hrClearBet() {
+  if (hr.racing) return;
+
+  balance += hr.bet;
+  hr.bet = 0;
+
+  updateBalance();
+  updateHorseInfo();
+  updateHorseButtons();
+
+  setMessage(hrEls.message, "Apuesta limpiada.");
+}
+
+function weightedPick(horses) {
+  const totalWeight = horses.reduce((sum, horse) => sum + horse.weight, 0);
+  let random = Math.random() * totalWeight;
+
+  for (const horse of horses) {
+    random -= horse.weight;
+
+    if (random <= 0) {
+      return horse;
+    }
+  }
+
+  return horses[horses.length - 1];
+}
+
+function generateHorsePodium() {
+  let available = [...hr.horses];
+  let podium = [];
+
+  for (let i = 0; i < 3; i++) {
+    const picked = weightedPick(available);
+    podium.push(picked.id);
+    available = available.filter(horse => horse.id !== picked.id);
+  }
+
+  const rest = available
+    .sort(() => Math.random() - 0.5)
+    .map(horse => horse.id);
+
+  return [...podium, ...rest];
+}
+
+function easeOutCubic(t) {
+  return 1 - Math.pow(1 - t, 3);
+}
+
+function hrStartRace() {
+  if (hr.racing || hr.bet <= 0 || !hr.selectedHorse) return;
+
+  hr.betType = hrEls.betType.value;
+  hr.racing = true;
+  hr.winner = null;
+  hr.podium = [];
+
+  resetHorsePositions();
+  renderHorseList();
+  updateHorseButtons();
+
+  const ranking = generateHorsePodium();
+  const podium = ranking.slice(0, 3);
+  const winner = ranking[0];
+
+  const selectedHorse = getHorseById(hr.selectedHorse);
+  const totalBet = hr.bet;
+  const selectedId = hr.selectedHorse;
+  const betType = hr.betType;
+
+  setMessage(
+    hrEls.message,
+    "La carrera empezó. Apostaste por " + selectedHorse.name + "."
+  );
+
+  const finishByRank = [100, 95, 91, 86, 82, 78];
+
+  const raceData = hr.horses.map(horse => {
+    const rank = ranking.indexOf(horse.id);
+
+    return {
+      id: horse.id,
+      rank,
+      finish: finishByRank[rank],
+      delay: Math.random() * 0.08,
+      wave: Math.random() * Math.PI * 2,
+      tempo: 8 + Math.random() * 8
+    };
+  });
+
+  let startTime = null;
+  const duration = 6500;
+
+  hr.horses.forEach(horse => {
+    horse.runnerEl.classList.add("running");
+  });
+
+  function animateRace(timestamp) {
+    if (!startTime) startTime = timestamp;
+
+    let t = (timestamp - startTime) / duration;
+    if (t > 1) t = 1;
+
+    raceData.forEach(data => {
+      const horse = getHorseById(data.id);
+
+      let localT = Math.max(0, (t - data.delay) / (1 - data.delay));
+      localT = Math.min(localT, 1);
+
+      let progress = easeOutCubic(localT) * data.finish;
+
+      if (t < 1) {
+        progress += Math.sin(t * data.tempo + data.wave) * 2.2;
+      }
+
+      progress = Math.max(0, Math.min(progress, 100));
+
+      const laneWidth = horse.areaEl.clientWidth - 78;
+      const x = laneWidth * (progress / 100);
+
+      horse.runnerEl.style.transform = `translateY(-50%) translateX(${x}px)`;
+    });
+
+    if (t < 1) {
+      requestAnimationFrame(animateRace);
+    } else {
+      hrFinishRace({
+        winner,
+        podium,
+        ranking,
+        selectedId,
+        betType,
+        totalBet
+      });
+    }
+  }
+
+  requestAnimationFrame(animateRace);
+}
+
+function hrFinishRace(result) {
+  hr.racing = false;
+  hr.winner = result.winner;
+  hr.podium = result.podium;
+
+  hr.horses.forEach(horse => {
+    horse.runnerEl.classList.remove("running");
+
+    if (horse.id === result.winner) {
+      horse.runnerEl.classList.add("winner");
+    }
+  });
+
+  const selectedHorse = getHorseById(result.selectedId);
+  const winnerHorse = getHorseById(result.winner);
+
+  let payout = 0;
+
+  if (result.betType === "winner" && result.selectedId === result.winner) {
+    payout = result.totalBet * selectedHorse.odds;
+  }
+
+  if (result.betType === "podium" && result.podium.includes(result.selectedId)) {
+    payout = result.totalBet * getHorsePodiumMultiplier(selectedHorse);
+  }
+
+  payout = Number(payout.toFixed(2));
+
+  if (payout > 0) {
+    balance = Number((balance + payout).toFixed(2));
+    hr.lastPayout = payout;
+
+    setMessage(
+      hrEls.message,
+      "Ganó " + winnerHorse.name + ". Tu caballo entró. Cobraste " + hrMoney(payout) + ".",
+      "win"
+    );
+  } else {
+    hr.lastPayout = 0;
+
+    setMessage(
+      hrEls.message,
+      "Ganó " + winnerHorse.name + ". Perdiste " + hrMoney(result.totalBet) + ".",
+      "lose"
+    );
+  }
+
+  hr.bet = 0;
+
+  updateBalance();
+  renderHorseList();
+  updateHorseInfo();
+  updateHorseButtons();
+}
+
+hrEls.chips.forEach(chip => {
+  chip.addEventListener("click", () => {
+    const amount = chip.dataset.allin === "true"
+      ? balance
+      : Number(chip.dataset.value);
+
+    hrPlaceChip(amount);
+  });
+});
+
+hrEls.clear.addEventListener("click", hrClearBet);
+hrEls.start.addEventListener("click", hrStartRace);
+
+hrEls.betType.addEventListener("change", () => {
+  hr.betType = hrEls.betType.value;
+
+  if (hr.betType === "winner") {
+    setMessage(hrEls.message, "Modo ganador: cobrás solo si tu caballo sale primero.");
+  } else {
+    setMessage(hrEls.message, "Modo podio: cobrás si tu caballo termina entre los primeros 3.");
+  }
+});
+
+resetHorsePositions();
+renderHorseList();
+updateHorseInfo();
+updateHorseButtons();
 //reset general
 
 resetCasinoBtn.addEventListener("click", () => {
