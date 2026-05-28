@@ -295,20 +295,30 @@ function bjFinish(result) {
 
   if (result === "blackjack") {
     let pay = Math.floor(bj.bet * 2.5);
+    let profit = pay - bj.bet;
     balance += pay;
-    setMessage(bjEls.message, "¡Blackjack! Ganaste $" + (pay - bj.bet), "win");
+    setMessage(bjEls.message, "¡Blackjack! Ganaste $" + profit, "win");
+    setTimeout(() => showWinAnimation("¡BLACKJACK!", profit, "bigwin"), 1000);
   }
 
   if (result === "playerWin") {
     let pay = bj.bet * 2;
+    let profit = bj.bet;
     balance += pay;
     setMessage(bjEls.message, "Ganaste. Cobrás $" + pay, "win");
+    const wType  = profit >= 300 ? "bigwin" : "win";
+    const wTitle = profit >= 300 ? "BIG WIN" : "WIN";
+    setTimeout(() => showWinAnimation(wTitle, profit, wType), 1000);
   }
 
   if (result === "dealerBust") {
     let pay = bj.bet * 2;
+    let profit = bj.bet;
     balance += pay;
     setMessage(bjEls.message, "El dealer se pasó. Ganaste $" + pay, "win");
+    const wType  = profit >= 300 ? "bigwin" : "win";
+    const wTitle = profit >= 300 ? "BIG WIN" : "WIN";
+    setTimeout(() => showWinAnimation(wTitle, profit, wType), 1000);
   }
 
   if (result === "push") {
@@ -317,11 +327,15 @@ function bjFinish(result) {
   }
 
   if (result === "playerBust") {
+    let lost = bj.bet;
     setMessage(bjEls.message, "Te pasaste de 21. Perdiste.", "lose");
+    setTimeout(() => showWinAnimation("GAME OVER", lost, "lose"), 1000);
   }
 
   if (result === "dealerWin") {
+    let lost = bj.bet;
     setMessage(bjEls.message, "Gana el dealer. Perdiste.", "lose");
+    setTimeout(() => showWinAnimation("GAME OVER", lost, "lose"), 1000);
   }
 
   bj.bet = 0;
@@ -669,6 +683,8 @@ function advancePokerStreet() {
 function pkFold() {
   if (pk.phase !== "action") return;
 
+  let pkLost = pk.bet; // capturar antes del reset
+
   pk.phase = "betting";
   pk.revealDealer = true;
 
@@ -682,6 +698,7 @@ function pkFold() {
   updatePokerButtons();
 
   setMessage(pkEls.message, "Te retiraste. Gana el dealer.", "lose");
+  setTimeout(() => showWinAnimation("GAME OVER", Math.round(pkLost), "lose"), 1000);
 }
 
 function dealerPokerAction() {
@@ -754,6 +771,7 @@ function pkWinByDealerFold() {
   pkEls.playerName.textContent = "Ganaste por fold";
 
   let winAmount = pk.pot;
+  let pkProfit  = pk.pot - pk.bet; // capturamos antes del reset
 
   balance += pk.pot;
 
@@ -768,6 +786,10 @@ function pkWinByDealerFold() {
   updatePokerButtons();
 
   setMessage(pkEls.message, "El dealer se retiró. Ganaste " + pokerMoney(winAmount) + ".", "win");
+
+  const pkWType  = pkProfit >= 300 ? "bigwin" : "win";
+  const pkWTitle = pkProfit >= 300 ? "BIG WIN" : "WIN";
+  setTimeout(() => showWinAnimation(pkWTitle, Math.round(pkProfit), pkWType), 1000);
 }
 
 function finishPokerRound() {
@@ -783,15 +805,24 @@ function finishPokerRound() {
   pkEls.playerName.textContent = playerBest.name;
   pkEls.dealerName.textContent = dealerBest.name;
 
+  // capturamos antes del reset de pk.bet / pk.pot
+  let pkPot   = pk.pot;
+  let pkBet   = pk.bet;
+
   renderPoker();
 
   if (result > 0) {
-    balance += pk.pot;
-    setMessage(pkEls.message, "Ganaste con " + playerBest.name + ". Cobrás " + pokerMoney(pk.pot) + ".", "win");
+    let pkProfit = pkPot - pkBet;
+    balance += pkPot;
+    setMessage(pkEls.message, "Ganaste con " + playerBest.name + ". Cobrás " + pokerMoney(pkPot) + ".", "win");
+    const pkWType  = pkProfit >= 300 ? "bigwin" : "win";
+    const pkWTitle = pkProfit >= 300 ? "BIG WIN" : "WIN";
+    setTimeout(() => showWinAnimation(pkWTitle, Math.round(pkProfit), pkWType), 1000);
   } else if (result < 0) {
     setMessage(pkEls.message, "Gana el dealer con " + dealerBest.name + ". Perdiste.", "lose");
+    setTimeout(() => showWinAnimation("GAME OVER", Math.round(pkBet), "lose"), 1000);
   } else {
-    let returned = Math.floor(pk.pot / 2);
+    let returned = Math.floor(pkPot / 2);
     balance += returned;
     setMessage(pkEls.message, "Empate. Recuperás " + pokerMoney(returned) + ".", "push");
   }
@@ -1278,12 +1309,19 @@ function rtSpin() {
         "Salió " + winnerNumber + ". Ganaste: " + wonBets.join(", ") + ". Neto: " + rouletteMoney(net) + ".",
         "win"
       );
+
+      if (net > 0) {
+        const rtWType  = net >= 300 ? "bigwin" : "win";
+        const rtWTitle = net >= 300 ? "BIG WIN" : "WIN";
+        setTimeout(() => showWinAnimation(rtWTitle, Math.round(net), rtWType), 1000);
+      }
     } else {
       setMessage(
         rtEls.message,
         "Salió " + winnerNumber + ". Perdiste " + rouletteMoney(totalBet) + ".",
         "lose"
       );
+      setTimeout(() => showWinAnimation("GAME OVER", Math.round(totalBet), "lose"), 1000);
     }
 
     rt.bets = {};
@@ -1663,12 +1701,14 @@ function cmLose() {
   updateCoinMinerButtons();
 
   setMessage(cmEls.message, "💣 Tocaste bomba. Perdiste " + formatMoney(lost) + ".", "lose");
+  setTimeout(() => showWinAnimation("GAME OVER", Math.round(lost), "lose"), 1000);
 }
 
 function cmCashout(perfect = false) {
   if (!cm.active) return;
 
-  let payout = Number((cm.bet + cm.profit).toFixed(2));
+  let payout  = Number((cm.bet + cm.profit).toFixed(2));
+  let cmProfit = cm.profit; // capturar antes del reset
 
   balance = Number((balance + payout).toFixed(2));
 
@@ -1690,6 +1730,10 @@ function cmCashout(perfect = false) {
   } else {
     setMessage(cmEls.message, "Cobraste " + formatMoney(payout) + ". Bien jugado.", "win");
   }
+
+  const cmWType  = cmProfit >= 300 ? "bigwin" : "win";
+  const cmWTitle = cmProfit >= 300 ? "BIG WIN" : "WIN";
+  setTimeout(() => showWinAnimation(cmWTitle, Math.round(cmProfit), cmWType), 1000);
 }
 
 cmEls.bombsApply.addEventListener("click", applyBombAmount);
@@ -1878,12 +1922,14 @@ function crCrash() {
   updateChickenButtons();
 
   setMessage(crEls.message, "💥 Pasó un auto. Perdiste " + crMoney(lost) + ".", "lose");
+  setTimeout(() => showWinAnimation("GAME OVER", lost, "lose"), 1000);
 }
 
 function crCashout(perfect = false) {
   if (!cr.active) return;
 
-  let payout = crCashValue();
+  let payout  = crCashValue();
+  let crProfit = payout - cr.bet; // capturar antes del reset
 
   balance += payout;
 
@@ -1900,6 +1946,10 @@ function crCashout(perfect = false) {
   } else {
     setMessage(crEls.message, "Cobraste " + crMoney(payout) + ". Te salvaste a tiempo.", "win");
   }
+
+  const crWType  = crProfit >= 300 ? "bigwin" : "win";
+  const crWTitle = crProfit >= 300 ? "BIG WIN" : "WIN";
+  setTimeout(() => showWinAnimation(crWTitle, Math.round(crProfit), crWType), 1000);
 }
 
 crEls.chips.forEach(chip => {
@@ -2287,17 +2337,23 @@ async function plDropBall() {
   updatePlinkoButtons();
 
   if (totalPayout > totalBet) {
+    let plProfit = totalPayout - totalBet;
     setMessage(
       plEls.message,
       "Ganaste. Multiplicador efectivo x" + pl.lastMultiplier.toFixed(2) + ". Cobraste " + plMoney(totalPayout) + ".",
       "win"
     );
+    const plWType  = plProfit >= 300 ? "bigwin" : "win";
+    const plWTitle = plProfit >= 300 ? "BIG WIN" : "WIN";
+    setTimeout(() => showWinAnimation(plWTitle, Math.round(plProfit), plWType), 1000);
   } else if (totalPayout < totalBet) {
+    let plLost = totalBet - totalPayout;
     setMessage(
       plEls.message,
       "Perdiste parte de la apuesta. Multiplicador efectivo x" + pl.lastMultiplier.toFixed(2) + ". Cobraste " + plMoney(totalPayout) + ".",
       "lose"
     );
+    setTimeout(() => showWinAnimation("GAME OVER", Math.round(plLost), "lose"), 1000);
   } else {
     setMessage(
       plEls.message,
@@ -2556,7 +2612,8 @@ function avTick(timestamp) {
 function avCashout() {
   if (!av.active || av.cashedOut) return;
 
-  const payout = Number((av.bet * av.multiplier).toFixed(2));
+  const payout   = Number((av.bet * av.multiplier).toFixed(2));
+  const avProfit = Number((payout - av.bet).toFixed(2)); // capturar antes del reset
 
   balance = Number((balance + payout).toFixed(2));
   av.lastWin = payout;
@@ -2573,9 +2630,15 @@ function avCashout() {
     "Cobraste a " + av.multiplier.toFixed(2) + "x y recibiste " + avMoney(payout) + ".",
     "win"
   );
+
+  const avWType  = avProfit >= 300 ? "bigwin" : "win";
+  const avWTitle = avProfit >= 300 ? "BIG WIN" : "WIN";
+  setTimeout(() => showWinAnimation(avWTitle, Math.round(avProfit), avWType), 1000);
 }
 
 function avFinishCrash() {
+  const avLost = av.bet; // capturar antes del reset (solo se usa si no cobró)
+
   if (av.raf) {
     cancelAnimationFrame(av.raf);
     av.raf = null;
@@ -2589,6 +2652,7 @@ function avFinishCrash() {
   updateAviatorInfo();
 
   if (av.cashedOut) {
+    // La animación de WIN ya fue disparada desde avCashout()
     updateAviatorStatus("Se fue", "crashed");
     setMessage(
       avEls.message,
@@ -2600,9 +2664,10 @@ function avFinishCrash() {
     updateAviatorStatus("Crash", "crashed");
     setMessage(
       avEls.message,
-      "El avión desapareció en " + av.crashAt.toFixed(2) + "x. Perdiste " + avMoney(av.bet) + ".",
+      "El avión desapareció en " + av.crashAt.toFixed(2) + "x. Perdiste " + avMoney(avLost) + ".",
       "lose"
     );
+    setTimeout(() => showWinAnimation("GAME OVER", Math.round(avLost), "lose"), 1000);
   }
 
   av.bet = 0;
@@ -2979,6 +3044,11 @@ function hrFinishRace(result) {
       "Ganó " + winnerHorse.name + ". Tu caballo entró. Cobraste " + hrMoney(payout) + ".",
       "win"
     );
+
+    let hrProfit = payout - result.totalBet;
+    const hrWType  = hrProfit >= 300 ? "bigwin" : "win";
+    const hrWTitle = hrProfit >= 300 ? "BIG WIN" : "WIN";
+    setTimeout(() => showWinAnimation(hrWTitle, Math.round(hrProfit), hrWType), 1000);
   } else {
     hr.lastPayout = 0;
 
@@ -2987,6 +3057,7 @@ function hrFinishRace(result) {
       "Ganó " + winnerHorse.name + ". Perdiste " + hrMoney(result.totalBet) + ".",
       "lose"
     );
+    setTimeout(() => showWinAnimation("GAME OVER", Math.round(result.totalBet), "lose"), 1000);
   }
 
   hr.bet = 0;
@@ -3032,3 +3103,125 @@ resetCasinoBtn.addEventListener("click", () => {
 
 
 });
+
+/* ============================================================
+   WIN CELEBRATION ANIMATION
+   ============================================================ */
+(function () {
+  const overlay   = document.getElementById("win-overlay");
+  const titleEl   = document.getElementById("win-title");
+  const amountEl  = document.getElementById("win-amount");
+  const coinsEl   = document.getElementById("win-coins");
+  const starsEl   = document.getElementById("win-stars");
+  const closeBtn  = document.getElementById("win-close");
+
+  let _autoClose = null;
+
+  /* ---- helpers ---- */
+  function fmtMoney(n) {
+    return n.toLocaleString("es-AR");
+  }
+
+  function rnd(min, max) {
+    return min + Math.random() * (max - min);
+  }
+
+  /* ---- build particles ---- */
+  function spawnCoins(count, extraClass) {
+    coinsEl.innerHTML = "";
+    const SYMBOLS = ["$", "$", "$", "🪙", "$", "$"];
+    for (let i = 0; i < count; i++) {
+      const coin = document.createElement("div");
+      coin.className = "win-coin" + (extraClass ? " " + extraClass : "");
+      coin.textContent = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+
+      const size  = rnd(26, 52);
+      const left  = rnd(2, 97);
+      const delay = rnd(0, 2.8);
+      const dur   = rnd(1.6, 3.4);
+
+      coin.style.cssText = [
+        `left: ${left}%`,
+        `width: ${size}px`,
+        `height: ${size}px`,
+        `font-size: ${Math.floor(size * 0.46)}px`,
+        `animation-duration: ${dur.toFixed(2)}s`,
+        `animation-delay: ${delay.toFixed(2)}s`
+      ].join(";");
+
+      coinsEl.appendChild(coin);
+    }
+  }
+
+  function spawnStars(count, glyphs) {
+    starsEl.innerHTML = "";
+    const GLYPHS = glyphs || ["✨", "⭐", "💫", "🌟", "✨", "💛"];
+    for (let i = 0; i < count; i++) {
+      const star = document.createElement("div");
+      star.className = "win-star";
+      star.textContent = GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+
+      const left  = rnd(5, 92);
+      const top   = rnd(5, 80);
+      const delay = rnd(0, 1.8);
+      const dur   = rnd(0.9, 1.8);
+      const size  = rnd(18, 34);
+
+      star.style.cssText = [
+        `left: ${left}%`,
+        `top: ${top}%`,
+        `font-size: ${size}px`,
+        `animation-duration: ${dur.toFixed(2)}s`,
+        `animation-delay: ${delay.toFixed(2)}s`
+      ].join(";");
+
+      starsEl.appendChild(star);
+    }
+  }
+
+  /* ---- public API ---- */
+  // type: "win" | "bigwin" | "lose"
+  window.showWinAnimation = function (title, amount, type) {
+    type = type || "win";
+
+    titleEl.textContent  = title;
+    amountEl.textContent = (type === "lose" ? "-$" : "+$") + fmtMoney(amount);
+
+    // Apply variant class — reset all first
+    overlay.className = "win-overlay win-overlay--" + type;
+
+    // Spawn particles based on type
+    if (type === "lose") {
+      coinsEl.innerHTML = "";  // sin monedas
+      starsEl.innerHTML = "";  // sin estrellas — más sutil
+    } else if (type === "bigwin") {
+      spawnCoins(42);
+      spawnStars(18);
+    } else {
+      // regular win — fewer particles
+      spawnCoins(20);
+      spawnStars(8);
+    }
+
+    /* reset win-card animation so it replays each time */
+    const card = overlay.querySelector(".win-card");
+    card.style.animation = "none";
+    card.offsetHeight;                  // force reflow
+    card.style.animation = "";
+
+    if (_autoClose) clearTimeout(_autoClose);
+    // lose: más corto y dinámico (1.8s); win/bigwin: 4.5s
+    _autoClose = setTimeout(closeWin, type === "lose" ? 1800 : 4500);
+  };
+
+  function closeWin() {
+    overlay.classList.add("win-overlay--out");
+    if (_autoClose) { clearTimeout(_autoClose); _autoClose = null; }
+    setTimeout(() => overlay.classList.add("win-overlay--hidden"), 420);
+  }
+
+  closeBtn.addEventListener("click", closeWin);
+  overlay.addEventListener("click", function (e) {
+    if (e.target === overlay) closeWin();
+  });
+})();
