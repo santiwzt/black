@@ -1758,44 +1758,8 @@ const cr = {
   bet: 0,
   active: false,
   step: 0,
-  crashedLane: null,
-  signalInterval: null,
-  signalGreen: false,
-  signalTick: 0
+  crashedLane: null
 };
-
-const CR_SIGNAL_TICKS = 50;       // 50 × 50ms = 2.5s por ciclo
-const CR_SIGNAL_GREEN_FROM = 30;  // verde a partir del tick 30 (60 % rojo, 40 % verde)
-const CR_SIGNAL_CARS = ["🚗","🚕","🚙","🏎","🚓"];
-
-function crStartSignal() {
-  crStopSignal();
-  cr.signalInterval = setInterval(() => {
-    cr.signalTick = (cr.signalTick + 1) % CR_SIGNAL_TICKS;
-    let wasGreen = cr.signalGreen;
-    cr.signalGreen = cr.signalTick >= CR_SIGNAL_GREEN_FROM;
-    if (wasGreen !== cr.signalGreen) crUpdateSignal();
-  }, 50);
-}
-
-function crStopSignal() {
-  if (cr.signalInterval) { clearInterval(cr.signalInterval); cr.signalInterval = null; }
-}
-
-function crUpdateSignal() {
-  let lane = crEls.road.children[cr.step];
-  let el = lane && lane.querySelector(".lane-signal");
-  if (!el) return;
-  if (cr.signalGreen) {
-    el.className = "lane-signal green";
-    el.innerHTML = "<span>🟢</span><small>CRUZAR</small>";
-    if (lane) lane.dataset.signal = "green";
-  } else {
-    el.className = "lane-signal red";
-    el.innerHTML = "<span>🔴</span><small>ESPERAR</small>";
-    if (lane) lane.dataset.signal = "red";
-  }
-}
 
 const crMultipliers = [1.20, 1.45, 1.75, 2.10, 2.65, 3.30, 4.20, 5.40, 7.00, 10.00];
 
@@ -1828,18 +1792,6 @@ function crCashValue() {
   return Math.round(cr.bet * crCurrentMultiplier());
 }
 
-function crLaneCarHTML(index) {
-  let carA = CR_SIGNAL_CARS[index % CR_SIGNAL_CARS.length];
-  let carB = CR_SIGNAL_CARS[(index + 2) % CR_SIGNAL_CARS.length];
-  let durA = 2000 + (index * 137) % 1000;
-  let durB = 2300 + (index * 241) % 900;
-  let delA = -((index * 373) % 2800);
-  let delB = -(((index * 373) + 1400) % 2800);
-  return `
-    <div class="lane-moving-car down" style="animation-duration:${durA}ms;animation-delay:${delA}ms">${carA}</div>
-    <div class="lane-moving-car up"   style="animation-duration:${durB}ms;animation-delay:${delB}ms">${carB}</div>`;
-}
-
 function renderChickenRoad() {
   crEls.road.innerHTML = "";
 
@@ -1847,40 +1799,27 @@ function renderChickenRoad() {
     let lane = document.createElement("div");
     lane.className = "road-lane";
 
+    let icon = "🚗";
+
     if (cr.crashedLane === index) {
       lane.classList.add("crash");
-      lane.innerHTML = `
-        <div class="lane-multiplier">x${multi.toFixed(2)}</div>
-        <div class="lane-road-lines"></div>
-        <div class="lane-icon">💥</div>`;
-
+      icon = "💥";
     } else if (index < cr.step) {
       lane.classList.add("safe");
-      lane.innerHTML = `
-        <div class="lane-multiplier">x${multi.toFixed(2)}</div>
-        <div class="lane-road-lines"></div>
-        <div class="lane-icon">✅</div>`;
-
+      icon = "✅";
     } else if (cr.active && index === cr.step) {
       lane.classList.add("current");
-      let sigClass = cr.signalGreen ? "green" : "red";
-      let sigIcon  = cr.signalGreen ? "🟢" : "🔴";
-      let sigText  = cr.signalGreen ? "CRUZAR" : "ESPERAR";
-      lane.dataset.signal = sigClass;
-      lane.innerHTML = `
-        <div class="lane-multiplier">x${multi.toFixed(2)}</div>
-        <div class="lane-road-lines"></div>
-        ${crLaneCarHTML(index)}
-        <div class="lane-signal ${sigClass}"><span>${sigIcon}</span><small>${sigText}</small></div>
-        <div class="lane-icon">🐔</div>`;
-
+      icon = "🐔";
     } else {
       lane.classList.add("car");
-      lane.innerHTML = `
-        <div class="lane-multiplier">x${multi.toFixed(2)}</div>
-        <div class="lane-road-lines"></div>
-        ${crLaneCarHTML(index)}`;
+      icon = "🚗";
     }
+
+    lane.innerHTML = `
+      <div class="lane-multiplier">x${multi.toFixed(2)}</div>
+      <div class="lane-road-lines"></div>
+      <div class="lane-icon">${icon}</div>
+    `;
 
     crEls.road.appendChild(lane);
   });
@@ -1938,28 +1877,20 @@ function crStartGame() {
   cr.active = true;
   cr.step = 0;
   cr.crashedLane = null;
-  cr.signalGreen = false;
-  cr.signalTick = 0;
 
   renderChickenRoad();
   updateChickenButtons();
-  crStartSignal();
 
-  setMessage(crEls.message, "El pollito está listo. Esperá el semáforo verde y tocá Avanzar.");
+  setMessage(crEls.message, "El pollito está listo. Tocá Avanzar para cruzar.");
 }
 
 function crGoForward() {
   if (!cr.active) return;
 
-  let base = crLoseChances[cr.step] || 0.75;
-  let crashChance = cr.signalGreen
-    ? base * 0.45
-    : Math.min(0.97, base * 1.55);
-
+  let crashChance = crLoseChances[cr.step] || 0.75;
   let crashed = Math.random() < crashChance;
 
   if (crashed) {
-    crStopSignal();
     crCrash();
     return;
   }
@@ -1974,15 +1905,13 @@ function crGoForward() {
     return;
   }
 
-  let hint = cr.signalGreen ? "¡Buen timing! " : "Pasaste con suerte. ";
   setMessage(
     crEls.message,
-    hint + "Multiplicador: x" + crCurrentMultiplier().toFixed(2) + ". Seguí o cobrá.",
+    "Cruzaste bien. Multiplicador actual: x" + crCurrentMultiplier().toFixed(2) + ". Podés seguir o cobrar.",
     "win"
   );
 }
 function crCrash() {
-  crStopSignal();
   let lost = cr.bet;
 
   cr.crashedLane = cr.step;
@@ -1998,7 +1927,6 @@ function crCrash() {
 
 function crCashout(perfect = false) {
   if (!cr.active) return;
-  crStopSignal();
 
   let payout  = crCashValue();
   let crProfit = payout - cr.bet; // capturar antes del reset
