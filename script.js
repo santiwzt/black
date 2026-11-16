@@ -753,6 +753,7 @@ function updateBalance() {
   saveBalanceTimer = setTimeout(saveBalance, 250);
 
   if (typeof renderBankrolls === "function") renderBankrolls();
+  if (typeof refreshAllButtons === "function") refreshAllButtons();
 }
 
 function walletTick(dt, now) {
@@ -3161,8 +3162,9 @@ const rt = {
     idleSpeed: 0.22,
     ballAngle: 0,
     ballRadius: 0,
-    ballVisible: false,
+    ballVisible: true,
     winnerIndex: -1,
+    restIndex: Math.floor(Math.random() * 37),
     spin: null,
     layers: null,
     size: 0,
@@ -3865,7 +3867,9 @@ function rouletteTick(dt, now) {
     }
   } else {
     W.rotor += W.idleSpeed * dt;
-    if (W.winnerIndex >= 0) W.ballAngle = W.rotor + W.winnerIndex * RT_SEG;
+    const restAt = W.winnerIndex >= 0 ? W.winnerIndex : W.restIndex;
+    W.ballAngle = W.rotor + restAt * RT_SEG;
+    W.ballRadius = (W.size || 400) / 2 * 0.97 * 0.6;
   }
 
   if (currentScreen === "roulette-screen") drawRouletteWheel(now);
@@ -4089,7 +4093,8 @@ function rtReset() {
   rt.spinning = false;
   rt.wheel.spin = null;
   rt.wheel.winnerIndex = -1;
-  rt.wheel.ballVisible = false;
+  rt.wheel.ballVisible = true;
+  rt.wheel.restIndex = Math.floor(Math.random() * 37);
   Sound.stopRoll();
   rtEls.result.textContent = "?";
   rtEls.resultChip.className = "wheel-center";
@@ -7907,7 +7912,10 @@ function resetCasino() {
   Sound.stopAllLoops();
   FX.clear();
 
-  /* 2) cada juego vuelve a un estado consistente, sin apuestas en curso */
+  /* 2) saldo ficticio inicial, antes de recalcular los botones de cada juego */
+  balance = INITIAL_BALANCE;
+
+  /* 3) cada juego vuelve a un estado consistente, sin apuestas en curso */
   bjReset();
   pkReset();
   rtReset();
@@ -7919,8 +7927,6 @@ function resetCasino() {
   bcReset();
   slReset();
 
-  /* 3) saldo ficticio inicial */
-  balance = INITIAL_BALANCE;
   updateBalance();
   saveBalance();
 
