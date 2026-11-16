@@ -4010,9 +4010,9 @@ input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; border-radius
 @media (max-width: 700px) {
   .hero-side { flex-direction: column; }
   .hero-emblem { width: 120px; }
-  .bonus-text { display: none; }
-  .bonus-pill { width: 38px; height: 38px; padding: 0; justify-content: center; border-radius: 12px; }
+  .bonus-pill { height: 38px; padding: 0 9px 0 5px; gap: 5px; border-radius: 12px; }
   .bonus-ring { width: 26px; height: 26px; }
+  .bonus-text strong { font-size: 13px; min-width: 32px; }
   .bankroll { position: static; margin: 14px auto 0; align-items: center; width: fit-content; }
   .poker-table .bankroll { margin-top: 6px; }
   .bj-table .bankroll { margin-top: 20px; }
@@ -4999,4 +4999,34 @@ body.auth-open { overflow: hidden; }
   }
   .quick-bet .diamond { width: 13px; height: 13px; }
   .bet-chip { width: 26px; height: 26px; margin: -13px 0 0 -13px; font-size: 8px; }
+}
+
+
+/* bono en celulares chicos: se mantiene visible el tiempo que falta */
+@media (max-width: 380px) {
+  .topbar-right { gap: 4px; }
+  .topbar-icon, .profile-chip { width: 34px; height: 34px; }
+  .bonus-pill { height: 34px; padding: 0 7px 0 4px; }
+  .bonus-ring { width: 22px; height: 22px; }
+  .bonus-ring::after { font-size: 10px; }
+  .bonus-text strong { font-size: 12px; min-width: 29px; }
+  .topbar-wallet { padding: 3px 8px; }
+  #global-balance { font-size: 14px; }
+  .brand-mark img { width: 34px; height: 34px; }
+}
+@media (max-width: 700px) {
+  .casino-topbar { grid-template-columns: auto minmax(0, 1fr); }
+  .topbar-left, .brand, .brand-mark { flex-shrink: 0; }
+  .topbar-right { min-width: 0; }
+  .topbar-wallet { min-width: 0; flex-shrink: 1; }
+  #global-balance { white-space: nowrap; }
+}
+@media (max-width: 340px) {
+  .casino-topbar { gap: 6px; padding-left: 8px; padding-right: 8px; }
+  .topbar-icon, .profile-chip { width: 32px; height: 32px; }
+  .topbar-icon svg { width: 17px; height: 17px; }
+  .bonus-pill { height: 32px; gap: 3px; padding: 0 6px 0 4px; }
+  .bonus-ring { width: 20px; height: 20px; }
+  #global-balance { font-size: 12.5px; }
+  .brand-mark img { width: 32px; height: 32px; }
 }
