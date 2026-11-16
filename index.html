@@ -3,147 +3,373 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Royal Neon Casino — simulación recreativa con dinero ficticio." />
+  <meta name="theme-color" content="#07060d" />
   <title>Royal Neon Casino</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400..900;1,14..32,400..900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <main class="app">
-   <header class="casino-topbar">
-  <div class="topbar-left">
-    <div class="brand-mark">RN</div>
-    <div class="brand-text">
-      <span>Royal Neon</span>
-      <strong>Casino</strong>
-    </div>
+  <!-- Fondo ambiental -->
+  <div class="ambient" aria-hidden="true">
+    <div class="ambient-orb orb-a"></div>
+    <div class="ambient-orb orb-b"></div>
+    <div class="ambient-orb orb-c"></div>
+    <div class="ambient-grid"></div>
   </div>
 
-  <div class="topbar-right">
-    <button class="topbar-icon" title="Buscar">🔍</button>
-    <button class="topbar-icon" title="Música">🎵</button>
-    <button class="topbar-icon" title="Opciones">⚙️</button>
+  <a class="skip-link" href="#menu-screen">Saltar al lobby</a>
 
-    <div class="topbar-wallet">
-      <span>Saldo</span>
-      <strong id="global-balance">$5000</strong>
-    </div>
-
-    <button id="reset-casino" class="btn secondary topbar-reset">Reiniciar</button>
-
-    <button class="profile-chip" title="Perfil">SW</button>
-  </div>
-</header>
-
-<section id="menu-screen" class="screen active">
-  <div class="menu-minimal">
-    <div class="casino-title-block">
-      <p class="casino-mini-label">ROYAL NEON CASINO</p>
-      <h1>Casino Deluxe</h1>
-    </div>
-
-    <div class="menu-grid modern-grid">
-      <button class="menu-card modern-card card-blackjack" data-screen="blackjack-screen">
-        <div class="modern-icon">🂡</div>
-        <h3>Blackjack</h3>
-        <p>21 contra el dealer.</p>
-        <span>Entrar →</span>
-      </button>
-
-      <button class="menu-card modern-card card-poker" data-screen="poker-screen">
-        <div class="modern-icon">♠</div>
-        <h3>Poker</h3>
-        <p>Cartas, apuesta y showdown.</p>
-        <span>Entrar →</span>
-      </button>
-
-      <button class="menu-card modern-card card-roulette" data-screen="roulette-screen">
-        <div class="modern-icon">🎡</div>
-        <h3>Ruleta</h3>
-        <p>Números, color y rangos.</p>
-        <span>Entrar →</span>
-      </button>
-
-      <button class="menu-card modern-card card-miner" data-screen="miner-screen">
-        <div class="modern-icon">💰</div>
-        <h3>Coin Miner</h3>
-        <p>Monedas o bombas.</p>
-        <span>Entrar →</span>
-      </button>
-
-      <button class="menu-card modern-card card-chicken" data-screen="chicken-screen">
-        <div class="modern-icon">🐔</div>
-        <h3>Chicken Road</h3>
-        <p>Cruzá y cobrá a tiempo.</p>
-        <span>Entrar →</span>
-      </button>
-
-      <button class="menu-card modern-card card-plinko" data-screen="plinko-screen">
-        <div class="modern-icon">🔵</div>
-        <h3>Plinko</h3>
-        <p>Soltá bolas y multiplicá.</p>
-        <span>Entrar →</span>
-      </button>
-
-      <button class="menu-card modern-card card-aviator" data-screen="aviator-screen">
-        <di1v class="modern-icon">✈️</di1v>
-        <h3>Aviator</h3>
-        <p>Cobrá antes del crash.</p>
-        <span>Entrar →</span>
-      </button>
-
-      <button class="menu-card modern-card card-horse" data-screen="horse-screen">
-        <div class="modern-icon">🏇</div>
-        <h3>Carrera</h3>
-        <p>Apostá al caballo ganador.</p>
-        <span>Entrar →</span>
+  <!-- ===================== BARRA SUPERIOR ===================== -->
+  <header class="casino-topbar">
+    <div class="topbar-left">
+      <button class="brand" id="brand-home" aria-label="Ir al lobby">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 48 48" width="40" height="40">
+            <defs>
+              <linearGradient id="brandGold" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#fff1c4"/>
+                <stop offset=".45" stop-color="#e7b85a"/>
+                <stop offset="1" stop-color="#8a5a1c"/>
+              </linearGradient>
+            </defs>
+            <path d="M24 3 L44 14 V34 L24 45 L4 34 V14 Z" fill="none" stroke="url(#brandGold)" stroke-width="2.4"/>
+            <path d="M12 30 L14 18 L19.5 24 L24 15 L28.5 24 L34 18 L36 30 Z" fill="url(#brandGold)"/>
+            <rect x="12" y="32" width="24" height="3.4" rx="1.7" fill="url(#brandGold)"/>
+            <circle cx="24" cy="12.6" r="2" fill="#ff3d9a"/>
+          </svg>
+        </span>
+        <span class="brand-text">
+          <span>Royal Neon</span>
+          <strong>Casino</strong>
+        </span>
       </button>
     </div>
-  </div>
-</section>
-    <section id="blackjack-screen" class="screen">
-      <div class="top-line">
-        <button class="back-btn">← Menú</button>
-        <div>
-          <p class="kicker">Juego</p>
-          <h2>Blackjack</h2>
-        </div>
+
+    <div class="topbar-search" role="search">
+      <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20 L16.2 16.2"/></svg>
+      <input id="game-search" type="search" placeholder="Buscar juegos…" autocomplete="off" aria-label="Buscar juegos" />
+      <kbd class="search-kbd" aria-hidden="true">/</kbd>
+    </div>
+
+    <div class="topbar-right">
+      <button class="topbar-icon" id="sound-toggle" title="Efectos de sonido" aria-label="Activar o desactivar efectos" aria-pressed="true">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path class="ico-fill" d="M4 9h4l5-4v14l-5-4H4z"/><path class="ico-wave" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/><path class="ico-mute" d="M16 9l6 6M22 9l-6 6"/></svg>
+      </button>
+      <button class="topbar-icon" id="music-toggle" title="Música ambiental" aria-label="Activar o desactivar música" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle class="ico-fill" cx="6" cy="18" r="3"/><circle class="ico-fill" cx="17" cy="16" r="3"/></svg>
+      </button>
+      <button class="topbar-icon" id="settings-open" title="Configuración" aria-label="Abrir configuración">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>
+      </button>
+
+      <div class="topbar-wallet" id="wallet" aria-live="polite">
+        <span class="wallet-label">Saldo ficticio</span>
+        <strong id="global-balance">$5000</strong>
+        <span class="wallet-delta" id="wallet-delta" aria-hidden="true"></span>
       </div>
 
-      <div class="game-card">
+      <button id="reset-casino" class="btn secondary topbar-reset" title="Reiniciar saldo ficticio a $5000">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/></svg>
+        <span>Reiniciar</span>
+      </button>
+
+      <button class="profile-chip" id="profile-btn" title="Perfil" aria-label="Abrir perfil">
+        <span id="profile-initials">SW</span>
+        <img id="profile-avatar" alt="" hidden />
+      </button>
+    </div>
+  </header>
+
+  <main class="app" id="app">
+
+    <!-- ===================== LOBBY ===================== -->
+    <section id="menu-screen" class="screen active" aria-label="Lobby">
+      <div class="menu-minimal">
+
+        <div class="casino-title-block hero">
+          <canvas id="hero-canvas" class="hero-canvas" aria-hidden="true"></canvas>
+          <p class="casino-mini-label">Simulación recreativa · Dinero ficticio</p>
+          <div class="hero-sign" aria-label="Royal Neon">
+            <span class="sign-word sign-royal" data-text="ROYAL">ROYAL</span>
+            <span class="sign-word sign-neon" data-text="NEON">NEON</span>
+          </div>
+          <h1>Casino Deluxe</h1>
+          <div class="hero-meta">
+            <div class="hero-stat"><span>Juegos</span><strong>8</strong></div>
+            <div class="hero-stat"><span>Rondas jugadas</span><strong id="hero-rounds">0</strong></div>
+            <div class="hero-stat"><span>Mejor premio</span><strong id="hero-best">$0</strong></div>
+            <button class="btn primary hero-continue" id="hero-continue" hidden>
+              <span>Seguir jugando</span>
+              <strong id="hero-continue-name"></strong>
+            </button>
+          </div>
+        </div>
+
+        <div class="lobby-bar">
+          <div class="filter-tabs" role="tablist" aria-label="Filtrar juegos">
+            <button class="filter-tab active" data-filter="all" role="tab" aria-selected="true">Todos</button>
+            <button class="filter-tab" data-filter="fav" role="tab" aria-selected="false">★ Favoritos</button>
+            <button class="filter-tab" data-filter="cartas" role="tab" aria-selected="false">Cartas</button>
+            <button class="filter-tab" data-filter="mesa" role="tab" aria-selected="false">Mesa y carreras</button>
+            <button class="filter-tab" data-filter="arcade" role="tab" aria-selected="false">Arcade</button>
+          </div>
+          <p class="lobby-count" id="lobby-count">8 juegos</p>
+        </div>
+
+        <div class="menu-grid modern-grid" id="menu-grid">
+
+          <article class="menu-card card-blackjack" data-screen="blackjack-screen" data-game="blackjack" data-cat="cartas" data-name="Blackjack" data-tags="21 cartas dealer mesa" tabindex="0" role="button" aria-label="Jugar Blackjack">
+            <button class="fav-btn" data-fav="blackjack" aria-label="Favorito: Blackjack" aria-pressed="false">★</button>
+            <div class="tile-art art-blackjack" aria-hidden="true">
+              <div class="art-felt"></div>
+              <div class="mini-card mc-1"><b>A</b><i>♠</i></div>
+              <div class="mini-card mc-2 red"><b>K</b><i>♥</i></div>
+              <div class="mini-card mc-3"><b>10</b><i>♣</i></div>
+              <div class="mini-chip mchip-a"></div>
+              <div class="mini-chip mchip-b"></div>
+            </div>
+            <div class="tile-info">
+              <span class="tile-tag">Cartas</span>
+              <h3>Blackjack</h3>
+              <p>21 contra el dealer. Blackjack paga 3:2.</p>
+              <span class="tile-cta">Jugar <i>→</i></span>
+            </div>
+          </article>
+
+          <article class="menu-card card-poker" data-screen="poker-screen" data-game="poker" data-cat="cartas" data-name="Poker Texas Hold'em" data-tags="poker holdem cartas flop river" tabindex="0" role="button" aria-label="Jugar Poker">
+            <button class="fav-btn" data-fav="poker" aria-label="Favorito: Poker" aria-pressed="false">★</button>
+            <div class="tile-art art-poker" aria-hidden="true">
+              <div class="art-felt"></div>
+              <div class="poker-stack ps-1"><i></i><i></i><i></i><i></i></div>
+              <div class="poker-stack ps-2"><i></i><i></i><i></i></div>
+              <div class="mini-card mc-p1 red"><b>A</b><i>♦</i></div>
+              <div class="mini-card mc-p2"><b>A</b><i>♠</i></div>
+            </div>
+            <div class="tile-info">
+              <span class="tile-tag">Cartas</span>
+              <h3>Poker</h3>
+              <p>Texas Hold'em: flop, turn, river y showdown.</p>
+              <span class="tile-cta">Jugar <i>→</i></span>
+            </div>
+          </article>
+
+          <article class="menu-card card-roulette tile-wide" data-screen="roulette-screen" data-game="roulette" data-cat="mesa" data-name="Ruleta Deluxe" data-tags="ruleta numeros rojo negro docena" tabindex="0" role="button" aria-label="Jugar Ruleta">
+            <button class="fav-btn" data-fav="roulette" aria-label="Favorito: Ruleta" aria-pressed="false">★</button>
+            <div class="tile-art art-roulette" aria-hidden="true">
+              <div class="rw-glow"></div>
+              <div class="rw-wheel"><div class="rw-inner"></div></div>
+              <div class="rw-ball-orbit"><span class="rw-ball"></span></div>
+            </div>
+            <div class="tile-info">
+              <span class="tile-tag">Mesa</span>
+              <h3>Ruleta</h3>
+              <p>Números, colores y docenas. Apuestas múltiples.</p>
+              <span class="tile-cta">Jugar <i>→</i></span>
+            </div>
+          </article>
+
+          <article class="menu-card card-miner" data-screen="miner-screen" data-game="miner" data-cat="arcade" data-name="Coin Miner" data-tags="minas bombas monedas mines" tabindex="0" role="button" aria-label="Jugar Coin Miner">
+            <button class="fav-btn" data-fav="miner" aria-label="Favorito: Coin Miner" aria-pressed="false">★</button>
+            <div class="tile-art art-miner" aria-hidden="true">
+              <div class="mine-grid">
+                <i></i><i class="coin"></i><i></i>
+                <i></i><i></i><i class="coin"></i>
+                <i class="coin"></i><i></i><i class="bomb"></i>
+              </div>
+            </div>
+            <div class="tile-info">
+              <span class="tile-tag">Arcade</span>
+              <h3>Coin Miner</h3>
+              <p>Monedas o bombas. Cobrá cuando quieras.</p>
+              <span class="tile-cta">Jugar <i>→</i></span>
+            </div>
+          </article>
+
+          <article class="menu-card card-chicken tile-wide" data-screen="chicken-screen" data-game="chicken" data-cat="arcade" data-name="Chicken Road" data-tags="pollo calle autos cruzar" tabindex="0" role="button" aria-label="Jugar Chicken Road">
+            <button class="fav-btn" data-fav="chicken" aria-label="Favorito: Chicken Road" aria-pressed="false">★</button>
+            <div class="tile-art art-chicken" aria-hidden="true">
+              <div class="cr-lanes"><i></i><i></i><i></i><i></i></div>
+              <div class="cr-car car-a"></div>
+              <div class="cr-car car-b"></div>
+              <svg class="cr-chick" viewBox="0 0 64 64">
+                <ellipse cx="32" cy="60" rx="14" ry="3" fill="rgba(0,0,0,.35)"/>
+                <path d="M26 50 l-2 8 M38 50 l2 8" stroke="#ff9f1c" stroke-width="3" stroke-linecap="round"/>
+                <ellipse cx="32" cy="38" rx="16" ry="15" fill="#fff8ec"/>
+                <path d="M20 38 q-6 -2 -4 6 q4 2 6 -2z" fill="#f1e2c6"/>
+                <circle cx="35" cy="22" r="10" fill="#fffaf2"/>
+                <path d="M31 12 q2 -6 5 -1 q3 -5 5 1 q-4 2 -10 0z" fill="#ff3b4e"/>
+                <path d="M44 22 l7 2.5 -7 2.5z" fill="#ffb21c"/>
+                <circle cx="38.5" cy="20.5" r="1.8" fill="#1a1325"/>
+                <path d="M41 28 q2 5 -1 6 q-2 -3 1 -6z" fill="#ff3b4e"/>
+              </svg>
+            </div>
+            <div class="tile-info">
+              <span class="tile-tag">Arcade</span>
+              <h3>Chicken Road</h3>
+              <p>Cruzá carriles y cobrá a tiempo.</p>
+              <span class="tile-cta">Jugar <i>→</i></span>
+            </div>
+          </article>
+
+          <article class="menu-card card-plinko" data-screen="plinko-screen" data-game="plinko" data-cat="arcade" data-name="Plinko" data-tags="bolas clavos multiplicador plinko" tabindex="0" role="button" aria-label="Jugar Plinko">
+            <button class="fav-btn" data-fav="plinko" aria-label="Favorito: Plinko" aria-pressed="false">★</button>
+            <div class="tile-art art-plinko" aria-hidden="true">
+              <svg viewBox="0 0 160 120" class="pk-pegs">
+                <g fill="#e9d8ff">
+                  <circle cx="80" cy="18" r="2.6"/>
+                  <circle cx="68" cy="34" r="2.6"/><circle cx="92" cy="34" r="2.6"/>
+                  <circle cx="56" cy="50" r="2.6"/><circle cx="80" cy="50" r="2.6"/><circle cx="104" cy="50" r="2.6"/>
+                  <circle cx="44" cy="66" r="2.6"/><circle cx="68" cy="66" r="2.6"/><circle cx="92" cy="66" r="2.6"/><circle cx="116" cy="66" r="2.6"/>
+                  <circle cx="32" cy="82" r="2.6"/><circle cx="56" cy="82" r="2.6"/><circle cx="80" cy="82" r="2.6"/><circle cx="104" cy="82" r="2.6"/><circle cx="128" cy="82" r="2.6"/>
+                </g>
+                <g class="pk-slots">
+                  <rect x="22" y="96" width="20" height="12" rx="3" fill="#ff3d9a"/>
+                  <rect x="46" y="96" width="20" height="12" rx="3" fill="#a855f7"/>
+                  <rect x="70" y="96" width="20" height="12" rx="3" fill="#6366f1"/>
+                  <rect x="94" y="96" width="20" height="12" rx="3" fill="#a855f7"/>
+                  <rect x="118" y="96" width="20" height="12" rx="3" fill="#ff3d9a"/>
+                </g>
+              </svg>
+              <span class="pk-ball"></span>
+            </div>
+            <div class="tile-info">
+              <span class="tile-tag">Arcade</span>
+              <h3>Plinko</h3>
+              <p>Soltá hasta 20 bolas y multiplicá.</p>
+              <span class="tile-cta">Jugar <i>→</i></span>
+            </div>
+          </article>
+
+          <article class="menu-card card-aviator tile-wide" data-screen="aviator-screen" data-game="aviator" data-cat="arcade" data-name="Aviator" data-tags="avion crash cobrar multiplicador" tabindex="0" role="button" aria-label="Jugar Aviator">
+            <button class="fav-btn" data-fav="aviator" aria-label="Favorito: Aviator" aria-pressed="false">★</button>
+            <div class="tile-art art-aviator" aria-hidden="true">
+              <div class="av-stars"></div>
+              <svg viewBox="0 0 300 140" preserveAspectRatio="none" class="av-curve">
+                <defs>
+                  <linearGradient id="tileAvFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="rgba(255,61,90,.55)"/>
+                    <stop offset="1" stop-color="rgba(255,61,90,0)"/>
+                  </linearGradient>
+                </defs>
+                <path d="M10 130 C 120 128, 200 100, 290 18 L290 140 L10 140 Z" fill="url(#tileAvFill)"/>
+                <path d="M10 130 C 120 128, 200 100, 290 18" fill="none" stroke="#ff3d5a" stroke-width="3.5" stroke-linecap="round"/>
+              </svg>
+              <svg class="av-plane-ico" viewBox="0 0 64 32">
+                <path d="M6 17 L40 13 Q52 12 58 16 Q52 20 40 19 Z" fill="#ff3d5a"/>
+                <path d="M26 15 L18 3 L24 3 L36 14 Z" fill="#ffd2d9"/>
+                <path d="M26 18 L18 29 L24 29 L36 18 Z" fill="#c2183a"/>
+                <path d="M8 16 L3 8 L8 8 L14 15 Z" fill="#ffd2d9"/>
+                <circle cx="49" cy="15.5" r="2" fill="#2de2e6"/>
+              </svg>
+              <span class="av-mult">2.48x</span>
+            </div>
+            <div class="tile-info">
+              <span class="tile-tag">Crash</span>
+              <h3>Aviator</h3>
+              <p>El multiplicador sube. Cobrá antes del crash.</p>
+              <span class="tile-cta">Jugar <i>→</i></span>
+            </div>
+          </article>
+
+          <article class="menu-card card-horse tile-wide" data-screen="horse-screen" data-game="horse" data-cat="mesa" data-name="Carrera de Caballos" data-tags="caballos carrera podio hipodromo" tabindex="0" role="button" aria-label="Jugar Carrera de Caballos">
+            <button class="fav-btn" data-fav="horse" aria-label="Favorito: Carrera" aria-pressed="false">★</button>
+            <div class="tile-art art-horse" aria-hidden="true">
+              <div class="hz-sun"></div>
+              <div class="hz-rail"></div>
+              <svg class="hz-horse" viewBox="0 0 120 80">
+                <path d="M18 40 Q20 28 40 28 L70 26 Q80 14 92 10 L100 8 Q104 12 100 16 L94 22 Q92 30 86 34 L80 44 Q74 50 60 50 L40 50 Q26 52 18 40 Z" fill="#2a1a12"/>
+                <path d="M18 40 Q8 38 4 48 Q12 44 20 46 Z" fill="#1a0f0a"/>
+                <g class="hz-legs" stroke="#2a1a12" stroke-width="5" stroke-linecap="round" fill="none">
+                  <path class="leg l1" d="M30 48 L22 62 L26 74"/>
+                  <path class="leg l2" d="M40 48 L44 62 L38 74"/>
+                  <path class="leg l3" d="M66 46 L76 58 L84 66"/>
+                  <path class="leg l4" d="M74 44 L70 60 L76 72"/>
+                </g>
+                <path d="M52 26 Q56 14 64 12 Q68 16 64 22 L60 28 Z" fill="#ff3d9a"/>
+                <circle cx="62" cy="10" r="5" fill="#ffd166"/>
+              </svg>
+              <div class="hz-dust"></div>
+            </div>
+            <div class="tile-info">
+              <span class="tile-tag">Carreras</span>
+              <h3>Carrera</h3>
+              <p>Apostá a ganador o al podio.</p>
+              <span class="tile-cta">Jugar <i>→</i></span>
+            </div>
+          </article>
+        </div>
+
+        <p class="lobby-empty" id="lobby-empty" hidden>No hay juegos que coincidan con tu búsqueda.</p>
+        <p class="lobby-footnote">Royal Neon es una simulación recreativa: el saldo es ficticio, no hay depósitos ni retiros de dinero real.</p>
+      </div>
+    </section>
+
+    <!-- ===================== BLACKJACK ===================== -->
+    <section id="blackjack-screen" class="screen game-screen theme-blackjack" data-game="blackjack" aria-label="Blackjack">
+      <div class="top-line">
+        <button class="back-btn"><span aria-hidden="true">←</span> Lobby</button>
+        <div class="game-title">
+          <p class="kicker">Cartas</p>
+          <h2>Blackjack</h2>
+        </div>
+        <nav class="game-switcher" aria-label="Cambiar de juego"></nav>
+      </div>
+
+      <div class="game-card bj-card">
         <div class="status-row">
-          <p id="bj-message" class="message">Elegí fichas y tocá Repartir.</p>
+          <p id="bj-message" class="message" aria-live="polite">Elegí fichas y tocá Repartir.</p>
           <div class="bet-box">
             <span>Apuesta</span>
             <strong id="bj-bet">$0</strong>
           </div>
         </div>
 
-        <div class="table">
-          <div class="hand-head">
-            <h3>Dealer</h3>
-            <p>Puntos: <span id="bj-dealer-score">0</span></p>
+        <div class="table felt-table bj-table" id="bj-table">
+          <div class="felt-print" aria-hidden="true">
+            <span>BLACKJACK PAGA 3 A 2</span>
+            <small>El dealer se planta en 17</small>
           </div>
-          <div id="bj-dealer-cards" class="cards"></div>
+
+          <div class="shoe" id="bj-shoe" aria-hidden="true"><div class="shoe-card"></div><div class="shoe-card"></div><div class="shoe-card"></div></div>
+
+          <div class="hand-zone hand-dealer">
+            <div class="hand-head">
+              <h3>Dealer</h3>
+              <p class="score-badge">Puntos: <span id="bj-dealer-score">0</span></p>
+            </div>
+            <div id="bj-dealer-cards" class="cards"></div>
+          </div>
 
           <div class="divider"></div>
 
-          <div class="hand-head">
-            <h3>Jugador</h3>
-            <p>Puntos: <span id="bj-player-score">0</span></p>
+          <div class="hand-zone hand-player">
+            <div id="bj-player-cards" class="cards"></div>
+            <div class="hand-head">
+              <h3>Jugador</h3>
+              <p class="score-badge">Puntos: <span id="bj-player-score">0</span></p>
+            </div>
           </div>
-          <div id="bj-player-cards" class="cards"></div>
+
+          <div class="bet-spot" id="bj-bet-spot" aria-hidden="true">
+            <div class="chip-stack" id="bj-stack"></div>
+            <span class="bet-spot-ring"></span>
+          </div>
         </div>
 
         <div class="controls">
           <div class="panel">
             <h4>Fichas</h4>
             <div class="chips">
-              <button class="chip bj-chip c25" data-value="25">$25</button>
-              <button class="chip bj-chip c50" data-value="50">$50</button>
-              <button class="chip bj-chip c100" data-value="100">$100</button>
-              <button class="chip bj-chip c500" data-value="500">$500</button>
+              <button class="chip bj-chip c25" data-value="25"><span>$25</span></button>
+              <button class="chip bj-chip c50" data-value="50"><span>$50</span></button>
+              <button class="chip bj-chip c100" data-value="100"><span>$100</span></button>
+              <button class="chip bj-chip c500" data-value="500"><span>$500</span></button>
+              <button class="chip bj-chip c1000" data-value="1000"><span>$1K</span></button>
+              <button class="chip bj-chip c5000" data-value="5000"><span>$5K</span></button>
+              <button class="chip bj-chip allin-chip" data-allin="true"><span>ALL IN</span></button>
             </div>
           </div>
 
@@ -158,719 +384,915 @@
             </div>
           </div>
         </div>
+
+        <details class="rules-card inline-rules">
+          <summary>Reglas del Blackjack</summary>
+          <p>Sumá lo más cerca posible de 21 sin pasarte. Figuras valen 10 y el As vale 1 u 11. El dealer pide hasta 16 y se planta en 17. Blackjack natural paga 3 a 2, una mano ganadora paga 1 a 1 y el empate devuelve la apuesta. Doblar duplica la apuesta y recibís exactamente una carta más.</p>
+        </details>
       </div>
     </section>
 
-   <section id="poker-screen" class="screen">
-  <div class="top-line">
-    <button class="back-btn">← Menú</button>
-    <div>
-      <p class="kicker">Juego</p>
-      <h2>Poker Texas Hold'em</h2>
-    </div>
-  </div>
-
-  <div class="poker-layout">
-    <div class="game-card">
-      <div class="status-row">
-        <p id="pk-message" class="message">Elegí fichas y tocá Repartir mano.</p>
-        <div class="bet-box">
-          <span>Tu apuesta</span>
-          <strong id="pk-bet">$0</strong>
+    <!-- ===================== POKER ===================== -->
+    <section id="poker-screen" class="screen game-screen theme-poker" data-game="poker" aria-label="Poker Texas Hold'em">
+      <div class="top-line">
+        <button class="back-btn"><span aria-hidden="true">←</span> Lobby</button>
+        <div class="game-title">
+          <p class="kicker">Cartas</p>
+          <h2>Poker Texas Hold'em</h2>
         </div>
+        <nav class="game-switcher" aria-label="Cambiar de juego"></nav>
       </div>
 
-     <div class="poker-info-row">
-  <div class="info-pill">
-    <span>Pozo</span>
-    <strong id="pk-pot">$0</strong>
-  </div>
-
-  <div class="info-pill">
-    <span>Apuesta dealer</span>
-    <strong id="pk-dealer-bet">$0</strong>
-  </div>
-
-  <div class="info-pill">
-    <span>Etapa</span>
-    <strong id="pk-stage">Esperando apuesta</strong>
-  </div>
-</div>
-
-      <div class="table poker-table">
-        <div class="hand-head">
-          <div>
-            <h3>Dealer</h3>
-            <small id="pk-dealer-name">Cartas ocultas</small>
+      <div class="poker-layout">
+        <div class="game-card">
+          <div class="status-row">
+            <p id="pk-message" class="message" aria-live="polite">Elegí fichas y tocá Repartir mano.</p>
+            <div class="bet-box">
+              <span>Tu apuesta</span>
+              <strong id="pk-bet">$0</strong>
+            </div>
           </div>
-        </div>
-        <div id="pk-dealer-cards" class="cards"></div>
 
-        <div class="community-area">
-          <h3>Cartas del medio</h3>
-          <div id="pk-community-cards" class="cards community-cards"></div>
-        </div>
-
-        <div class="hand-head">
-          <div>
-            <h3>Jugador</h3>
-            <small id="pk-player-name">Tus cartas</small>
+          <div class="poker-info-row">
+            <div class="info-pill">
+              <span>Pozo</span>
+              <strong id="pk-pot">$0</strong>
+            </div>
+            <div class="info-pill">
+              <span>Apuesta dealer</span>
+              <strong id="pk-dealer-bet">$0</strong>
+            </div>
+            <div class="info-pill">
+              <span>Etapa</span>
+              <strong id="pk-stage">Esperando apuesta</strong>
+            </div>
+            <div class="info-pill pk-raise-pill">
+              <span>Subida pendiente</span>
+              <strong id="pk-pending">$0</strong>
+            </div>
           </div>
-        </div>
-        <div id="pk-player-cards" class="cards"></div>
-      </div>
 
-      <div class="controls">
-        <div class="panel">
-          <h4>Fichas</h4>
-          <div class="chips">
-            <button class="chip pk-chip c25" data-value="25">$25</button>
-            <button class="chip pk-chip c50" data-value="50">$50</button>
-            <button class="chip pk-chip c100" data-value="100">$100</button>
-            <button class="chip pk-chip c500" data-value="500">$500</button>
-          </div>
-        </div>
-
-        <div class="panel">
-          <h4>Acciones</h4>
-          <div class="actions">
-            <button id="pk-clear" class="btn secondary">Limpiar</button>
-            <button id="pk-deal" class="btn primary">Repartir mano</button>
-            <button id="pk-draw" class="btn">Pasar / Confirmar</button>
-            <button id="pk-stand" class="btn">Retirarse</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <aside class="game-card rules-card">
-      <h3>Reglas del Poker</h3>
-      <p>
-        Este modo es <strong>Texas Hold'em</strong>. Vos y el dealer reciben 2 cartas.
-        En el medio aparecen 5 cartas comunitarias.
-      </p>
-
-      <h4>Cómo avanza</h4>
-      <ol>
-        <li>Primero se muestran 3 cartas del medio.</li>
-        <li>Decidís si apostás más o pasás.</li>
-        <li>Se muestra la cuarta carta.</li>
-        <li>Volvés a decidir si apostás más.</li>
-        <li>Se muestra la quinta carta.</li>
-        <li>Última decisión y después se revelan las cartas.</li>
-      </ol>
-
-      <p class="tip">
-        El dealer actúa solo: puede pagar tu apuesta, pasar o retirarse si su mano es mala.
-      </p>
-    </aside>
-  </div>
-</section>
-
-   <section id="roulette-screen" class="screen">
-  <div class="top-line">
-    <button class="back-btn">← Menú</button>
-    <div>
-      <p class="kicker">Juego</p>
-      <h2>Ruleta Deluxe</h2>
-    </div>
-  </div>
-
-  <div class="game-card roulette-casino-card">
-    <div class="roulette-main-casino">
-      
-      <!-- IZQUIERDA: RULETA -->
-      <div class="roulette-left">
-        <p id="rt-message" class="message">Elegí una apuesta, cargá fichas y girá.</p>
-
-        <div class="wheel-card">
-          <div class="pointer"></div>
-
-          <div class="roulette-wheel">
-            <div id="roulette-rotor" class="roulette-rotor">
-              <div id="roulette-labels"></div>
+          <div class="table felt-table poker-table" id="pk-table">
+            <div class="street-track" id="pk-streets" aria-hidden="true">
+              <span data-street="preflop">Pre-flop</span>
+              <span data-street="flop">Flop</span>
+              <span data-street="turn">Turn</span>
+              <span data-street="river">River</span>
+              <span data-street="showdown">Showdown</span>
             </div>
 
-            <div class="wheel-center">
-              <span id="roulette-result">?</span>
-              <small>Resultado</small>
+            <div class="shoe poker-shoe" id="pk-shoe" aria-hidden="true"><div class="shoe-card"></div><div class="shoe-card"></div></div>
+
+            <div class="seat seat-dealer" id="pk-seat-dealer">
+              <div class="seat-avatar" aria-hidden="true">
+                <svg viewBox="0 0 40 40"><circle cx="20" cy="15" r="7" fill="#f3e2b3"/><path d="M6 38 q14 -18 28 0z" fill="#f3e2b3"/><path d="M13 11 h14 v-3 q-7 -5 -14 0z" fill="#1a1325"/></svg>
+              </div>
+              <div class="hand-head">
+                <div>
+                  <h3>Dealer</h3>
+                  <small id="pk-dealer-name">Cartas ocultas</small>
+                </div>
+              </div>
+              <div class="action-bubble" id="pk-dealer-action" aria-live="polite"></div>
+              <div class="turn-dot" aria-hidden="true"></div>
+            </div>
+            <div id="pk-dealer-cards" class="cards"></div>
+            <div class="chip-stack seat-stack dealer-stack" id="pk-dealer-stack" aria-hidden="true"></div>
+
+            <div class="community-area">
+              <h3>Cartas del medio</h3>
+              <div id="pk-community-cards" class="cards community-cards"></div>
+              <div class="pot-zone" id="pk-pot-zone">
+                <div class="chip-stack pot-stack" id="pk-pot-stack" aria-hidden="true"></div>
+                <span class="pot-label">Pozo <strong id="pk-pot-label">$0</strong></span>
+              </div>
+            </div>
+
+            <div class="chip-stack seat-stack player-stack" id="pk-player-stack" aria-hidden="true"></div>
+            <div id="pk-player-cards" class="cards"></div>
+            <div class="seat seat-player" id="pk-seat-player">
+              <div class="hand-head">
+                <div>
+                  <h3>Jugador</h3>
+                  <small id="pk-player-name">Tus cartas</small>
+                </div>
+              </div>
+              <div class="turn-dot" aria-hidden="true"></div>
+            </div>
+          </div>
+
+          <div class="controls">
+            <div class="panel">
+              <h4>Fichas <small class="panel-hint">En juego: subís la apuesta</small></h4>
+              <div class="chips">
+                <button class="chip pk-chip c25" data-value="25"><span>$25</span></button>
+                <button class="chip pk-chip c50" data-value="50"><span>$50</span></button>
+                <button class="chip pk-chip c100" data-value="100"><span>$100</span></button>
+                <button class="chip pk-chip c500" data-value="500"><span>$500</span></button>
+                <button class="chip pk-chip c1000" data-value="1000"><span>$1K</span></button>
+                <button class="chip pk-chip c5000" data-value="5000"><span>$5K</span></button>
+                <button class="chip pk-chip allin-chip" data-allin="true"><span>ALL IN</span></button>
+              </div>
+            </div>
+
+            <div class="panel">
+              <h4>Acciones</h4>
+              <div class="actions">
+                <button id="pk-clear" class="btn secondary">Limpiar</button>
+                <button id="pk-deal" class="btn primary">Repartir mano</button>
+                <button id="pk-draw" class="btn">Pasar / Confirmar</button>
+                <button id="pk-stand" class="btn danger">Retirarse</button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- DERECHA: APUESTAS, FICHAS Y ACCIONES -->
-      <aside class="roulette-right">
-        <div class="roulette-box">
-          <span>Apuesta total</span>
-          <strong id="rt-bet">$0</strong>
-        </div>
-
-        <div class="roulette-box">
-          <span>Selecciones marcadas</span>
-          <strong id="rt-target">Ninguna</strong>
-        </div>
-
-        <div class="roulette-box">
-          <span>Apuestas activas</span>
-          <div id="rt-bets-list" class="rt-bets-list">Sin apuestas</div>
-        </div>
-
-        <div class="panel roulette-inner-panel">
-          <h4>Apuestas rápidas</h4>
-
-          <div class="quick-bets">
-            <button class="quick-bet red-bet" data-type="outside" data-value="red">Rojo</button>
-            <button class="quick-bet black-bet" data-type="outside" data-value="black">Negro</button>
-            <button class="quick-bet normal-bet" data-type="outside" data-value="even">Par</button>
-            <button class="quick-bet normal-bet" data-type="outside" data-value="odd">Impar</button>
-
-            <button class="quick-bet normal-bet" data-type="dozen" data-value="1">1 - 12</button>
-            <button class="quick-bet normal-bet" data-type="dozen" data-value="2">13 - 24</button>
-            <button class="quick-bet normal-bet" data-type="dozen" data-value="3">25 - 36</button>
-          </div>
-        </div>
-
-        <div class="panel roulette-inner-panel">
-          <h4>Fichas</h4>
-
-          <div class="chips">
-            <button class="chip rt-chip c25" data-value="25">$25</button>
-            <button class="chip rt-chip c50" data-value="50">$50</button>
-            <button class="chip rt-chip c100" data-value="100">$100</button>
-            <button class="chip rt-chip c500" data-value="500">$500</button>
-          </div>
-        </div>
-
-        <div class="panel roulette-inner-panel">
-          <h4>Acciones</h4>
-
-          <div class="actions">
-            <button id="rt-clear" class="btn secondary">Limpiar</button>
-            <button id="rt-spin" class="btn primary">Girar ruleta</button>
-          </div>
-        </div>
-      </aside>
-    </div>
-
-    <!-- ABAJO: TABLA HORIZONTAL DE NÚMEROS -->
-    <div class="roulette-numbers-bottom">
-      <div class="number-title-row">
-        <div>
-          <p class="kicker">Mesa de apuestas</p>
-          <h3>Números</h3>
-        </div>
-
-        <p>Seleccioná uno o varios números. Después tocá una ficha para apostar en todos.</p>
-      </div>
-
-      <div id="number-board" class="number-board casino-horizontal-board"></div>
-    </div>
-  </div>
-</section>
-    <section id="miner-screen" class="screen">
-  <div class="top-line">
-    <button class="back-btn">← Menú</button>
-    <div>
-      <p class="kicker">Juego</p>
-      <h2>Coin Miner</h2>
-    </div>
-  </div>
-
-  <div class="miner-layout">
-    <div class="game-card">
-      <div class="status-row">
-        <p id="cm-message" class="message">Elegí fichas y tocá Iniciar partida.</p>
-        <div class="bet-box">
-          <span>Apuesta</span>
-          <strong id="cm-bet">$0</strong>
-        </div>
-      </div>
-
-    <div class="miner-stats">
-  <div class="info-pill">
-    <span>Ganancia actual</span>
-    <strong id="cm-profit">$0</strong>
-  </div>
-
-  <div class="info-pill">
-    <span>Si cobrás ahora</span>
-    <strong id="cm-total">$0</strong>
-  </div>
-
-  <div class="info-pill">
-    <span>Próxima moneda</span>
-    <strong id="cm-next">+0%</strong>
-  </div>
-
-  <div class="info-pill">
-    <span>Cartas seguras</span>
-    <strong id="cm-safe">0</strong>
-  </div>
-</div>
-
-<div class="bomb-selector">
-  <h4>Cantidad exacta de bombas</h4>
-
-  <div class="bomb-exact-row">
-    <input id="cm-bombs-input" type="number" min="1" max="24" value="3" />
-    <button id="cm-bombs-apply" class="btn primary">Aplicar</button>
-  </div>
-
-  <p>
-    Podés elegir de 1 a 24 bombas. Más bombas = más riesgo, pero también más porcentaje de ganancia.
-  </p>
-</div>
-      </div>
-
-      <div class="miner-board-wrap">
-        <div id="cm-board" class="miner-board"></div>
-      </div>
-
-      <div class="controls">
-        <div class="panel">
-          <h4>Fichas</h4>
-          <div class="chips">
-            <button class="chip cm-chip c25" data-value="25">$25</button>
-            <button class="chip cm-chip c50" data-value="50">$50</button>
-            <button class="chip cm-chip c100" data-value="100">$100</button>
-            <button class="chip cm-chip c500" data-value="500">$500</button>
-          </div>
-        </div>
-
-        <div class="panel">
-          <h4>Acciones</h4>
-          <div class="actions">
-            <button id="cm-clear" class="btn secondary">Limpiar</button>
-            <button id="cm-start" class="btn primary">Iniciar partida</button>
-            <button id="cm-cashout" class="btn">Cobrar</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <aside class="game-card rules-card">
-      <h3>Reglas de Coin Miner</h3>
-      <p>
-        Hay 25 tarjetas. Dentro hay <strong>3 bombas</strong>. Cada vez que das vuelta una
-        tarjeta con moneda, sumás un <strong>5% de tu apuesta inicial</strong>.
-      </p>
-
-      <p>
-        Podés cobrar cuando quieras. Si te toca bomba, perdés la apuesta y la ganancia acumulada.
-      </p>
-
-      <p class="tip">
-        Ejemplo: si apostás $100, cada moneda suma $5. Si cobrás después de 4 monedas,
-        recibís $120.
-      </p>
-    </aside>
-  </div>
-</section><section id="chicken-screen" class="screen">
-  <div class="top-line">
-    <button class="back-btn">← Menú</button>
-    <div>
-      <p class="kicker">Juego</p>
-      <h2>Chicken Road</h2>
-    </div>
-  </div>
-
-  <div class="game-card chicken-card">
-    <div class="status-row">
-      <p id="cr-message" class="message">Elegí fichas y tocá Iniciar.</p>
-
-      <div class="bet-box">
-        <span>Apuesta</span>
-        <strong id="cr-bet">$0</strong>
-      </div>
-    </div>
-
-    <div class="chicken-layout">
-      <div class="chicken-road-area">
-        <div class="chicken-topbar">
-          <div>
-            <span>Multiplicador actual</span>
-            <strong id="cr-multiplier">x1.00</strong>
-          </div>
-
-          <div>
-            <span>Si cobrás ahora</span>
-            <strong id="cr-cash">$0</strong>
-          </div>
-
-          <div>
-            <span>Cruces seguros</span>
-            <strong id="cr-step">0</strong>
-          </div>
-        </div>
-
-        <div class="road-wrapper">
-          <div id="cr-road" class="chicken-road"></div>
-        </div>
-      </div>
-
-      <aside class="chicken-side">
-        <div class="panel">
-          <h4>Fichas</h4>
-          <div class="chips">
-            <button class="chip cr-chip c25" data-value="25">$25</button>
-            <button class="chip cr-chip c50" data-value="50">$50</button>
-            <button class="chip cr-chip c100" data-value="100">$100</button>
-            <button class="chip cr-chip c500" data-value="500">$500</button>
-          </div>
-        </div>
-
-        <div class="panel">
-          <h4>Acciones</h4>
-          <div class="actions chicken-actions">
-            <button id="cr-clear" class="btn secondary">Limpiar</button>
-            <button id="cr-start" class="btn primary">Iniciar</button>
-            <button id="cr-go" class="btn">Avanzar</button>
-            <button id="cr-cashout" class="btn primary">Cobrar</button>
-          </div>
-        </div>
-
-        <div class="panel chicken-rules">
-          <h4>Reglas</h4>
+        <aside class="game-card rules-card">
+          <h3>Reglas del Poker</h3>
           <p>
-            Cada vez que avanzás, el multiplicador sube. Si cruzás bien, podés seguir
-            o cobrar. Si te toca auto, perdés la apuesta.
+            Este modo es <strong>Texas Hold'em</strong>. Vos y el dealer reciben 2 cartas.
+            En el medio aparecen 5 cartas comunitarias.
           </p>
-        </div>
-      </aside>
-    </div>
-  </div>
-</section>
-
-<section id="plinko-screen" class="screen">
-  <div class="top-line">
-    <button class="back-btn">← Menú</button>
-    <div>
-      <p class="kicker">Juego</p>
-      <h2>Plinko</h2>
-    </div>
-  </div>
-
-  <div class="game-card plinko-card">
-    <div class="status-row">
-      <p id="pl-message" class="message">
-        Elegí fichas, configurá el tablero y soltá la bola.
-      </p>
-
-      <div class="bet-box">
-        <span>Apuesta total</span>
-        <strong id="pl-bet">$0</strong>
+          <h4>Cómo avanza</h4>
+          <ol>
+            <li>Primero se muestran 3 cartas del medio.</li>
+            <li>Decidís si apostás más o pasás.</li>
+            <li>Se muestra la cuarta carta.</li>
+            <li>Volvés a decidir si apostás más.</li>
+            <li>Se muestra la quinta carta.</li>
+            <li>Última decisión y después se revelan las cartas.</li>
+          </ol>
+          <p class="tip">
+            El dealer actúa solo: puede pagar tu apuesta, pasar, subir o retirarse si su mano es mala.
+          </p>
+          <h4>Ranking de manos</h4>
+          <ul class="hand-ranks">
+            <li><span>Royal Flush</span><i>10</i></li>
+            <li><span>Straight Flush</span><i>9</i></li>
+            <li><span>Poker</span><i>8</i></li>
+            <li><span>Full House</span><i>7</i></li>
+            <li><span>Color</span><i>6</i></li>
+            <li><span>Escalera</span><i>5</i></li>
+            <li><span>Trío</span><i>4</i></li>
+            <li><span>Doble pareja</span><i>3</i></li>
+            <li><span>Pareja</span><i>2</i></li>
+            <li><span>Carta alta</span><i>1</i></li>
+          </ul>
+        </aside>
       </div>
-    </div>
+    </section>
 
-    <div class="plinko-layout">
-      <!-- PANEL IZQUIERDO -->
-      <aside class="plinko-side">
-        <div class="panel">
-          <h4>Configuración</h4>
-
-          <div class="plinko-config">
-            <label>
-              <span>Riesgo</span>
-              <select id="pl-risk">
-                <option value="low">Bajo</option>
-                <option value="medium" selected>Medio</option>
-                <option value="high">Alto</option>
-              </select>
-            </label>
-
-            <label>
-              <span>Filas</span>
-              <select id="pl-rows">
-                <option value="8">8 filas</option>
-                <option value="10" selected>10 filas</option>
-                <option value="12">12 filas</option>
-              </select>
-            </label>
-
-            <label>
-              <span>Cantidad de bolas</span>
-              <select id="pl-balls">
-                <option value="1" selected>1 bola</option>
-                <option value="3">3 bolas</option>
-                <option value="5">5 bolas</option>
-                <option value="10">10 bolas</option>
-                <option value="20">20 bolas</option>
-              </select>
-            </label>
-          </div>
+    <!-- ===================== RULETA ===================== -->
+    <section id="roulette-screen" class="screen game-screen theme-roulette" data-game="roulette" aria-label="Ruleta">
+      <div class="top-line">
+        <button class="back-btn"><span aria-hidden="true">←</span> Lobby</button>
+        <div class="game-title">
+          <p class="kicker">Mesa</p>
+          <h2>Ruleta Deluxe</h2>
         </div>
+        <nav class="game-switcher" aria-label="Cambiar de juego"></nav>
+      </div>
 
-        <div class="panel">
-          <h4>Fichas</h4>
+      <div class="game-card roulette-casino-card">
+        <div class="roulette-main-casino">
+          <div class="roulette-left">
+            <p id="rt-message" class="message" aria-live="polite">Elegí una apuesta, cargá fichas y girá.</p>
 
-          <div class="chips">
-            <button class="chip pl-chip c25" data-value="25">$25</button>
-            <button class="chip pl-chip c50" data-value="50">$50</button>
-            <button class="chip pl-chip c100" data-value="100">$100</button>
-            <button class="chip pl-chip c500" data-value="500">$500</button>
-            <button class="chip pl-chip c1000" data-value="1000">$1K</button>
-            <button class="chip pl-chip c5000" data-value="5000">$5K</button>
-            <button class="chip pl-chip allin-chip" data-allin="true">ALL IN</button>
-          </div>
-        </div>
-
-        <div class="panel">
-          <h4>Acciones</h4>
-
-          <div class="actions">
-            <button id="pl-clear" class="btn secondary">Limpiar apuesta</button>
-            <button id="pl-drop" class="btn primary">Soltar bola</button>
-          </div>
-        </div>
-
-        <div class="panel">
-          <h4>Resultado</h4>
-
-          <div class="plinko-result-box">
-            <div>
-              <span>Último multiplicador</span>
-              <strong id="pl-last-multiplier">x0.00</strong>
-            </div>
-
-            <div>
-              <span>Último premio</span>
-              <strong id="pl-last-win">$0</strong>
+            <div class="wheel-card">
+              <div class="wheel-stage" id="rt-wheel-stage">
+                <canvas id="rt-wheel" class="roulette-canvas" aria-label="Rueda de ruleta"></canvas>
+              </div>
+              <div class="wheel-result-panel">
+                <div class="wheel-center" id="rt-result-chip">
+                  <span id="roulette-result">?</span>
+                  <small>Resultado</small>
+                </div>
+                <div class="rt-history-wrap">
+                  <span class="mini-label">Últimos números</span>
+                  <div class="rt-history" id="rt-history"></div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </aside>
 
-      <!-- TABLERO DERECHO -->
-      <div class="plinko-board-area">
-        <div class="plinko-board-header">
-          <div class="info-pill">
-            <span>Multiplicadores</span>
-            <strong id="pl-risk-label">Riesgo medio</strong>
-          </div>
+          <aside class="roulette-right">
+            <div class="roulette-box-row">
+              <div class="roulette-box">
+                <span>Apuesta total</span>
+                <strong id="rt-bet">$0</strong>
+              </div>
+              <div class="roulette-box">
+                <span>Selecciones marcadas</span>
+                <strong id="rt-target">Ninguna</strong>
+              </div>
+            </div>
 
-          <div class="info-pill">
-            <span>Filas activas</span>
-            <strong id="pl-rows-label">10</strong>
-          </div>
+            <div class="roulette-box">
+              <span>Apuestas activas</span>
+              <div id="rt-bets-list" class="rt-bets-list">Sin apuestas</div>
+            </div>
 
-          <div class="info-pill">
-            <span>Bolas</span>
-            <strong id="pl-balls-label">1</strong>
-          </div>
-        </div>
+            <div class="panel roulette-inner-panel">
+              <h4>Fichas <small class="panel-hint">Se apuesta en cada selección</small></h4>
+              <div class="chips">
+                <button class="chip rt-chip c25" data-value="25"><span>$25</span></button>
+                <button class="chip rt-chip c50" data-value="50"><span>$50</span></button>
+                <button class="chip rt-chip c100" data-value="100"><span>$100</span></button>
+                <button class="chip rt-chip c500" data-value="500"><span>$500</span></button>
+                <button class="chip rt-chip c1000" data-value="1000"><span>$1K</span></button>
+                <button class="chip rt-chip c5000" data-value="5000"><span>$5K</span></button>
+                <button class="chip rt-chip allin-chip" data-allin="true"><span>ALL IN</span></button>
+              </div>
+            </div>
 
-        <div class="plinko-stage-wrap">
-          <div id="plinko-stage" class="plinko-stage"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-<section id="aviator-screen" class="screen">
-  <div class="top-line">
-    <button class="back-btn">← Menú</button>
-    <div>
-      <p class="kicker">Juego</p>
-      <h2>Aviator</h2>
-    </div>
-  </div>
-
-  <div class="game-card aviator-card">
-    <div class="status-row">
-      <p id="av-message" class="message">Elegí fichas y tocá Iniciar vuelo.</p>
-
-      <div class="bet-box">
-        <span>Apuesta</span>
-        <strong id="av-bet">$0</strong>
-      </div>
-    </div>
-
-    <div class="aviator-layout">
-      <!-- IZQUIERDA -->
-      <div class="aviator-stage-area">
-        <div class="aviator-topbar">
-          <div class="info-pill">
-            <span>Multiplicador actual</span>
-            <strong id="av-multiplier">1.00x</strong>
-          </div>
-
-          <div class="info-pill">
-            <span>Si cobrás ahora</span>
-            <strong id="av-cash">$0</strong>
-          </div>
-
-          <div class="info-pill">
-            <span>Último crash</span>
-            <strong id="av-last-crash">-</strong>
-          </div>
-
-          <div class="info-pill">
-            <span>Último premio</span>
-            <strong id="av-last-win">$0</strong>
-          </div>
+            <div class="panel roulette-inner-panel">
+              <h4>Acciones</h4>
+              <div class="actions">
+                <button id="rt-clear" class="btn secondary">Limpiar</button>
+                <button id="rt-rebet" class="btn">Repetir apuesta</button>
+                <button id="rt-spin" class="btn primary">Girar ruleta</button>
+              </div>
+            </div>
+          </aside>
         </div>
 
-        <div class="aviator-stage-wrap">
-          <div class="aviator-stage">
-            <svg
-              class="aviator-graph"
-              viewBox="0 0 800 400"
-              preserveAspectRatio="none"
-            >
-              <defs>
-                <linearGradient id="aviatorFillGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="rgba(220,38,38,0.65)"></stop>
-                  <stop offset="100%" stop-color="rgba(220,38,38,0.05)"></stop>
-                </linearGradient>
-              </defs>
+        <div class="roulette-numbers-bottom">
+          <div class="number-title-row">
+            <div>
+              <p class="kicker">Mesa de apuestas</p>
+              <h3>Números</h3>
+            </div>
+            <p>Seleccioná uno o varios casilleros. Después tocá una ficha para apostar en todos. Pleno paga 35 a 1, docenas 2 a 1 y chances simples 1 a 1.</p>
+          </div>
 
-              <path id="av-fill-path" fill="rgba(220,38,38,0.18)"></path>
-              <path
-                id="av-line-path"
-                fill="none"
-                stroke="#ef4444"
-                stroke-width="8"
-                stroke-linecap="round"
-              ></path>
-            </svg>
+          <div class="betting-layout">
+            <div id="number-board" class="number-board casino-horizontal-board"></div>
 
-            <div id="av-plane" class="aviator-plane">✈️</div>
-            <div id="av-multiplier-big" class="aviator-big-multiplier">1.00x</div>
-            <div id="av-status" class="aviator-status-tag">Esperando</div>
+            <div class="quick-bets outside-bets">
+              <button class="quick-bet normal-bet dozen-bet" data-type="dozen" data-value="1">1 - 12</button>
+              <button class="quick-bet normal-bet dozen-bet" data-type="dozen" data-value="2">13 - 24</button>
+              <button class="quick-bet normal-bet dozen-bet" data-type="dozen" data-value="3">25 - 36</button>
+              <button class="quick-bet normal-bet" data-type="outside" data-value="even">Par</button>
+              <button class="quick-bet red-bet" data-type="outside" data-value="red"><i class="diamond"></i>Rojo</button>
+              <button class="quick-bet black-bet" data-type="outside" data-value="black"><i class="diamond"></i>Negro</button>
+              <button class="quick-bet normal-bet" data-type="outside" data-value="odd">Impar</button>
+            </div>
           </div>
         </div>
       </div>
+    </section>
 
-      <!-- DERECHA -->
-      <aside class="aviator-side">
-        <div class="panel">
-          <h4>Fichas</h4>
+    <!-- ===================== COIN MINER ===================== -->
+    <section id="miner-screen" class="screen game-screen theme-miner" data-game="miner" aria-label="Coin Miner">
+      <div class="top-line">
+        <button class="back-btn"><span aria-hidden="true">←</span> Lobby</button>
+        <div class="game-title">
+          <p class="kicker">Arcade</p>
+          <h2>Coin Miner</h2>
+        </div>
+        <nav class="game-switcher" aria-label="Cambiar de juego"></nav>
+      </div>
 
-          <div class="chips">
-            <button class="chip av-chip c25" data-value="25">$25</button>
-            <button class="chip av-chip c50" data-value="50">$50</button>
-            <button class="chip av-chip c100" data-value="100">$100</button>
-            <button class="chip av-chip c500" data-value="500">$500</button>
-            <button class="chip av-chip c1000" data-value="1000">$1K</button>
-            <button class="chip av-chip c5000" data-value="5000">$5K</button>
-            <button class="chip av-chip allin-chip" data-allin="true">ALL IN</button>
+      <div class="miner-layout">
+        <div class="game-card miner-main">
+          <div class="status-row">
+            <p id="cm-message" class="message" aria-live="polite">Elegí fichas y tocá Iniciar partida.</p>
+            <div class="bet-box">
+              <span>Apuesta</span>
+              <strong id="cm-bet">$0</strong>
+            </div>
+          </div>
+
+          <div class="miner-stats">
+            <div class="info-pill">
+              <span>Ganancia actual</span>
+              <strong id="cm-profit">$0</strong>
+            </div>
+            <div class="info-pill accent-pill">
+              <span>Si cobrás ahora</span>
+              <strong id="cm-total">$0</strong>
+            </div>
+            <div class="info-pill">
+              <span>Próxima moneda</span>
+              <strong id="cm-next">+0%</strong>
+            </div>
+            <div class="info-pill">
+              <span>Cartas seguras</span>
+              <strong id="cm-safe">0</strong>
+            </div>
+          </div>
+
+          <div class="miner-ladder" id="cm-ladder" aria-label="Próximos porcentajes"></div>
+
+          <div class="miner-board-wrap" id="cm-board-wrap">
+            <div id="cm-board" class="miner-board"></div>
+            <div class="miner-progress" aria-hidden="true"><span id="cm-progress-bar"></span></div>
           </div>
         </div>
 
-        <div class="panel">
-          <h4>Acciones</h4>
+        <aside class="miner-side">
+          <div class="panel bomb-selector">
+            <h4>Cantidad exacta de bombas</h4>
+            <div class="bomb-exact-row">
+              <button class="btn stepper" id="cm-bombs-minus" aria-label="Menos bombas">−</button>
+              <input id="cm-bombs-input" type="number" min="1" max="24" value="3" inputmode="numeric" aria-label="Cantidad de bombas" />
+              <button class="btn stepper" id="cm-bombs-plus" aria-label="Más bombas">+</button>
+              <button id="cm-bombs-apply" class="btn primary">Aplicar</button>
+            </div>
+            <div class="bomb-presets">
+              <button class="preset" data-bombs="1">1</button>
+              <button class="preset" data-bombs="3">3</button>
+              <button class="preset" data-bombs="5">5</button>
+              <button class="preset" data-bombs="10">10</button>
+              <button class="preset" data-bombs="18">18</button>
+              <button class="preset" data-bombs="24">24</button>
+            </div>
+            <p>Podés elegir de 1 a 24 bombas. Más bombas = más riesgo, pero también más porcentaje de ganancia.</p>
+          </div>
 
-          <div class="actions aviator-actions">
-            <button id="av-clear" class="btn secondary">Limpiar</button>
-            <button id="av-start" class="btn primary">Iniciar vuelo</button>
-            <button id="av-cashout" class="btn">Cobrar</button>
+          <div class="panel">
+            <h4>Fichas</h4>
+            <div class="chips">
+              <button class="chip cm-chip c25" data-value="25"><span>$25</span></button>
+              <button class="chip cm-chip c50" data-value="50"><span>$50</span></button>
+              <button class="chip cm-chip c100" data-value="100"><span>$100</span></button>
+              <button class="chip cm-chip c500" data-value="500"><span>$500</span></button>
+              <button class="chip cm-chip c1000" data-value="1000"><span>$1K</span></button>
+              <button class="chip cm-chip c5000" data-value="5000"><span>$5K</span></button>
+              <button class="chip cm-chip allin-chip" data-allin="true"><span>ALL IN</span></button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h4>Acciones</h4>
+            <div class="actions">
+              <button id="cm-clear" class="btn secondary">Limpiar</button>
+              <button id="cm-start" class="btn primary">Iniciar partida</button>
+              <button id="cm-cashout" class="btn success">Cobrar</button>
+            </div>
+          </div>
+
+          <details class="rules-card inline-rules" open>
+            <summary>Reglas de Coin Miner</summary>
+            <p id="cm-rules-text">Hay 25 tarjetas con bombas escondidas. Cada moneda suma un porcentaje de tu apuesta inicial.</p>
+            <p>Podés cobrar cuando quieras. Si te toca bomba, perdés la apuesta y la ganancia acumulada.</p>
+            <p class="tip" id="cm-rules-example"></p>
+          </details>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ===================== CHICKEN ROAD ===================== -->
+    <section id="chicken-screen" class="screen game-screen theme-chicken" data-game="chicken" aria-label="Chicken Road">
+      <div class="top-line">
+        <button class="back-btn"><span aria-hidden="true">←</span> Lobby</button>
+        <div class="game-title">
+          <p class="kicker">Arcade</p>
+          <h2>Chicken Road</h2>
+        </div>
+        <nav class="game-switcher" aria-label="Cambiar de juego"></nav>
+      </div>
+
+      <div class="game-card chicken-card">
+        <div class="status-row">
+          <p id="cr-message" class="message" aria-live="polite">Elegí fichas y tocá Iniciar.</p>
+          <div class="bet-box">
+            <span>Apuesta</span>
+            <strong id="cr-bet">$0</strong>
           </div>
         </div>
 
-        <div class="panel aviator-rules">
-          <h4>Reglas</h4>
-          <p>
-            El multiplicador empieza en <strong>x1.00</strong> y va subiendo a medida
-            que el avión despega. Si cobrás antes del crash, ganás
-            <strong>apuesta × multiplicador</strong>. Si no, perdés la apuesta.
+        <div class="chicken-layout">
+          <div class="chicken-road-area">
+            <div class="chicken-topbar">
+              <div>
+                <span>Multiplicador actual</span>
+                <strong id="cr-multiplier">x1.00</strong>
+              </div>
+              <div>
+                <span>Si cobrás ahora</span>
+                <strong id="cr-cash">$0</strong>
+              </div>
+              <div>
+                <span>Cruces seguros</span>
+                <strong id="cr-step">0</strong>
+              </div>
+            </div>
+
+            <div class="road-wrapper">
+              <div id="cr-road" class="chicken-road">
+                <canvas id="cr-canvas" class="scene-canvas" aria-label="Escena de la calle"></canvas>
+              </div>
+            </div>
+
+            <div class="lane-ladder" id="cr-ladder" aria-label="Multiplicadores por carril"></div>
+          </div>
+
+          <aside class="chicken-side">
+            <div class="panel">
+              <h4>Fichas</h4>
+              <div class="chips">
+                <button class="chip cr-chip c25" data-value="25"><span>$25</span></button>
+                <button class="chip cr-chip c50" data-value="50"><span>$50</span></button>
+                <button class="chip cr-chip c100" data-value="100"><span>$100</span></button>
+                <button class="chip cr-chip c500" data-value="500"><span>$500</span></button>
+                <button class="chip cr-chip c1000" data-value="1000"><span>$1K</span></button>
+                <button class="chip cr-chip c5000" data-value="5000"><span>$5K</span></button>
+                <button class="chip cr-chip allin-chip" data-allin="true"><span>ALL IN</span></button>
+              </div>
+            </div>
+
+            <div class="panel">
+              <h4>Acciones</h4>
+              <div class="actions chicken-actions">
+                <button id="cr-clear" class="btn secondary">Limpiar</button>
+                <button id="cr-start" class="btn primary">Iniciar</button>
+                <button id="cr-go" class="btn go-btn">Avanzar</button>
+                <button id="cr-cashout" class="btn success">Cobrar</button>
+              </div>
+            </div>
+
+            <details class="panel chicken-rules rules-card inline-rules" open>
+              <summary>Reglas</summary>
+              <p>
+                Cada vez que avanzás, el multiplicador sube. Si cruzás bien, podés seguir
+                o cobrar. Si te toca auto, perdés la apuesta.
+              </p>
+            </details>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== PLINKO ===================== -->
+    <section id="plinko-screen" class="screen game-screen theme-plinko" data-game="plinko" aria-label="Plinko">
+      <div class="top-line">
+        <button class="back-btn"><span aria-hidden="true">←</span> Lobby</button>
+        <div class="game-title">
+          <p class="kicker">Arcade</p>
+          <h2>Plinko</h2>
+        </div>
+        <nav class="game-switcher" aria-label="Cambiar de juego"></nav>
+      </div>
+
+      <div class="game-card plinko-card">
+        <div class="status-row">
+          <p id="pl-message" class="message" aria-live="polite">
+            Elegí fichas, configurá el tablero y soltá la bola.
           </p>
+          <div class="bet-box">
+            <span>Apuesta total</span>
+            <strong id="pl-bet">$0</strong>
+          </div>
         </div>
-      </aside>
-    </div>
-  </div>
-</section>
-<section id="horse-screen" class="screen">
-  <div class="top-line">
-    <button class="back-btn">← Menú</button>
-    <div>
-      <p class="kicker">Juego</p>
-      <h2>Carrera de Caballos</h2>
-    </div>
-  </div>
 
-  <div class="game-card horse-card">
-    <div class="status-row">
-      <p id="hr-message" class="message">Elegí un caballo, poné fichas y empezá la carrera.</p>
+        <div class="plinko-layout">
+          <aside class="plinko-side">
+            <div class="panel">
+              <h4>Configuración</h4>
+              <div class="plinko-config">
+                <label>
+                  <span>Riesgo</span>
+                  <select id="pl-risk">
+                    <option value="low">Bajo</option>
+                    <option value="medium" selected>Medio</option>
+                    <option value="high">Alto</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Filas</span>
+                  <select id="pl-rows">
+                    <option value="8">8 filas</option>
+                    <option value="10" selected>10 filas</option>
+                    <option value="12">12 filas</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Cantidad de bolas</span>
+                  <select id="pl-balls">
+                    <option value="1" selected>1 bola</option>
+                    <option value="3">3 bolas</option>
+                    <option value="5">5 bolas</option>
+                    <option value="10">10 bolas</option>
+                    <option value="20">20 bolas</option>
+                  </select>
+                </label>
+              </div>
+            </div>
 
-      <div class="bet-box">
-        <span>Apuesta</span>
-        <strong id="hr-bet">$0</strong>
+            <div class="panel">
+              <h4>Fichas</h4>
+              <div class="chips">
+                <button class="chip pl-chip c25" data-value="25"><span>$25</span></button>
+                <button class="chip pl-chip c50" data-value="50"><span>$50</span></button>
+                <button class="chip pl-chip c100" data-value="100"><span>$100</span></button>
+                <button class="chip pl-chip c500" data-value="500"><span>$500</span></button>
+                <button class="chip pl-chip c1000" data-value="1000"><span>$1K</span></button>
+                <button class="chip pl-chip c5000" data-value="5000"><span>$5K</span></button>
+                <button class="chip pl-chip allin-chip" data-allin="true"><span>ALL IN</span></button>
+              </div>
+            </div>
+
+            <div class="panel">
+              <h4>Acciones</h4>
+              <div class="actions">
+                <button id="pl-clear" class="btn secondary">Limpiar apuesta</button>
+                <button id="pl-drop" class="btn primary">Soltar bola</button>
+              </div>
+            </div>
+
+            <div class="panel">
+              <h4>Resultado</h4>
+              <div class="plinko-result-box">
+                <div>
+                  <span>Último multiplicador</span>
+                  <strong id="pl-last-multiplier">x0.00</strong>
+                </div>
+                <div>
+                  <span>Último premio</span>
+                  <strong id="pl-last-win">$0</strong>
+                </div>
+              </div>
+              <div class="pl-history" id="pl-history" aria-label="Últimos multiplicadores"></div>
+            </div>
+          </aside>
+
+          <div class="plinko-board-area">
+            <div class="plinko-board-header">
+              <div class="info-pill">
+                <span>Multiplicadores</span>
+                <strong id="pl-risk-label">Riesgo medio</strong>
+              </div>
+              <div class="info-pill">
+                <span>Filas activas</span>
+                <strong id="pl-rows-label">10</strong>
+              </div>
+              <div class="info-pill">
+                <span>Bolas</span>
+                <strong id="pl-balls-label">1</strong>
+              </div>
+              <div class="info-pill">
+                <span>Por bola</span>
+                <strong id="pl-per-ball">$0</strong>
+              </div>
+            </div>
+
+            <div class="plinko-stage-wrap">
+              <div id="plinko-stage" class="plinko-stage">
+                <canvas id="pl-canvas" class="scene-canvas" aria-label="Tablero de Plinko"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <div class="horse-layout">
-      <aside class="horse-side">
-        <div class="panel">
-          <h4>Tipo de apuesta</h4>
+    <!-- ===================== AVIATOR ===================== -->
+    <section id="aviator-screen" class="screen game-screen theme-aviator" data-game="aviator" aria-label="Aviator">
+      <div class="top-line">
+        <button class="back-btn"><span aria-hidden="true">←</span> Lobby</button>
+        <div class="game-title">
+          <p class="kicker">Crash</p>
+          <h2>Aviator</h2>
+        </div>
+        <nav class="game-switcher" aria-label="Cambiar de juego"></nav>
+      </div>
 
-          <div class="horse-config">
-            <label>
-              <span>Modo</span>
-              <select id="hr-bet-type">
-                <option value="winner" selected>Ganador</option>
-                <option value="podium">Podio / Top 3</option>
-              </select>
-            </label>
+      <div class="game-card aviator-card">
+        <div class="status-row">
+          <p id="av-message" class="message" aria-live="polite">Elegí fichas y tocá Iniciar vuelo.</p>
+          <div class="bet-box">
+            <span>Apuesta</span>
+            <strong id="av-bet">$0</strong>
           </div>
         </div>
 
-        <div class="panel">
-          <h4>Caballos</h4>
-          <div id="hr-horse-list" class="horse-list"></div>
-        </div>
+        <div class="aviator-layout">
+          <div class="aviator-stage-area">
+            <div class="aviator-topbar">
+              <div class="info-pill">
+                <span>Multiplicador actual</span>
+                <strong id="av-multiplier">1.00x</strong>
+              </div>
+              <div class="info-pill">
+                <span>Si cobrás ahora</span>
+                <strong id="av-cash">$0</strong>
+              </div>
+              <div class="info-pill">
+                <span>Último crash</span>
+                <strong id="av-last-crash">-</strong>
+              </div>
+              <div class="info-pill">
+                <span>Último premio</span>
+                <strong id="av-last-win">$0</strong>
+              </div>
+            </div>
 
-        <div class="panel">
-          <h4>Fichas</h4>
+            <div class="av-history" id="av-history" aria-label="Historial de crash"></div>
 
-          <div class="chips">
-            <button class="chip hr-chip c25" data-value="25">$25</button>
-            <button class="chip hr-chip c50" data-value="50">$50</button>
-            <button class="chip hr-chip c100" data-value="100">$100</button>
-            <button class="chip hr-chip c500" data-value="500">$500</button>
-            <button class="chip hr-chip c1000" data-value="1000">$1K</button>
-            <button class="chip hr-chip c5000" data-value="5000">$5K</button>
-            <button class="chip hr-chip allin-chip" data-allin="true">ALL IN</button>
-          </div>
-        </div>
-
-        <div class="panel">
-          <h4>Acciones</h4>
-
-          <div class="actions">
-            <button id="hr-clear" class="btn secondary">Limpiar</button>
-            <button id="hr-start" class="btn primary">Empezar carrera</button>
-          </div>
-        </div>
-      </aside>
-
-      <div class="horse-track-area">
-        <div class="horse-topbar">
-          <div class="info-pill">
-            <span>Caballo elegido</span>
-            <strong id="hr-selected">Ninguno</strong>
+            <div class="aviator-stage-wrap">
+              <div class="aviator-stage" id="av-stage">
+                <canvas id="av-canvas" class="scene-canvas" aria-label="Vuelo del avión"></canvas>
+                <div id="av-multiplier-big" class="aviator-big-multiplier">1.00x</div>
+                <div id="av-status" class="aviator-status-tag">Esperando</div>
+              </div>
+            </div>
           </div>
 
-          <div class="info-pill">
-            <span>Último ganador</span>
-            <strong id="hr-last-winner">-</strong>
-          </div>
+          <aside class="aviator-side">
+            <div class="panel">
+              <h4>Fichas</h4>
+              <div class="chips">
+                <button class="chip av-chip c25" data-value="25"><span>$25</span></button>
+                <button class="chip av-chip c50" data-value="50"><span>$50</span></button>
+                <button class="chip av-chip c100" data-value="100"><span>$100</span></button>
+                <button class="chip av-chip c500" data-value="500"><span>$500</span></button>
+                <button class="chip av-chip c1000" data-value="1000"><span>$1K</span></button>
+                <button class="chip av-chip c5000" data-value="5000"><span>$5K</span></button>
+                <button class="chip av-chip allin-chip" data-allin="true"><span>ALL IN</span></button>
+              </div>
+            </div>
 
-          <div class="info-pill">
-            <span>Último premio</span>
-            <strong id="hr-last-win">$0</strong>
-          </div>
-        </div>
+            <div class="panel">
+              <h4>Acciones</h4>
+              <div class="actions aviator-actions">
+                <button id="av-clear" class="btn secondary">Limpiar</button>
+                <button id="av-start" class="btn primary">Iniciar vuelo</button>
+                <button id="av-cashout" class="btn success av-cash-btn">Cobrar</button>
+              </div>
+            </div>
 
-        <div class="horse-track-wrap">
-          <div class="horse-finish-sign">META</div>
-          <div id="hr-track" class="horse-track"></div>
+            <div class="panel">
+              <h4>Cobro automático</h4>
+              <div class="auto-cash-row">
+                <label class="switch">
+                  <input type="checkbox" id="av-auto-enabled" />
+                  <span class="switch-ui" aria-hidden="true"></span>
+                  <span class="switch-label">Activar</span>
+                </label>
+                <div class="auto-cash-input">
+                  <input type="number" id="av-auto-value" min="1.01" max="100" step="0.01" value="2.00" aria-label="Multiplicador de cobro automático" />
+                  <span>x</span>
+                </div>
+              </div>
+              <p class="panel-note">Cobra solo cuando el multiplicador alcanza el valor elegido.</p>
+            </div>
+
+            <details class="panel aviator-rules rules-card inline-rules">
+              <summary>Reglas</summary>
+              <p>
+                El multiplicador empieza en <strong>x1.00</strong> y va subiendo a medida
+                que el avión despega. Si cobrás antes del crash, ganás
+                <strong>apuesta × multiplicador</strong>. Si no, perdés la apuesta.
+              </p>
+            </details>
+          </aside>
         </div>
       </div>
-    </div>
-  </div>
-</section>
+    </section>
+
+    <!-- ===================== CABALLOS ===================== -->
+    <section id="horse-screen" class="screen game-screen theme-horse" data-game="horse" aria-label="Carrera de Caballos">
+      <div class="top-line">
+        <button class="back-btn"><span aria-hidden="true">←</span> Lobby</button>
+        <div class="game-title">
+          <p class="kicker">Carreras</p>
+          <h2>Carrera de Caballos</h2>
+        </div>
+        <nav class="game-switcher" aria-label="Cambiar de juego"></nav>
+      </div>
+
+      <div class="game-card horse-card">
+        <div class="status-row">
+          <p id="hr-message" class="message" aria-live="polite">Elegí un caballo, poné fichas y empezá la carrera.</p>
+          <div class="bet-box">
+            <span>Apuesta</span>
+            <strong id="hr-bet">$0</strong>
+          </div>
+        </div>
+
+        <div class="horse-layout">
+          <aside class="horse-side">
+            <div class="panel">
+              <h4>Tipo de apuesta</h4>
+              <div class="horse-config">
+                <label>
+                  <span>Modo</span>
+                  <select id="hr-bet-type">
+                    <option value="winner" selected>Ganador</option>
+                    <option value="podium">Podio / Top 3</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+
+            <div class="panel">
+              <h4>Caballos</h4>
+              <div id="hr-horse-list" class="horse-list"></div>
+            </div>
+
+            <div class="panel">
+              <h4>Fichas</h4>
+              <div class="chips">
+                <button class="chip hr-chip c25" data-value="25"><span>$25</span></button>
+                <button class="chip hr-chip c50" data-value="50"><span>$50</span></button>
+                <button class="chip hr-chip c100" data-value="100"><span>$100</span></button>
+                <button class="chip hr-chip c500" data-value="500"><span>$500</span></button>
+                <button class="chip hr-chip c1000" data-value="1000"><span>$1K</span></button>
+                <button class="chip hr-chip c5000" data-value="5000"><span>$5K</span></button>
+                <button class="chip hr-chip allin-chip" data-allin="true"><span>ALL IN</span></button>
+              </div>
+            </div>
+
+            <div class="panel">
+              <h4>Acciones</h4>
+              <div class="actions">
+                <button id="hr-clear" class="btn secondary">Limpiar</button>
+                <button id="hr-start" class="btn primary">Empezar carrera</button>
+              </div>
+            </div>
+          </aside>
+
+          <div class="horse-track-area">
+            <div class="horse-topbar">
+              <div class="info-pill">
+                <span>Caballo elegido</span>
+                <strong id="hr-selected">Ninguno</strong>
+              </div>
+              <div class="info-pill">
+                <span>Último ganador</span>
+                <strong id="hr-last-winner">-</strong>
+              </div>
+              <div class="info-pill">
+                <span>Último premio</span>
+                <strong id="hr-last-win">$0</strong>
+              </div>
+            </div>
+
+            <div class="horse-track-wrap">
+              <div class="horse-finish-sign">META · 1200 m</div>
+              <div id="hr-track" class="horse-track">
+                <canvas id="hr-canvas" class="scene-canvas" aria-label="Pista de carrera"></canvas>
+                <div class="race-standings" id="hr-standings" aria-live="polite"></div>
+                <div class="race-results" id="hr-results" hidden></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
+
+  <!-- ===================== CONFIGURACIÓN ===================== -->
+  <dialog id="settings-modal" class="modal" aria-labelledby="settings-title">
+    <div class="modal-shell">
+      <header class="modal-head">
+        <h2 id="settings-title">Configuración</h2>
+        <button class="modal-close" data-close aria-label="Cerrar">✕</button>
+      </header>
+
+      <div class="modal-tabs" role="tablist">
+        <button class="modal-tab active" data-tab="tab-sound" role="tab">Sonido</button>
+        <button class="modal-tab" data-tab="tab-graphics" role="tab">Gráficos</button>
+        <button class="modal-tab" data-tab="tab-access" role="tab">Accesibilidad</button>
+        <button class="modal-tab" data-tab="tab-stats" role="tab">Estadísticas</button>
+        <button class="modal-tab" data-tab="tab-history" role="tab">Historial</button>
+      </div>
+
+      <div class="modal-body">
+        <section class="modal-panel active" id="tab-sound" role="tabpanel">
+          <label class="switch row-switch">
+            <input type="checkbox" id="set-sound" />
+            <span class="switch-ui" aria-hidden="true"></span>
+            <span class="switch-label">Efectos de sonido</span>
+          </label>
+          <label class="switch row-switch">
+            <input type="checkbox" id="set-music" />
+            <span class="switch-ui" aria-hidden="true"></span>
+            <span class="switch-label">Música ambiental</span>
+          </label>
+          <label class="range-row">
+            <span>Volumen general <output id="out-master">80%</output></span>
+            <input type="range" id="set-master" min="0" max="100" step="1" />
+          </label>
+          <label class="range-row">
+            <span>Efectos <output id="out-sfx">80%</output></span>
+            <input type="range" id="set-sfx" min="0" max="100" step="1" />
+          </label>
+          <label class="range-row">
+            <span>Música <output id="out-music">50%</output></span>
+            <input type="range" id="set-music-vol" min="0" max="100" step="1" />
+          </label>
+          <button class="btn" id="sound-test">Probar sonido</button>
+          <p class="panel-note">Todos los sonidos se generan en tiempo real con Web Audio API. Nada suena hasta que interactúes con la página.</p>
+        </section>
+
+        <section class="modal-panel" id="tab-graphics" role="tabpanel">
+          <div class="seg-group" role="radiogroup" aria-label="Calidad gráfica">
+            <span class="seg-title">Calidad gráfica</span>
+            <div class="seg">
+              <button class="seg-btn" data-quality="low">Baja</button>
+              <button class="seg-btn" data-quality="medium">Media</button>
+              <button class="seg-btn" data-quality="high">Alta</button>
+            </div>
+          </div>
+          <label class="switch row-switch">
+            <input type="checkbox" id="set-fast" />
+            <span class="switch-ui" aria-hidden="true"></span>
+            <span class="switch-label">Animaciones rápidas</span>
+          </label>
+          <label class="switch row-switch">
+            <input type="checkbox" id="set-tilt" />
+            <span class="switch-ui" aria-hidden="true"></span>
+            <span class="switch-label">Efecto 3D en tarjetas del lobby</span>
+          </label>
+          <p class="panel-note">La calidad baja reduce partículas, resolución de los lienzos y efectos de fondo para equipos modestos.</p>
+        </section>
+
+        <section class="modal-panel" id="tab-access" role="tabpanel">
+          <label class="switch row-switch">
+            <input type="checkbox" id="set-reduce" />
+            <span class="switch-ui" aria-hidden="true"></span>
+            <span class="switch-label">Reducir movimiento</span>
+          </label>
+          <label class="switch row-switch">
+            <input type="checkbox" id="set-contrast" />
+            <span class="switch-ui" aria-hidden="true"></span>
+            <span class="switch-label">Alto contraste</span>
+          </label>
+          <label class="switch row-switch">
+            <input type="checkbox" id="set-large" />
+            <span class="switch-ui" aria-hidden="true"></span>
+            <span class="switch-label">Texto más grande</span>
+          </label>
+          <div class="shortcut-list">
+            <h4>Atajos de teclado</h4>
+            <p><kbd>/</kbd> buscar juego · <kbd>Esc</kbd> volver al lobby o cerrar · <kbd>Espacio</kbd> acción principal del juego</p>
+          </div>
+        </section>
+
+        <section class="modal-panel" id="tab-stats" role="tabpanel">
+          <div class="stats-summary" id="stats-summary"></div>
+          <div class="stats-table-wrap">
+            <table class="stats-table" id="stats-table"></table>
+          </div>
+          <button class="btn secondary" id="stats-reset">Borrar estadísticas</button>
+        </section>
+
+        <section class="modal-panel" id="tab-history" role="tabpanel">
+          <ol class="history-list" id="history-list"></ol>
+        </section>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- ===================== PERFIL ===================== -->
+  <dialog id="profile-modal" class="modal modal-small" aria-labelledby="profile-title">
+    <div class="modal-shell">
+      <header class="modal-head">
+        <h2 id="profile-title">Perfil</h2>
+        <button class="modal-close" data-close aria-label="Cerrar">✕</button>
+      </header>
+      <div class="modal-body">
+        <div class="profile-preview">
+          <div class="profile-big" id="profile-big"><span id="profile-big-initials">SW</span><img id="profile-big-img" alt="" hidden /></div>
+          <div>
+            <label class="field">
+              <span>Nombre de jugador</span>
+              <input type="text" id="profile-name" maxlength="24" placeholder="Tu nombre" />
+            </label>
+            <div class="profile-actions">
+              <label class="btn file-btn">
+                Elegir foto
+                <input type="file" id="profile-file" accept="image/*" hidden />
+              </label>
+              <button class="btn secondary" id="profile-photo-remove">Quitar foto</button>
+            </div>
+          </div>
+        </div>
+        <p class="panel-note">La foto y el nombre se guardan solo en este navegador.</p>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- ===================== CONFIRMACIÓN ===================== -->
+  <dialog id="confirm-modal" class="modal modal-small" aria-labelledby="confirm-title">
+    <div class="modal-shell">
+      <header class="modal-head">
+        <h2 id="confirm-title">¿Reiniciar el casino?</h2>
+      </header>
+      <div class="modal-body">
+        <p id="confirm-text">El saldo ficticio vuelve a $5000 y se cancelan las rondas y apuestas en curso.</p>
+        <div class="confirm-actions">
+          <button class="btn secondary" data-close>Cancelar</button>
+          <button class="btn primary" id="confirm-ok">Reiniciar</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <div class="toast-stack" id="toast-stack" aria-live="polite"></div>
+  <div class="fx-layer" id="fx-layer" aria-hidden="true"></div>
 
   <!-- WIN CELEBRATION OVERLAY -->
   <div id="win-overlay" class="win-overlay win-overlay--hidden">
