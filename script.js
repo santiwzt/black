@@ -8512,6 +8512,7 @@ function initCasino() {
   if (Accounts.mode === null) showAuth();
   renderRecentActivity();
   Bonus.start();
+  OfflineIncome.start();
 
   const key = location.hash.replace("#", "");
   if (GAME_META[key]) {
@@ -8658,6 +8659,88 @@ const Bonus = {
     const s = this.remaining % 60;
     el.textContent = m + ":" + String(s).padStart(2, "0");
     pill.style.setProperty("--p", ((1 - this.remaining / this.period) * 100).toFixed(1));
+  }
+};
+
+/* ============================================================
+   18c-bis. INGRESO MIENTRAS NO ESTÁS (offline)
+   ------------------------------------------------------------
+   Por cada media hora completa fuera de la página (cerrada o en
+   otra pestaña) se suman $250 ficticios, hasta un tope de $6000
+   (12 horas). Así nunca volvés con el saldo en cero, pero suma
+   poco comparado con el bono online. Cada cuenta lleva su propio
+   registro ("lastSeen").
+   ============================================================ */
+const OfflineIncome = {
+  period: 30 * 60 * 1000,
+  amount: 250,
+  maxPeriods: 24,
+  timer: null,
+
+  lastSeen() {
+    const v = Number(Store.get("lastSeen", 0));
+    return Number.isFinite(v) ? v : 0;
+  },
+
+  touch() {
+    Store.set("lastSeen", Date.now());
+  },
+
+  /* acredita los períodos completos desde la última vez que estuviste */
+  check() {
+    const now = Date.now();
+    const last = this.lastSeen();
+    if (!last || now < last) {
+      this.touch();
+      return 0;
+    }
+    const awayMs = now - last;
+    const periods = Math.floor(awayMs / this.period);
+    if (periods < 1) {
+      this.touch();
+      return 0;
+    }
+    const paid = Math.min(periods, this.maxPeriods);
+    const gain = paid * this.amount;
+    balance += gain;
+    updateBalance();
+    this.touch();
+    this.welcome(awayMs, gain, periods > this.maxPeriods);
+    return gain;
+  },
+
+  welcome(awayMs, gain, capped) {
+    const mins = Math.floor(awayMs / 60000);
+    const days = Math.floor(mins / 1440);
+    const hours = Math.floor((mins % 1440) / 60);
+    const rest = mins % 60;
+    const parts = [];
+    if (days) parts.push(days + (days === 1 ? " día" : " días"));
+    if (hours) parts.push(hours + " h");
+    if (rest && !days) parts.push(rest + " min");
+    document.getElementById("offline-away").textContent = "Estuviste afuera " + parts.join(" ") + ".";
+    document.getElementById("offline-amount").textContent = "+" + formatMoney(gain);
+    document.getElementById("offline-note").textContent = capped
+      ? "Llegaste al máximo de " + formatMoney(this.maxPeriods * this.amount) + " por tiempo fuera. Jugando sumás $5000 cada 5 minutos."
+      : "Sumás " + formatMoney(this.amount) + " por cada media hora fuera (hasta " + formatMoney(this.maxPeriods * this.amount) + "). Jugando, $5000 cada 5 minutos.";
+    Sound.play("cash");
+    const show = () => openModal("offline-modal");
+    /* si está abierta la pantalla de ingreso, se muestra después */
+    if (document.body.classList.contains("auth-open")) setTimeout(show, 600);
+    else show();
+  },
+
+  start() {
+    this.check();
+    clearInterval(this.timer);
+    this.timer = setInterval(() => {
+      if (document.visibilityState === "visible") this.touch();
+    }, 60000);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") this.touch();
+      else this.check();
+    });
+    window.addEventListener("beforeunload", () => this.touch());
   }
 };
 

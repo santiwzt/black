@@ -5188,3 +5188,36 @@ body.auth-open { overflow: hidden; }
   .bj-table .bet-spot, .bj-table .bet-spot-2 { bottom: 182px; }
   .bj-table:not(.in-play) .hand-player { min-height: 120px; }
 }
+
+
+/* ============================================================
+   31. BIENVENIDA CON INGRESO OFFLINE
+   ============================================================ */
+.offline-body { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding-top: 26px; }
+.offline-body h2 { font-size: 22px; }
+.offline-away { margin: 0; color: var(--muted); font-weight: 600; }
+.offline-amount {
+  margin: 8px 0 4px;
+  font-family: var(--font-display);
+  font-size: 40px;
+  background: var(--gold-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 16px rgba(240, 201, 107, 0.45));
+  animation: resultReveal 0.7s var(--ease-spring);
+}
+.offline-ok { width: 100%; min-height: 48px; margin-top: 10px; }
+.offline-coins { position: relative; width: 120px; height: 56px; }
+.offline-coins i {
+  position: absolute;
+  bottom: 0;
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff6d6, #f0c96b 45%, #b9822b 80%);
+  box-shadow: 0 0 0 3px #8a5a1c, 0 0 20px rgba(240, 201, 107, 0.5);
+  animation: chipFloat 3s ease-in-out infinite;
+}
+.offline-coins i:nth-child(1) { left: 6px; animation-delay: -1s; }
+.offline-coins i:nth-child(2) { left: 38px; bottom: 10px; z-index: 1; }
+.offline-coins i:nth-child(3) { left: 70px; animation-delay: -2s; }
