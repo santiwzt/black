@@ -4943,3 +4943,60 @@ body.auth-open { overflow: hidden; }
   .spotlight-body { grid-template-columns: 40px 1fr; }
   .spot-play { grid-column: 1 / -1; }
 }
+
+
+/* ============================================================
+   29. RULETA VERTICAL EN CELULAR
+   ------------------------------------------------------------
+   Como en las ruletas de celular: el 0 arriba y los números
+   en 3 columnas (1-2-3, 4-5-6, …), sin scroll horizontal.
+   ============================================================ */
+@media (max-width: 700px) {
+  .roulette-numbers-bottom { margin-top: 14px; }
+  .number-title-row { margin-bottom: 8px; }
+  .number-title-row p { display: none; }
+  .betting-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 96px;
+    gap: 6px;
+    padding: 10px;
+    overflow: visible;
+    border-radius: 22px;
+  }
+  .number-board {
+    min-width: 0;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: none;
+    grid-auto-rows: 40px;
+    grid-auto-flow: row;
+    gap: 4px;
+  }
+  .num-btn { grid-row: var(--vrow); grid-column: var(--vcol); font-size: 14px; border-radius: 7px; }
+  .num-btn.zero { grid-row: 1; grid-column: 1 / -1; border-radius: 40px 40px 8px 8px; font-size: 17px; }
+
+  /* apuestas externas en una columna al costado, como en la mesa real */
+  .outside-bets {
+    min-width: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-auto-rows: 1fr;
+    gap: 4px;
+    padding-top: 44px;
+  }
+  .quick-bet,
+  .quick-bet.dozen-bet,
+  .quick-bet.dozen-bet:first-child,
+  .quick-bet:not(.dozen-bet),
+  .quick-bet:nth-child(4) {
+    grid-column: auto;
+    min-height: 0;
+    font-size: 11px;
+    letter-spacing: 0.3px;
+    padding: 4px 2px;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .quick-bet .diamond { width: 13px; height: 13px; }
+  .bet-chip { width: 26px; height: 26px; margin: -13px 0 0 -13px; font-size: 8px; }
+}
