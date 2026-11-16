@@ -1138,6 +1138,7 @@ function showScreen(id, opts = {}) {
   }
 
   if (id === "menu-screen") startHeroLoop();
+  if (typeof MobileDock !== "undefined") MobileDock.attach(id);
   else Loop.remove("hero");
 
   window.scrollTo({ top: 0, behavior: Settings.reduceMotion ? "auto" : "smooth" });
@@ -8016,6 +8017,7 @@ function initCasino() {
   updateSlotsButtons();
 
   renderBankrolls();
+  MobileDock.attach(currentScreen);
   startSpotlight();
   renderRecentActivity();
   Bonus.start();
@@ -8909,6 +8911,144 @@ function refreshAllButtons() {
     updateChickenButtons, updatePlinkoButtons, updateAviatorButtons, updateHorseButtons,
     updateBaccaratButtons, updateSlotsButtons].forEach(fn => {
     try { fn(); } catch (e) { console.error(e); }
+  });
+}
+
+/* ============================================================
+   18g. VERSIÓN MÓVIL
+   ------------------------------------------------------------
+   En pantallas angostas:
+   - En cada juego, el mensaje, las fichas y los botones del
+     juego actual se mueven a una barra fija abajo (se mueven
+     los mismos elementos, así conservan sus eventos).
+   - En el lobby hay una barra de navegación inferior.
+   - Se puede instalar como app (manifest + service worker).
+   ============================================================ */
+const MobileDock = {
+  mq: window.matchMedia("(max-width: 700px)"),
+  dock: document.getElementById("mobile-dock"),
+  slots: {
+    status: document.getElementById("dock-bet"),
+    chips: document.getElementById("dock-chips"),
+    actions: document.getElementById("dock-actions")
+  },
+  moved: [],
+  hiddenPanels: [],
+  current: null,
+
+  isMobile() {
+    return this.mq.matches;
+  },
+
+  attach(screenId) {
+    this.detach();
+    this.current = screenId;
+    const screen = document.getElementById(screenId);
+    const inGame = !!(screen && screen.classList.contains("game-screen"));
+    document.body.classList.toggle("in-game", inGame);
+    updateBottomNav();
+
+    if (!this.isMobile() || !inGame || !this.dock) return;
+
+    const status = screen.querySelector(".status-row") || screen.querySelector(".message");
+    const chips = screen.querySelector(".chips");
+    const actions = screen.querySelector(".actions");
+
+    [["status", status], ["chips", chips], ["actions", actions]].forEach(([slot, el]) => {
+      if (!el) return;
+      const placeholder = document.createComment("dock:" + slot);
+      el.parentNode.insertBefore(placeholder, el);
+      this.moved.push({ el, placeholder });
+      this.slots[slot].appendChild(el);
+
+      /* el panel que queda vacío (solo con su título) se oculta */
+      const panel = placeholder.parentNode.closest(".panel");
+      if (panel && !Array.from(panel.children).some(c => c.tagName !== "H4")) {
+        panel.classList.add("docked-empty");
+        this.hiddenPanels.push(panel);
+      }
+    });
+
+    this.dock.hidden = false;
+    document.body.classList.add("has-dock");
+    requestAnimationFrame(() => this.measure());
+  },
+
+  detach() {
+    this.moved.forEach(({ el, placeholder }) => {
+      const parent = placeholder.parentNode;
+      if (parent) {
+        parent.insertBefore(el, placeholder);
+        parent.removeChild(placeholder);
+      }
+    });
+    this.hiddenPanels.forEach(p => p.classList.remove("docked-empty"));
+    this.moved = [];
+    this.hiddenPanels = [];
+    if (this.dock) this.dock.hidden = true;
+    document.body.classList.remove("has-dock");
+  },
+
+  /* el contenido de la página deja lugar para la barra fija */
+  measure() {
+    if (!this.dock || this.dock.hidden) return;
+    document.documentElement.style.setProperty("--dock-h", this.dock.offsetHeight + "px");
+  }
+};
+
+MobileDock.mq.addEventListener("change", () => {
+  MobileDock.attach(currentScreen);
+  if (screenHooks[currentScreen] && screenHooks[currentScreen].show) screenHooks[currentScreen].show();
+});
+window.addEventListener("resize", () => MobileDock.measure());
+if (window.ResizeObserver && MobileDock.dock) new ResizeObserver(() => MobileDock.measure()).observe(MobileDock.dock);
+
+function updateBottomNav() {
+  const active = Lobby.filter === "fav" ? "fav" : "home";
+  $$(".bn-item").forEach(b => b.classList.toggle("active", b.dataset.nav === active));
+}
+
+function setLobbyFilter(filter) {
+  const tab = document.querySelector(`.filter-tab[data-filter="${filter}"]`);
+  if (tab) tab.click();
+}
+
+$$(".bn-item").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const nav = btn.dataset.nav;
+    if (nav === "home") {
+      if (currentScreen !== "menu-screen") showScreen("menu-screen");
+      setLobbyFilter("all");
+      window.scrollTo({ top: 0, behavior: Settings.reduceMotion ? "auto" : "smooth" });
+    } else if (nav === "search") {
+      if (currentScreen !== "menu-screen") showScreen("menu-screen");
+      searchInput.focus();
+      searchInput.scrollIntoView({ block: "center" });
+    } else if (nav === "fav") {
+      if (currentScreen !== "menu-screen") showScreen("menu-screen");
+      setLobbyFilter("fav");
+      const bar = document.querySelector(".lobby-bar");
+      if (bar) bar.scrollIntoView({ behavior: Settings.reduceMotion ? "auto" : "smooth", block: "start" });
+    } else if (nav === "history") {
+      syncSettingsUI();
+      renderStatsPanel();
+      renderHistoryPanel();
+      openModal("settings-modal");
+      const tab = document.querySelector('.modal-tab[data-tab="tab-history"]');
+      if (tab) tab.click();
+    } else if (nav === "settings") {
+      document.getElementById("settings-open").click();
+    }
+    updateBottomNav();
+  });
+});
+
+$$(".filter-tab").forEach(tab => tab.addEventListener("click", updateBottomNav));
+
+/* Instalable como app: solo funciona servido por http(s) (Live Server, GitHub Pages…) */
+if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => { /* sin modo offline */ });
   });
 }
 

@@ -4416,3 +4416,237 @@ input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; border-radius
 /* retoques: fichas de $100 visibles en las pilas y historial vacío compacto */
 .stack-chip.c100 { --chip-c: #463f5e; }
 .bc-road:has(.bc-road-empty) { display: block; }
+
+/* ============================================================
+   26. VERSIÓN MÓVIL (barra de juego, navegación inferior, app)
+   ============================================================ */
+.mobile-dock, .bottom-nav { display: none; }
+
+button, a, .menu-card, input, select { touch-action: manipulation; }
+
+@media (max-width: 700px) {
+  :root { --dock-h: 170px; --nav-h: 64px; }
+
+  body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
+
+  /* ---- barra superior compacta ---- */
+  .casino-topbar {
+    padding-top: calc(8px + env(safe-area-inset-top));
+    padding-left: calc(12px + env(safe-area-inset-left));
+    padding-right: calc(12px + env(safe-area-inset-right));
+  }
+  :root { --topbar-h: calc(108px + env(safe-area-inset-top)); }
+  body.in-game { --topbar-h: calc(58px + env(safe-area-inset-top)); }
+  body.in-game .topbar-search { display: none; }
+  body.in-game .casino-topbar { grid-template-areas: "brand right"; }
+  #settings-open, #music-toggle { display: none; }
+  .topbar-right { gap: 5px; }
+
+  /* ---- navegación inferior (lobby) ---- */
+  .bottom-nav {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 120;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, rgba(12, 10, 24, 0.86), rgba(7, 6, 13, 0.97));
+    border-top: 1px solid var(--line);
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.45);
+  }
+  body.in-game .bottom-nav { display: none; }
+  .bn-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 0 4px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--faint);
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    transition: color var(--t-fast), background var(--t-fast);
+  }
+  .bn-item svg {
+    width: 22px; height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .bn-item.active { color: var(--gold-2); }
+  .bn-item.active svg { filter: drop-shadow(0 0 6px rgba(240, 201, 107, 0.6)); }
+  .bn-item:active { background: rgba(255, 255, 255, 0.06); }
+
+  body:not(.in-game) .app { padding-bottom: calc(var(--nav-h) + 28px + env(safe-area-inset-bottom)); }
+  body:not(.in-game) .toast-stack { bottom: calc(var(--nav-h) + 14px + env(safe-area-inset-bottom)); }
+
+  /* ---- barra fija de juego ---- */
+  body.has-dock .mobile-dock {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 120;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, rgba(16, 13, 30, 0.9), rgba(7, 6, 13, 0.98));
+    border-top: 1px solid rgba(var(--accent-rgb), 0.35);
+    border-radius: 20px 20px 0 0;
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    box-shadow: 0 -12px 34px rgba(0, 0, 0, 0.55), 0 -1px 18px rgba(var(--accent-rgb), 0.12);
+    animation: dockIn 0.4s var(--ease-out);
+  }
+  @keyframes dockIn { from { transform: translateY(100%); } }
+  body.has-dock .app { padding-bottom: calc(var(--dock-h) + 20px); }
+  body.has-dock .toast-stack { bottom: calc(var(--dock-h) + 10px); }
+
+  /* mensaje + apuesta en una línea compacta */
+  .dock-bet .status-row {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+  }
+  .dock-bet .message {
+    min-height: 0;
+    padding: 7px 10px 7px 13px;
+    font-size: 12.5px;
+    line-height: 1.3;
+    border-radius: 11px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .dock-bet .message::before { top: 7px; bottom: 7px; }
+  .dock-bet .bet-box {
+    flex: 0 0 auto;
+    min-width: 0;
+    display: block;
+    padding: 4px 10px;
+    border-radius: 11px;
+    text-align: right;
+  }
+  .dock-bet .bet-box span { font-size: 8.5px; letter-spacing: 1px; }
+  .dock-bet .bet-box strong { font-size: 15px; }
+
+  /* riel de fichas con scroll horizontal */
+  .dock-chips .chips {
+    flex-wrap: nowrap;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 4px 2px 6px;
+    margin: 0 -2px;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .dock-chips .chips::-webkit-scrollbar { display: none; }
+  .dock-chips .chip { width: 46px; height: 46px; scroll-snap-align: start; }
+  .dock-chips .chip span { inset: 6px; font-size: 9.5px; }
+  .dock-chips .allin-chip { width: 62px; }
+  .dock-chips .chip:not(:disabled):hover { transform: none; }
+
+  /* botones grandes para el dedo */
+  .dock-actions .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .dock-actions .actions .btn {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 46px;
+    padding: 0 8px;
+    font-size: 13.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .dock-actions .actions .btn.secondary { flex: 0.7 1 0; }
+  .dock-actions .chicken-actions,
+  .dock-actions .aviator-actions { display: flex; }
+  .dock-actions .aviator-actions .av-cash-btn { flex: 1.6 1 0; min-height: 46px; font-size: 15px; }
+  .dock-actions .btn.primary:not(:disabled) { box-shadow: 0 4px 18px rgba(240, 201, 107, 0.35); }
+
+  .panel.docked-empty { display: none; }
+  .controls:not(:has(.panel:not(.docked-empty))) { display: none; }
+
+  /* ---- pantallas de juego más compactas ---- */
+  .game-screen .top-line { gap: 10px; margin-bottom: 12px; }
+  .game-screen .back-btn { height: 38px; padding: 0 12px; }
+  .game-screen h2 { font-size: 22px; }
+  .game-card { padding: 12px; border-radius: 22px; }
+  .game-switcher { padding: 4px; }
+  .switch-pill { width: 36px; height: 36px; }
+
+  .bj-table { min-height: 0; padding: 54px 10px 16px; }
+  .poker-table { gap: 4px; }
+  .wheel-card { padding: 12px; gap: 12px; }
+  .miner-board { gap: 6px; }
+  .miner-board-wrap { padding: 10px; }
+  .chicken-road { height: 300px; }
+  .plinko-stage { height: clamp(320px, 100vw, 460px); }
+  .aviator-stage { height: 280px; }
+  .horse-track { height: 330px; }
+  .bc-table { padding: 54px 10px 14px; }
+  .slot-machine { padding: 14px 12px 16px; }
+
+  /* ---- lobby tipo app ---- */
+  .hero { padding: 22px 16px 20px; border-radius: 24px; }
+  .hero-meta { margin-top: 18px; gap: 8px; }
+  .hero-stat { padding: 8px 10px; }
+  .hero-stat strong { font-size: 15px; }
+  .lobby-bar { position: sticky; top: var(--topbar-h); z-index: 20; padding: 6px 0; background: linear-gradient(180deg, rgba(7, 6, 13, 0.95), rgba(7, 6, 13, 0)); }
+  .lobby-count { display: none; }
+  .menu-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .menu-card { min-height: 220px; }
+  .recent-activity { padding: 8px 10px; }
+  .recent-activity .mini-label { display: none; }
+}
+
+@media (max-width: 360px) {
+  .menu-grid { grid-template-columns: 1fr; }
+  .dock-actions .actions .btn { font-size: 12.5px; }
+}
+
+/* abierta como app instalada */
+@media (display-mode: standalone) {
+  .lobby-footnote { padding-bottom: env(safe-area-inset-bottom); }
+}
+
+/* columnas únicas que no pueden ensancharse por su contenido (evita zoom en celulares) */
+@media (max-width: 1100px) {
+  .roulette-main-casino, .miner-layout, .chicken-layout, .aviator-layout,
+  .plinko-layout, .horse-layout, .poker-layout, .slots-layout { grid-template-columns: minmax(0, 1fr); }
+  .miner-main, .miner-side { min-width: 0; }
+}
+
+/* barra fija: los botones se reparten en filas en vez de cortarse */
+@media (max-width: 700px) {
+  .dock-actions .actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  }
+  .dock-actions .actions .btn,
+  .dock-actions .actions .btn.secondary { flex: none; }
+  .dock-actions .aviator-actions .av-cash-btn { grid-column: auto; }
+}
+@media (max-width: 700px) {
+  .dock-actions .actions .btn { white-space: normal; line-height: 1.15; text-overflow: clip; }
+}
+@media (max-width: 380px) {
+  .dock-actions .actions { grid-template-columns: repeat(auto-fit, minmax(86px, 1fr)); }
+  .dock-actions .actions .btn { min-height: 40px; font-size: 12.5px; }
+  .dock-chips .chip { width: 42px; height: 42px; }
+  .dock-bet .message { font-size: 12px; }
+  body.has-dock .mobile-dock { gap: 6px; padding-top: 8px; }
+}

@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="description" content="Royal Neon Casino — simulación recreativa con dinero ficticio." />
   <meta name="theme-color" content="#07060d" />
   <title>Royal Neon Casino</title>
@@ -10,7 +10,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="styles.css?v=3.3" />
+  <link rel="apple-touch-icon" href="assets/icon-192.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Royal Neon" />
+  <link rel="stylesheet" href="styles.css?v=4.0" />
 </head>
 <body>
   <!-- Fondo ambiental -->
@@ -1554,6 +1560,36 @@
     </div>
   </dialog>
 
+  <!-- ===================== MÓVIL: barra de juego y navegación ===================== -->
+  <div class="mobile-dock" id="mobile-dock" hidden>
+    <div class="dock-bet" id="dock-bet"></div>
+    <div class="dock-chips" id="dock-chips"></div>
+    <div class="dock-actions" id="dock-actions"></div>
+  </div>
+
+  <nav class="bottom-nav" id="bottom-nav" aria-label="Navegación principal">
+    <button class="bn-item active" data-nav="home" aria-label="Inicio">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 L12 3 L21 11 V21 H14 V15 H10 V21 H3 Z"/></svg>
+      <span>Inicio</span>
+    </button>
+    <button class="bn-item" data-nav="search" aria-label="Buscar juegos">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20 L16.2 16.2"/></svg>
+      <span>Buscar</span>
+    </button>
+    <button class="bn-item" data-nav="fav" aria-label="Favoritos">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 L14.6 9 L21 9.6 L16.1 13.8 L17.6 20.2 L12 16.8 L6.4 20.2 L7.9 13.8 L3 9.6 L9.4 9 Z"/></svg>
+      <span>Favoritos</span>
+    </button>
+    <button class="bn-item" data-nav="history" aria-label="Historial y estadísticas">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20 V10 M10 20 V4 M16 20 V13 M22 20 H2"/></svg>
+      <span>Historial</span>
+    </button>
+    <button class="bn-item" data-nav="settings" aria-label="Ajustes">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>
+      <span>Ajustes</span>
+    </button>
+  </nav>
+
   <div class="toast-stack" id="toast-stack" aria-live="polite"></div>
   <div class="fx-layer" id="fx-layer" aria-hidden="true"></div>
 
@@ -1570,7 +1606,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=3.3"></script>
+  <script src="script.js?v=4.0"></script>
 </body>
 
 </html>
