@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="Royal Neon Casino">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff3cf"/>
+      <stop offset=".3" stop-color="#f0c96b"/>
+      <stop offset=".55" stop-color="#b9822b"/>
+      <stop offset=".78" stop-color="#f8dfa0"/>
+      <stop offset="1" stop-color="#8a5a1c"/>
+    </linearGradient>
+    <radialGradient id="core" cx=".5" cy=".42" r=".6">
+      <stop offset="0" stop-color="#2a1640"/>
+      <stop offset=".7" stop-color="#120a22"/>
+      <stop offset="1" stop-color="#07060d"/>
+    </radialGradient>
+    <filter id="neon" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3.2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- canto de ficha -->
+  <circle cx="128" cy="128" r="122" fill="#0b0816"/>
+  <circle cx="128" cy="128" r="116" fill="none" stroke="url(#g)" stroke-width="12"/>
+  <g fill="#ff3d9a">
+    <rect x="120" y="6" width="16" height="22" rx="3"/>
+    <rect x="120" y="6" width="16" height="22" rx="3" transform="rotate(45 128 128)"/>
+    <rect x="120" y="6" width="16" height="22" rx="3" transform="rotate(90 128 128)"/>
+    <rect x="120" y="6" width="16" height="22" rx="3" transform="rotate(135 128 128)"/>
+    <rect x="120" y="6" width="16" height="22" rx="3" transform="rotate(180 128 128)"/>
+    <rect x="120" y="6" width="16" height="22" rx="3" transform="rotate(225 128 128)"/>
+    <rect x="120" y="6" width="16" height="22" rx="3" transform="rotate(270 128 128)"/>
+    <rect x="120" y="6" width="16" height="22" rx="3" transform="rotate(315 128 128)"/>
+  </g>
+  <circle cx="128" cy="128" r="98" fill="url(#core)"/>
+  <circle cx="128" cy="128" r="92" fill="none" stroke="url(#g)" stroke-width="2.5" stroke-dasharray="3 5"/>
+  <!-- corona -->
+  <path d="M90 98 L96 66 L113 84 L128 58 L143 84 L160 66 L166 98 Z" fill="url(#g)"/>
+  <rect x="88" y="100" width="80" height="8" rx="4" fill="url(#g)"/>
+  <circle cx="128" cy="56" r="5" fill="#ff3d9a" filter="url(#neon)"/>
+  <circle cx="96" cy="64" r="3.5" fill="#2de2e6"/>
+  <circle cx="160" cy="64" r="3.5" fill="#2de2e6"/>
+  <!-- monograma RN en neón -->
+  <g fill="none" stroke="#ffd1ea" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" filter="url(#neon)">
+    <path d="M78 188 V124 H102 a17 17 0 0 1 0 34 H78 M98 158 L118 188"/>
+    <path d="M140 188 V124 L178 188 V124"/>
+  </g>
+  <g fill="none" stroke="#ff3d9a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M78 188 V124 H102 a17 17 0 0 1 0 34 H78 M98 158 L118 188"/>
+    <path d="M140 188 V124 L178 188 V124"/>
+  </g>
+  <path d="M96 206 H160" stroke="url(#g)" stroke-width="3" stroke-linecap="round"/>
+</svg>
