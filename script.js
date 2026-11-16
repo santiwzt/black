@@ -751,6 +751,9 @@ function updateBalance() {
 
   clearTimeout(saveBalanceTimer);
   saveBalanceTimer = setTimeout(saveBalance, 250);
+
+  if (typeof renderBankrolls === "function") renderBankrolls();
+  if (typeof refreshAllButtons === "function") refreshAllButtons();
 }
 
 function walletTick(dt, now) {
@@ -776,6 +779,7 @@ function pendingRefundables() {
     if (!pl.dropping) total += pl.bet;
     if (!av.active) total += av.bet;
     if (!hr.racing) total += hr.bet;
+    if (!bc.active) total += bcTotalBet();
   } catch (e) {
     /* durante la carga inicial algunos estados todavía no existen */
   }
@@ -999,24 +1003,30 @@ function chipFeedback(chipEl, targetEl, value) {
     chipEl.classList.add("chip-pop");
   }
   Sound.play("chip");
-  if (targetEl) FX.flyChip(chipEl, targetEl, value);
+  /* si en la mesa están tus fichas, la ficha sale de tu propia pila */
+  const source = bankrollSource(value) || chipEl;
+  if (targetEl) FX.flyChip(source, targetEl, value);
 }
 
 /* ============================================================
    6. ESTADÍSTICAS E HISTORIAL
    ============================================================ */
 const GAME_META = {
-  blackjack: { name: "Blackjack", screen: "blackjack-screen", glyph: "♠" },
-  poker: { name: "Poker", screen: "poker-screen", glyph: "♦" },
-  roulette: { name: "Ruleta", screen: "roulette-screen", glyph: "◉" },
-  miner: { name: "Coin Miner", screen: "miner-screen", glyph: "◆" },
-  chicken: { name: "Chicken Road", screen: "chicken-screen", glyph: "🐔" },
-  plinko: { name: "Plinko", screen: "plinko-screen", glyph: "▾" },
-  aviator: { name: "Aviator", screen: "aviator-screen", glyph: "✈" },
-  horse: { name: "Carrera", screen: "horse-screen", glyph: "🏇" }
+  blackjack: { name: "Blackjack", screen: "blackjack-screen", glyph: "♠", blurb: "Sumá 21 sin pasarte. El Blackjack natural paga 3 a 2.", accent: "52,232,158" },
+  poker: { name: "Poker", screen: "poker-screen", glyph: "♦", blurb: "Texas Hold'em contra un dealer que paga, sube o se retira.", accent: "255,77,109" },
+  baccarat: { name: "Baccarat", screen: "baccarat-screen", glyph: "♣", blurb: "Jugador, Banca o Empate. Gana la mano más cerca de 9.", accent: "78,168,255" },
+  slots: { name: "Tragamonedas", screen: "slots-screen", glyph: "7", blurb: "Tres rodillos clásicos con palanca. Tres 7 pagan 150x.", accent: "255,181,71" },
+  roulette: { name: "Ruleta", screen: "roulette-screen", glyph: "◉", blurb: "Rueda europea con bola real: plenos, colores y docenas.", accent: "240,201,107" },
+  miner: { name: "Coin Miner", screen: "miner-screen", glyph: "◆", blurb: "Elegí de 1 a 24 bombas y cobrá antes de explotar.", accent: "45,226,230" },
+  chicken: { name: "Chicken Road", screen: "chicken-screen", glyph: "🐔", blurb: "Cruzá carriles con el pollito y cobrá a tiempo.", accent: "255,159,28" },
+  plinko: { name: "Plinko", screen: "plinko-screen", glyph: "▾", blurb: "Soltá hasta 20 bolas y mirá dónde caen.", accent: "196,120,255" },
+  aviator: { name: "Aviator", screen: "aviator-screen", glyph: "✈", blurb: "El multiplicador sube con el avión. Cobrá antes del crash.", accent: "255,61,90" },
+  horse: { name: "Carrera", screen: "horse-screen", glyph: "🏇", blurb: "Seis caballos, apuesta a ganador o al podio.", accent: "120,220,90" }
 };
 
 const SWITCH_ICONS = {
+  baccarat: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="8" height="14" rx="1.6" fill="#0f2a4a" stroke="#4ea8ff" stroke-width="1.6"/><rect x="13" y="5" width="8" height="14" rx="1.6" fill="#3a0d1c" stroke="#ff4d6d" stroke-width="1.6"/><text x="7" y="15" font-size="7" font-weight="900" fill="#4ea8ff" text-anchor="middle" font-family="sans-serif">P</text><text x="17" y="15" font-size="7" font-weight="900" fill="#ff4d6d" text-anchor="middle" font-family="sans-serif">B</text></svg>',
+  slots: '<svg viewBox="0 0 24 24"><rect x="2" y="5" width="17" height="14" rx="3" fill="#2a1406" stroke="#ffb547" stroke-width="1.6"/><path d="M6 9 h3 l-2 6 M11 9 h3 l-2 6" stroke="#ff4d6d" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M21 6 v8" stroke="#ffb547" stroke-width="1.6"/><circle cx="21" cy="5" r="1.8" fill="#ff4d6d"/></svg>',
   blackjack: '<svg viewBox="0 0 24 24"><rect x="4" y="3" width="12" height="17" rx="2" fill="none" stroke="#34e89e" stroke-width="1.8"/><rect x="8" y="5" width="12" height="17" rx="2" fill="#0f2a20" stroke="#34e89e" stroke-width="1.8"/><path d="M14 10 q-3 3 0 5 q3 -2 0 -5z" fill="#34e89e"/></svg>',
   poker: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="#ff4d6d" stroke-width="1.8" stroke-dasharray="3 2.2"/><path d="M12 7 l4 5 -4 5 -4 -5z" fill="#ff4d6d"/></svg>',
   roulette: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#f0c96b" stroke-width="1.8"/><circle cx="12" cy="12" r="4" fill="#f0c96b"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4" stroke="#f0c96b" stroke-width="1.6"/></svg>',
@@ -1082,6 +1092,7 @@ function updateHeroStats() {
   const best = $("#hero-best");
   if (rounds) rounds.textContent = String(t.rounds);
   if (best) best.textContent = formatMoney(t.best);
+  renderRecentActivity();
 }
 
 /* ============================================================
@@ -1381,7 +1392,9 @@ const PRIMARY_ACTIONS = {
   "chicken-screen": ["cr-start", "cr-go"],
   "plinko-screen": ["pl-drop"],
   "aviator-screen": ["av-cashout", "av-start"],
-  "horse-screen": ["hr-start"]
+  "horse-screen": ["hr-start"],
+  "baccarat-screen": ["bc-deal"],
+  "slots-screen": ["sl-spin"]
 };
 
 document.addEventListener("keydown", e => {
@@ -3149,8 +3162,9 @@ const rt = {
     idleSpeed: 0.22,
     ballAngle: 0,
     ballRadius: 0,
-    ballVisible: false,
+    ballVisible: true,
     winnerIndex: -1,
+    restIndex: Math.floor(Math.random() * 37),
     spin: null,
     layers: null,
     size: 0,
@@ -3853,7 +3867,9 @@ function rouletteTick(dt, now) {
     }
   } else {
     W.rotor += W.idleSpeed * dt;
-    if (W.winnerIndex >= 0) W.ballAngle = W.rotor + W.winnerIndex * RT_SEG;
+    const restAt = W.winnerIndex >= 0 ? W.winnerIndex : W.restIndex;
+    W.ballAngle = W.rotor + restAt * RT_SEG;
+    W.ballRadius = (W.size || 400) / 2 * 0.97 * 0.6;
   }
 
   if (currentScreen === "roulette-screen") drawRouletteWheel(now);
@@ -4077,7 +4093,8 @@ function rtReset() {
   rt.spinning = false;
   rt.wheel.spin = null;
   rt.wheel.winnerIndex = -1;
-  rt.wheel.ballVisible = false;
+  rt.wheel.ballVisible = true;
+  rt.wheel.restIndex = Math.floor(Math.random() * 37);
   Sound.stopRoll();
   rtEls.result.textContent = "?";
   rtEls.resultChip.className = "wheel-center";
@@ -7895,7 +7912,10 @@ function resetCasino() {
   Sound.stopAllLoops();
   FX.clear();
 
-  /* 2) cada juego vuelve a un estado consistente, sin apuestas en curso */
+  /* 2) saldo ficticio inicial, antes de recalcular los botones de cada juego */
+  balance = INITIAL_BALANCE;
+
+  /* 3) cada juego vuelve a un estado consistente, sin apuestas en curso */
   bjReset();
   pkReset();
   rtReset();
@@ -7904,15 +7924,16 @@ function resetCasino() {
   plReset();
   avReset();
   hrReset();
+  bcReset();
+  slReset();
 
-  /* 3) saldo ficticio inicial */
-  balance = INITIAL_BALANCE;
   updateBalance();
   saveBalance();
 
   if (screenHooks[currentScreen] && screenHooks[currentScreen].show) screenHooks[currentScreen].show();
   if (currentScreen === "menu-screen") startHeroLoop();
 
+  refreshAllButtons();
   toast("Casino reiniciado: saldo ficticio " + formatMoney(INITIAL_BALANCE));
 }
 
@@ -7986,6 +8007,19 @@ function initCasino() {
   updateHorseInfo();
   updateHorseButtons();
 
+  renderBaccarat();
+  renderBaccaratRoad();
+  updateBaccaratButtons();
+
+  buildSlotMachine();
+  slRenderInfo();
+  updateSlotsButtons();
+
+  renderBankrolls();
+  startSpotlight();
+  renderRecentActivity();
+  Bonus.start();
+
   const key = location.hash.replace("#", "");
   if (GAME_META[key]) {
     showScreen(GAME_META[key].screen, { fromHistory: true });
@@ -7995,6 +8029,888 @@ function initCasino() {
   }
 }
 
+
+/* ============================================================
+   18b. TUS FICHAS SOBRE LA MESA
+   ------------------------------------------------------------
+   El saldo se muestra como fichas reales apiladas por color.
+   Se reparte como en un casino: algunas fichas chicas para
+   apostar y el resto en fichas grandes.
+   ============================================================ */
+const BANKROLL_ORDER = [25, 50, 100, 500, 1000, 5000];
+const BANKROLL_CAPS = { 25: 6, 50: 6, 100: 10, 500: 6, 1000: 8 };
+const BANKROLL_VISIBLE = 12;
+
+function bankrollBreakdown(amount) {
+  let rest = Math.floor(Math.max(0, amount) / 25) * 25;
+  const loose = round2(Math.max(0, amount) - rest);
+  const counts = {};
+
+  for (let i = 0; i < BANKROLL_ORDER.length - 1; i++) {
+    const d = BANKROLL_ORDER[i];
+    const next = BANKROLL_ORDER[i + 1];
+    const chunk = next / d;
+    let c = (rest % next) / d;
+    let extra = Math.floor((BANKROLL_CAPS[d] - c) / chunk);
+    while (extra > 0 && (c + extra * chunk) * d > rest) extra--;
+    if (extra > 0) c += extra * chunk;
+    counts[d] = c;
+    rest -= c * d;
+  }
+  counts[5000] = rest / 5000;
+  return { counts, loose };
+}
+
+function renderBankrolls() {
+  const { counts, loose } = bankrollBreakdown(balance);
+  const key = JSON.stringify(counts);
+
+  $$("[data-bankroll]").forEach(el => {
+    const total = el.querySelector(".bankroll-total");
+    if (total) total.textContent = formatMoney(balance) + (loose > 0 ? " · " + formatMoney(loose) + " sueltos" : "");
+    if (el._key === key) return;
+
+    const prev = el._prev || null;
+    const cols = el.querySelector(".bankroll-cols");
+    let html = "";
+
+    [...BANKROLL_ORDER].reverse().forEach(d => {
+      const count = counts[d];
+      if (!count) return;
+      const visible = Math.min(count, BANKROLL_VISIBLE);
+      const before = prev ? Math.min(prev[d] || 0, BANKROLL_VISIBLE) : visible;
+      let chips = "";
+      for (let i = 0; i < visible; i++) {
+        const isNew = i >= before;
+        chips += `<i class="stack-chip c${d}${isNew ? " drop" : ""}" style="--n:${i};--k:${Math.max(0, i - before)}"></i>`;
+      }
+      html += `<div class="br-col" data-d="${d}"><div class="br-stack" style="height:${16 + visible * 5}px">${chips}</div><span class="br-count">${count > 1 ? "×" + count : ""}</span><span class="br-denom">${shortMoney(d)}</span></div>`;
+    });
+
+    if (!html) html = '<span class="br-empty">Sin fichas</span>';
+    cols.innerHTML = html;
+    el._key = key;
+    el._prev = counts;
+  });
+
+  if (typeof slRenderInfo === "function" && sl && sl.reels) slRenderInfo();
+}
+
+/* Pila de origen para una ficha apostada (solo si la mesa actual muestra tus fichas). */
+function bankrollSource(value) {
+  const screen = document.getElementById(currentScreen);
+  if (!screen) return null;
+  const rack = screen.querySelector("[data-bankroll]");
+  if (!rack || !FX.visible(rack)) return null;
+  const d = Number(chipClassFor(value).replace("c", "")) || 0;
+  const col = rack.querySelector(`.br-col[data-d="${d}"]`) || rack.querySelector(".br-col");
+  if (!col) return null;
+  return col.querySelector(".stack-chip:last-child") || col;
+}
+
+/* ============================================================
+   18c. BONO POR ESTAR ONLINE
+   ------------------------------------------------------------
+   Cada 5 minutos con la página abierta y visible se suman
+   $5000 ficticios. El tiempo solo corre con la pestaña
+   visible y se guarda, así que recargar no lo reinicia.
+   ============================================================ */
+const Bonus = {
+  period: 300,
+  amount: 5000,
+  remaining: 300,
+  timer: null,
+
+  start() {
+    const saved = Number(Store.get("bonusRemaining", this.period));
+    this.remaining = Number.isFinite(saved) && saved > 0 && saved <= this.period ? Math.round(saved) : this.period;
+    this.render();
+    clearInterval(this.timer);
+    this.timer = setInterval(() => this.tick(), 1000);
+    window.addEventListener("beforeunload", () => Store.set("bonusRemaining", this.remaining));
+  },
+
+  tick() {
+    if (document.visibilityState !== "visible") return;
+    this.remaining--;
+    if (this.remaining <= 0) {
+      this.remaining = this.period;
+      this.grant();
+    }
+    if (this.remaining % 5 === 0) Store.set("bonusRemaining", this.remaining);
+    this.render();
+  },
+
+  grant() {
+    balance += this.amount;
+    updateBalance();
+    const pill = $("#bonus-pill");
+    if (pill) {
+      pill.classList.remove("granted");
+      void pill.offsetWidth;
+      pill.classList.add("granted");
+      FX.burstAt(pill, { count: 22, colors: ["#fff1c4", "#f0c96b", "#34e89e"], speed: 170, gravity: 260 });
+      FX.flyChip(pill, walletEl, this.amount);
+    }
+    Sound.play("cash");
+    refreshAllButtons();
+    toast("🎁 +" + formatMoney(this.amount) + " ficticios por estar online");
+  },
+
+  render() {
+    const el = $("#bonus-time");
+    const pill = $("#bonus-pill");
+    if (!el || !pill) return;
+    const m = Math.floor(this.remaining / 60);
+    const s = this.remaining % 60;
+    el.textContent = m + ":" + String(s).padStart(2, "0");
+    pill.style.setProperty("--p", ((1 - this.remaining / this.period) * 100).toFixed(1));
+  }
+};
+
+/* ============================================================
+   18d. INICIO: JUEGO DESTACADO Y ACTIVIDAD RECIENTE
+   ============================================================ */
+const Spotlight = { index: 0, timer: null, keys: Object.keys(GAME_META) };
+
+function renderSpotlight(i, animate = true) {
+  const keys = Spotlight.keys;
+  Spotlight.index = ((i % keys.length) + keys.length) % keys.length;
+  const key = keys[Spotlight.index];
+  const meta = GAME_META[key];
+  const body = $("#spotlight-body");
+  if (!body) return;
+
+  const spot = $("#spotlight");
+  spot.style.setProperty("--spot-rgb", meta.accent);
+  body.innerHTML = `
+    <div class="spot-icon">${SWITCH_ICONS[key]}</div>
+    <div class="spot-text">
+      <strong>${meta.name}</strong>
+      <p>${meta.blurb}</p>
+    </div>
+    <button class="btn primary spot-play" type="button">Jugar ahora</button>
+  `;
+  body.querySelector(".spot-play").addEventListener("click", () => showScreen(meta.screen));
+  if (animate) {
+    body.classList.remove("spot-in");
+    void body.offsetWidth;
+    body.classList.add("spot-in");
+  }
+
+  $$(".spot-dot").forEach((d, k) => {
+    d.classList.toggle("active", k === Spotlight.index);
+    d.setAttribute("aria-selected", String(k === Spotlight.index));
+  });
+}
+
+function startSpotlight() {
+  const dots = $("#spotlight-dots");
+  if (!dots) return;
+  dots.innerHTML = Spotlight.keys.map((k, i) => `<button class="spot-dot" role="tab" aria-label="${GAME_META[k].name}" data-i="${i}"></button>`).join("");
+  $$(".spot-dot").forEach(d => d.addEventListener("click", () => {
+    renderSpotlight(Number(d.dataset.i));
+    restartSpotlightTimer();
+  }));
+  renderSpotlight(Math.floor(Math.random() * Spotlight.keys.length), false);
+  restartSpotlightTimer();
+}
+
+function restartSpotlightTimer() {
+  clearInterval(Spotlight.timer);
+  Spotlight.timer = setInterval(() => {
+    if (currentScreen === "menu-screen" && !document.hidden && !Settings.reduceMotion) renderSpotlight(Spotlight.index + 1);
+  }, 6500);
+}
+
+function renderRecentActivity() {
+  const wrap = $("#recent-activity");
+  const list = $("#recent-list");
+  if (!wrap || !list) return;
+  const items = Stats.data.history.slice(0, 8);
+  wrap.hidden = items.length === 0;
+  list.innerHTML = items.map(item => {
+    const meta = GAME_META[item.g] || { name: item.g, screen: "menu-screen" };
+    const cls = item.net > 0 ? "pos" : item.net < 0 ? "neg" : "";
+    return `<button class="recent-item ${cls}" data-screen-go="${meta.screen}"><span class="recent-icon">${SWITCH_ICONS[item.g] || ""}</span><span>${meta.name}</span><b>${signedMoney(item.net)}</b></button>`;
+  }).join("");
+  $$(".recent-item", list).forEach(b => b.addEventListener("click", () => showScreen(b.dataset.screenGo)));
+}
+
+/* ============================================================
+   18e. BACCARAT (Punto Banco)
+   ------------------------------------------------------------
+   Jugador paga 1 a 1, Banca 0,95 a 1 (5% de comisión) y
+   Empate 8 a 1. En empate se devuelven las apuestas a
+   Jugador y Banca. Tercera carta según la tabla clásica.
+   ============================================================ */
+const bc = {
+  bets: { player: 0, banker: 0, tie: 0 },
+  zone: "player",
+  active: false,
+  animating: false,
+  deck: [],
+  player: [],
+  banker: [],
+  history: Store.get("bcHistory", []),
+  lastBets: null
+};
+
+const bcEls = {
+  message: document.getElementById("bc-message"),
+  bet: document.getElementById("bc-bet"),
+  table: document.getElementById("bc-table"),
+  shoe: document.getElementById("bc-shoe"),
+  playerCards: document.getElementById("bc-player-cards"),
+  bankerCards: document.getElementById("bc-banker-cards"),
+  playerScore: document.getElementById("bc-player-score"),
+  bankerScore: document.getElementById("bc-banker-score"),
+  handPlayer: document.getElementById("bc-hand-player"),
+  handBanker: document.getElementById("bc-hand-banker"),
+  zones: document.querySelectorAll(".bc-zone"),
+  road: document.getElementById("bc-road"),
+  tally: document.getElementById("bc-tally"),
+  chips: document.querySelectorAll(".bc-chip"),
+  clear: document.getElementById("bc-clear"),
+  rebet: document.getElementById("bc-rebet"),
+  deal: document.getElementById("bc-deal"),
+  stacks: {
+    player: document.getElementById("bc-stack-player"),
+    banker: document.getElementById("bc-stack-banker"),
+    tie: document.getElementById("bc-stack-tie")
+  },
+  amounts: {
+    player: document.getElementById("bc-amount-player"),
+    banker: document.getElementById("bc-amount-banker"),
+    tie: document.getElementById("bc-amount-tie")
+  }
+};
+
+const BC_ZONE_NAMES = { player: "Jugador", banker: "Banca", tie: "Empate" };
+
+function bcCardValue(card) {
+  if (card.rank === "A") return 1;
+  if (card.rank === "10" || card.rank === "J" || card.rank === "Q" || card.rank === "K") return 0;
+  return Number(card.rank);
+}
+
+function bcTotal(hand) {
+  return hand.reduce((sum, card) => sum + bcCardValue(card), 0) % 10;
+}
+
+function bcTotalBet() {
+  return round2(bc.bets.player + bc.bets.banker + bc.bets.tie);
+}
+
+function bcBankerDraws(bankerTotal, playerThird) {
+  if (playerThird === null) return bankerTotal <= 5;
+  if (bankerTotal <= 2) return true;
+  if (bankerTotal === 3) return playerThird !== 8;
+  if (bankerTotal === 4) return playerThird >= 2 && playerThird <= 7;
+  if (bankerTotal === 5) return playerThird >= 4 && playerThird <= 7;
+  if (bankerTotal === 6) return playerThird === 6 || playerThird === 7;
+  return false;
+}
+
+function bcUpdateScores() {
+  animateNumber(bcEls.playerScore, bc.player.length ? bcTotal(bc.player) : 0);
+  animateNumber(bcEls.bankerScore, bc.banker.length ? bcTotal(bc.banker) : 0);
+}
+
+function renderBaccarat(animate = false) {
+  const decorate = (el, index) => {
+    if (index === 2) el.classList.add("doubled");
+  };
+  syncHand(bcEls.playerCards, bc.player, () => false, { animate, shoe: bcEls.shoe, decorate });
+  syncHand(bcEls.bankerCards, bc.banker, () => false, { animate, shoe: bcEls.shoe, decorate });
+  if (!animate) bcUpdateScores();
+
+  bcEls.bet.textContent = formatMoney(bcTotalBet());
+  Object.keys(bc.bets).forEach(z => {
+    bcEls.amounts[z].textContent = formatMoney(bc.bets[z]);
+    if (bc.bets[z] > 0) renderChipStack(bcEls.stacks[z], bc.bets[z]);
+    else if (!bc.active) renderChipStack(bcEls.stacks[z], 0);
+  });
+
+  bcEls.zones.forEach(zone => {
+    const on = zone.dataset.zone === bc.zone;
+    zone.classList.toggle("selected", on);
+    zone.setAttribute("aria-checked", String(on));
+    zone.classList.toggle("has-bet", bc.bets[zone.dataset.zone] > 0);
+  });
+}
+
+function renderBaccaratRoad() {
+  const counts = { player: 0, banker: 0, tie: 0 };
+  bc.history.forEach(r => { counts[r]++; });
+  bcEls.tally.innerHTML = `<span class="t-p">Jugador ${counts.player}</span><span class="t-b">Banca ${counts.banker}</span><span class="t-t">Empate ${counts.tie}</span>`;
+  const letters = { player: "J", banker: "B", tie: "E" };
+  bcEls.road.innerHTML = bc.history.length
+    ? bc.history.map(r => `<span class="bead bead-${r}">${letters[r]}</span>`).join("")
+    : '<span class="bc-road-empty">Todavía no se jugaron manos.</span>';
+}
+
+function updateBaccaratButtons() {
+  const busy = bc.active || bc.animating;
+
+  bcEls.chips.forEach(chip => {
+    const value = chipAmount(chip);
+    chip.disabled = busy || value <= 0 || balance < value;
+  });
+  bcEls.zones.forEach(z => { z.disabled = busy; });
+
+  const lastTotal = bc.lastBets ? bc.lastBets.player + bc.lastBets.banker + bc.lastBets.tie : 0;
+  bcEls.clear.disabled = busy || bcTotalBet() === 0;
+  bcEls.deal.disabled = busy || bcTotalBet() === 0;
+  bcEls.rebet.disabled = busy || !lastTotal || balance < lastTotal;
+}
+
+function bcSelectZone(zone) {
+  if (bc.active || bc.animating || !BC_ZONE_NAMES[zone]) return;
+  bc.zone = zone;
+  Sound.play("select");
+  renderBaccarat();
+  setMessage(bcEls.message, "Apostás a " + BC_ZONE_NAMES[zone] + ". Tocá una ficha para sumar.");
+}
+
+function bcPlaceChip(value, chipEl) {
+  if (bc.active || bc.animating || value <= 0 || balance < value) return;
+
+  balance -= value;
+  bc.bets[bc.zone] = round2(bc.bets[bc.zone] + value);
+
+  chipFeedback(chipEl, bcEls.stacks[bc.zone], value);
+  updateBalance();
+  renderChipStack(bcEls.stacks[bc.zone], bc.bets[bc.zone], { force: true });
+  renderBaccarat();
+  updateBaccaratButtons();
+
+  setMessage(bcEls.message, "Apostaste " + formatMoney(bc.bets[bc.zone]) + " a " + BC_ZONE_NAMES[bc.zone] + ". Total: " + formatMoney(bcTotalBet()) + ".");
+}
+
+function bcClearBet() {
+  if (bc.active || bc.animating) return;
+  const total = bcTotalBet();
+  balance += total;
+  Object.keys(bc.bets).forEach(z => {
+    if (bc.bets[z] > 0) FX.flyChip(bcEls.stacks[z], walletEl, bc.bets[z]);
+    bc.bets[z] = 0;
+    renderChipStack(bcEls.stacks[z], 0, { force: true });
+  });
+  updateBalance();
+  renderBaccarat();
+  updateBaccaratButtons();
+  setMessage(bcEls.message, "Apuestas limpiadas.");
+}
+
+function bcRebet() {
+  if (bc.active || bc.animating || !bc.lastBets) return;
+  const total = bc.lastBets.player + bc.lastBets.banker + bc.lastBets.tie;
+  if (!total || balance < total) {
+    setMessage(bcEls.message, "No tenés saldo suficiente para repetir la apuesta anterior.", "lose");
+    return;
+  }
+  balance -= total;
+  Object.keys(bc.bets).forEach(z => {
+    if (bc.lastBets[z] > 0) {
+      bc.bets[z] = round2(bc.bets[z] + bc.lastBets[z]);
+      FX.flyChip(bankrollSource(bc.lastBets[z]) || bcEls.rebet, bcEls.stacks[z], bc.lastBets[z]);
+      renderChipStack(bcEls.stacks[z], bc.bets[z], { force: true });
+    }
+  });
+  Sound.play("chipsCollect");
+  updateBalance();
+  renderBaccarat();
+  updateBaccaratButtons();
+  setMessage(bcEls.message, "Repetiste la apuesta anterior: " + formatMoney(total) + ".");
+}
+
+async function bcDealCard(target) {
+  bc[target].push(bc.deck.pop());
+  renderBaccarat(true);
+  await sleep(T(340));
+  bcUpdateScores();
+  await sleep(T(170));
+}
+
+async function bcDeal() {
+  if (bc.active || bc.animating || bcTotalBet() <= 0) return;
+
+  bc.active = true;
+  bc.animating = true;
+  bc.lastBets = { ...bc.bets };
+  updateBaccaratButtons();
+  bcEls.handPlayer.classList.remove("bc-winner", "bc-loser");
+  bcEls.handBanker.classList.remove("bc-winner", "bc-loser");
+  bcEls.zones.forEach(z => z.classList.remove("zone-won", "zone-lost"));
+  setMessage(bcEls.message, "Repartiendo cartas…");
+
+  await sweepCards([bcEls.playerCards, bcEls.bankerCards]);
+
+  /* zapato de 6 mazos */
+  let shoe = [];
+  for (let i = 0; i < 6; i++) shoe = shoe.concat(createDeck());
+  bc.deck = shuffle(shoe);
+  bc.player = [];
+  bc.banker = [];
+  renderBaccarat();
+
+  await bcDealCard("player");
+  await bcDealCard("banker");
+  await bcDealCard("player");
+  await bcDealCard("banker");
+
+  let p = bcTotal(bc.player);
+  let b = bcTotal(bc.banker);
+
+  if (p >= 8 || b >= 8) {
+    setMessage(bcEls.message, "¡Natural! " + (p >= 8 ? "Jugador con " + p : "Banca con " + b) + ". No se piden más cartas.");
+    await sleep(T(600));
+  } else {
+    let playerThird = null;
+
+    if (p <= 5) {
+      setMessage(bcEls.message, "El Jugador tiene " + p + " y pide una tercera carta.");
+      await sleep(T(450));
+      await bcDealCard("player");
+      playerThird = bcCardValue(bc.player[2]);
+    } else {
+      setMessage(bcEls.message, "El Jugador se planta con " + p + ".");
+      await sleep(T(450));
+    }
+
+    b = bcTotal(bc.banker);
+    if (bcBankerDraws(b, playerThird)) {
+      setMessage(bcEls.message, "La Banca tiene " + b + " y pide una tercera carta.");
+      await sleep(T(450));
+      await bcDealCard("banker");
+    } else {
+      setMessage(bcEls.message, "La Banca se planta con " + b + ".");
+      await sleep(T(450));
+    }
+  }
+
+  await sleep(T(300));
+  bcResolve();
+}
+
+function bcResolve() {
+  const p = bcTotal(bc.player);
+  const b = bcTotal(bc.banker);
+  const outcome = p > b ? "player" : b > p ? "banker" : "tie";
+  const totalBet = bcTotalBet();
+  const bets = { ...bc.bets };
+
+  let payout = 0;
+  if (outcome === "player") payout += bets.player * 2;
+  if (outcome === "banker") payout += bets.banker * 1.95;
+  if (outcome === "tie") payout += bets.tie * 9 + bets.player + bets.banker;
+  payout = round2(payout);
+  balance += payout;
+
+  const net = round2(payout - totalBet);
+
+  if (outcome !== "tie") {
+    (outcome === "player" ? bcEls.handPlayer : bcEls.handBanker).classList.add("bc-winner");
+    (outcome === "player" ? bcEls.handBanker : bcEls.handPlayer).classList.add("bc-loser");
+  }
+
+  /* liquidación de cada zona: gana, se devuelve (empate) o se la lleva la banca */
+  Object.keys(bets).forEach(z => {
+    if (!bets[z]) return;
+    const zoneEl = document.querySelector(`.bc-zone[data-zone="${z}"]`);
+    let back = 0;
+    if (z === outcome) back = z === "player" ? bets.player * 2 : z === "banker" ? bets.banker * 1.95 : bets.tie * 9;
+    else if (outcome === "tie") back = bets[z];
+    zoneEl.classList.add(back > bets[z] ? "zone-won" : back === 0 ? "zone-lost" : "zone-push");
+    settleStack(bcEls.stacks[z], back > 0, round2(back), bcEls.shoe);
+  });
+
+  bc.history.push(outcome);
+  if (bc.history.length > 72) bc.history.shift();
+  Store.set("bcHistory", bc.history);
+  renderBaccaratRoad();
+
+  const resultName = outcome === "tie" ? "Empate " + p + " a " + b : "Gana " + BC_ZONE_NAMES[outcome] + " " + Math.max(p, b) + " a " + Math.min(p, b);
+  Stats.record("baccarat", totalBet, payout, resultName);
+
+  if (net > 0) {
+    Sound.play("cash");
+    setMessage(bcEls.message, resultName + ". Cobrás " + formatMoney(payout) + " (ganancia " + formatMoney(net) + ").", "win");
+    const type = net >= 300 ? "bigwin" : "win";
+    later(() => showWinAnimation(type === "bigwin" ? "BIG WIN" : "WIN", Math.round(net), type), 1000);
+  } else if (net < 0) {
+    Sound.play("thud");
+    setMessage(bcEls.message, resultName + ". " + (payout > 0 ? "Recuperás " + formatMoney(payout) + ", perdés " + formatMoney(-net) + "." : "Perdiste " + formatMoney(totalBet) + "."), "lose");
+    later(() => showWinAnimation("GAME OVER", Math.round(-net), "lose"), 1000);
+  } else {
+    setMessage(bcEls.message, resultName + ". Recuperás tu apuesta.", "push");
+  }
+
+  bc.bets = { player: 0, banker: 0, tie: 0 };
+  bc.active = false;
+  bc.animating = false;
+
+  updateBalance();
+  renderBaccarat();
+  updateBaccaratButtons();
+}
+
+function bcReset() {
+  bc.bets = { player: 0, banker: 0, tie: 0 };
+  bc.active = false;
+  bc.animating = false;
+  bc.player = [];
+  bc.banker = [];
+  bcEls.handPlayer.classList.remove("bc-winner", "bc-loser");
+  bcEls.handBanker.classList.remove("bc-winner", "bc-loser");
+  bcEls.zones.forEach(z => z.classList.remove("zone-won", "zone-lost", "zone-push"));
+  Object.values(bcEls.stacks).forEach(el => renderChipStack(el, 0, { force: true }));
+  renderBaccarat();
+  updateBaccaratButtons();
+  setMessage(bcEls.message, "Elegí dónde apostar (Jugador, Banca o Empate), poné fichas y repartí.");
+}
+
+bcEls.zones.forEach(zone => zone.addEventListener("click", () => bcSelectZone(zone.dataset.zone)));
+bcEls.chips.forEach(chip => chip.addEventListener("click", () => bcPlaceChip(chipAmount(chip), chip)));
+bcEls.clear.addEventListener("click", bcClearBet);
+bcEls.rebet.addEventListener("click", bcRebet);
+bcEls.deal.addEventListener("click", bcDeal);
+
+/* ============================================================
+   18f. TRAGAMONEDAS ROYAL 7s (3 rodillos, 1 línea)
+   ------------------------------------------------------------
+   Cada rodillo es una tira fija de 29 símbolos. El resultado
+   se sortea eligiendo una posición al azar de cada tira y la
+   animación frena exactamente en esa posición, así lo que ves
+   en la línea es siempre lo que se paga.
+   Retorno teórico calculado: 94,9%. Frecuencia de premio: 32,5%.
+   ============================================================ */
+const SL_SYMBOLS = {
+  seven: {
+    name: "7",
+    svg: '<svg viewBox="0 0 100 100"><defs><linearGradient id="g7" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff7a8f"/><stop offset=".5" stop-color="#e3133f"/><stop offset="1" stop-color="#8c0420"/></linearGradient></defs><path d="M20 16 H82 L50 88 H28 L58 34 H20 Z" fill="url(#g7)" stroke="#f0c96b" stroke-width="5" stroke-linejoin="round"/><path d="M26 22 H72" stroke="rgba(255,255,255,.45)" stroke-width="4" stroke-linecap="round"/></svg>'
+  },
+  diamond: {
+    name: "Diamante",
+    svg: '<svg viewBox="0 0 100 100"><path d="M50 88 L10 38 L28 16 H72 L90 38 Z" fill="#2de2e6" stroke="#e6ffff" stroke-width="3" stroke-linejoin="round"/><path d="M10 38 H90 M28 16 L40 38 L50 88 L60 38 L72 16 M40 38 L50 16 L60 38" fill="none" stroke="#0b7f86" stroke-width="3" stroke-linejoin="round"/><path d="M30 22 L36 32" stroke="#fff" stroke-width="4" stroke-linecap="round"/></svg>'
+  },
+  bar: {
+    name: "BAR",
+    svg: '<svg viewBox="0 0 100 100"><rect x="8" y="30" width="84" height="40" rx="9" fill="#15121d" stroke="#f0c96b" stroke-width="5"/><text x="50" y="61" text-anchor="middle" font-family="Unbounded, Arial Black, sans-serif" font-weight="900" font-size="26" fill="#fff1c4">BAR</text></svg>'
+  },
+  bell: {
+    name: "Campana",
+    svg: '<svg viewBox="0 0 100 100"><path d="M50 12 C30 12 26 34 26 50 C26 64 18 70 14 76 H86 C82 70 74 64 74 50 C74 34 70 12 50 12 Z" fill="#f5c542" stroke="#8a5a1c" stroke-width="4" stroke-linejoin="round"/><circle cx="50" cy="82" r="8" fill="#c99335" stroke="#8a5a1c" stroke-width="3"/><path d="M38 26 C34 34 34 44 34 52" stroke="#fff6d6" stroke-width="5" stroke-linecap="round" fill="none"/></svg>'
+  },
+  lemon: {
+    name: "Limón",
+    svg: '<svg viewBox="0 0 100 100"><path d="M12 52 C12 30 34 18 50 18 C66 18 88 30 88 52 C88 74 66 84 50 84 C34 84 12 74 12 52 Z" fill="#ffe14d" stroke="#b39500" stroke-width="4"/><path d="M8 52 L14 46 M92 52 L86 46" stroke="#b39500" stroke-width="5" stroke-linecap="round"/><ellipse cx="38" cy="38" rx="10" ry="6" fill="#fff8c4" transform="rotate(-25 38 38)"/></svg>'
+  },
+  cherry: {
+    name: "Cereza",
+    svg: '<svg viewBox="0 0 100 100"><path d="M48 14 C46 34 34 46 28 58 M48 14 C54 34 66 46 72 56" stroke="#2f9e44" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M48 14 C58 8 70 12 74 18 C64 22 54 20 48 14 Z" fill="#40c057"/><circle cx="28" cy="68" r="17" fill="#e3133f" stroke="#7a0019" stroke-width="3"/><circle cx="72" cy="66" r="17" fill="#e3133f" stroke="#7a0019" stroke-width="3"/><circle cx="22" cy="62" r="5" fill="#ffb3c1"/><circle cx="66" cy="60" r="5" fill="#ffb3c1"/></svg>'
+  }
+};
+
+const SL_STRIP = [
+  "seven", "lemon", "bell", "bar", "cherry", "lemon", "diamond", "bell", "lemon", "bar",
+  "bell", "lemon", "cherry", "bar", "seven", "lemon", "bell", "diamond", "bar", "lemon",
+  "bell", "cherry", "lemon", "bar", "bell", "diamond", "lemon", "bar", "bell"
+];
+
+const SL_PAY3 = { seven: 150, diamond: 60, bar: 25, cherry: 20, bell: 12, lemon: 10 };
+const SL_CHERRY = { 1: 0.5, 2: 3 };
+
+const sl = {
+  bet: Number(Store.get("slBet", 0)) || 0,
+  spinning: false,
+  reels: [],
+  history: [],
+  lastWin: 0
+};
+
+const slEls = {
+  message: document.getElementById("sl-message"),
+  bet: document.getElementById("sl-bet"),
+  betDisplay: document.getElementById("sl-bet-display"),
+  credit: document.getElementById("sl-credit"),
+  win: document.getElementById("sl-win"),
+  machine: document.getElementById("sl-machine"),
+  lever: document.getElementById("sl-lever"),
+  paytable: document.getElementById("sl-paytable"),
+  history: document.getElementById("sl-history"),
+  chips: document.querySelectorAll(".sl-chip"),
+  clear: document.getElementById("sl-clear"),
+  spin: document.getElementById("sl-spin")
+};
+
+function slMultiplier(symbols) {
+  if (symbols[0] === symbols[1] && symbols[1] === symbols[2]) return SL_PAY3[symbols[0]];
+  const cherries = symbols.filter(s => s === "cherry").length;
+  return SL_CHERRY[cherries] || 0;
+}
+
+function buildSlotMachine() {
+  const n = SL_STRIP.length;
+  sl.reels = [0, 1, 2].map(r => {
+    const el = document.getElementById("sl-reel-" + r);
+    const offset = (r * 7) % n;
+    const strip = SL_STRIP.slice(offset).concat(SL_STRIP.slice(0, offset));
+    const stripEl = el.querySelector(".reel-strip");
+    let html = "";
+    for (let copy = 0; copy < 3; copy++) {
+      strip.forEach((key, i) => {
+        html += `<div class="sym sym-${key}" data-i="${i}">${SL_SYMBOLS[key].svg}</div>`;
+      });
+    }
+    stripEl.innerHTML = html;
+    const reel = { idx: r, el, stripEl, strip, pos: Math.floor(Math.random() * n) };
+    slSetReel(reel);
+    return reel;
+  });
+
+  /* bombillas de la marquesina */
+  const bulbs = slEls.machine.querySelector(".sm-bulbs");
+  if (bulbs && !bulbs.children.length) bulbs.innerHTML = "<i></i>".repeat(18);
+
+  renderPaytable();
+}
+
+function slSymbolHeight(reel) {
+  const sym = reel.stripEl.firstElementChild;
+  return sym ? sym.getBoundingClientRect().height || 80 : 80;
+}
+
+function slSetReel(reel) {
+  const n = reel.strip.length;
+  const h = slSymbolHeight(reel);
+  const p = ((reel.pos % n) + n) % n;
+  reel.stripEl.style.transform = `translate3d(0, ${-(p + n - 1) * h}px, 0)`;
+}
+
+function renderPaytable() {
+  const rows = Object.entries(SL_PAY3)
+    .sort((a, b) => b[1] - a[1])
+    .map(([key, mult]) => `<div class="pay-row"><span class="pay-syms">${SL_SYMBOLS[key].svg.repeat(3)}</span><b>${mult}x</b></div>`);
+  rows.push(`<div class="pay-row"><span class="pay-syms">${SL_SYMBOLS.cherry.svg.repeat(2)}<i class="pay-any">?</i></span><b>${SL_CHERRY[2]}x</b></div>`);
+  rows.push(`<div class="pay-row"><span class="pay-syms">${SL_SYMBOLS.cherry.svg}<i class="pay-any">?</i><i class="pay-any">?</i></span><b>${SL_CHERRY[1]}x</b></div>`);
+  slEls.paytable.innerHTML = rows.join("");
+}
+
+function slRenderInfo() {
+  if (!slEls.bet) return;
+  slEls.bet.textContent = formatMoney(sl.bet);
+  slEls.betDisplay.textContent = formatMoney(sl.bet);
+  slEls.credit.textContent = formatMoney(balance);
+  slEls.win.textContent = formatMoney(sl.lastWin);
+  slEls.spin.textContent = sl.bet > 0 ? "Girar · " + formatMoney(sl.bet) : "Girar";
+}
+
+function updateSlotsButtons() {
+  slEls.chips.forEach(chip => {
+    const value = chip.dataset.allin === "true" ? Math.max(0, Math.floor(balance) - sl.bet) : Number(chip.dataset.value);
+    chip.disabled = sl.spinning || value <= 0 || sl.bet + value > balance;
+  });
+  slEls.clear.disabled = sl.spinning || sl.bet === 0;
+  slEls.spin.disabled = sl.spinning || sl.bet <= 0 || balance < sl.bet;
+  slEls.lever.disabled = slEls.spin.disabled;
+}
+
+function slPlaceChip(value, chipEl) {
+  if (sl.spinning || value <= 0 || sl.bet + value > balance) return;
+  sl.bet = round2(sl.bet + value);
+  Store.set("slBet", sl.bet);
+  if (chipEl) {
+    chipEl.classList.remove("chip-pop");
+    void chipEl.offsetWidth;
+    chipEl.classList.add("chip-pop");
+  }
+  Sound.play("chip");
+  FX.flyChip(chipEl, slEls.betDisplay, value);
+  slRenderInfo();
+  updateSlotsButtons();
+  setMessage(slEls.message, "Apuesta por giro: " + formatMoney(sl.bet) + ". Se descuenta recién al girar.");
+}
+
+function slClearBet() {
+  if (sl.spinning) return;
+  sl.bet = 0;
+  Store.set("slBet", 0);
+  slRenderInfo();
+  updateSlotsButtons();
+  setMessage(slEls.message, "Apuesta limpiada.");
+}
+
+/* Gira un rodillo hasta la posición sorteada: tirón inicial, giro y rebote final. */
+function slAnimateReel(reel, target, duration, loops) {
+  return new Promise(resolve => {
+    const n = reel.strip.length;
+    const start = reel.pos;
+    const cur = ((start % n) + n) % n;
+    const delta = (((target - cur) % n) + n) % n + loops * n;
+    const t0 = performance.now();
+    let lastSym = Math.floor(start);
+    reel.el.classList.add("spinning");
+
+    Loop.add("reel-" + reel.idx, (dt, now) => {
+      const u = clamp((now - t0) / duration, 0, 1);
+      let pos;
+      if (u < 0.07) {
+        pos = start - 0.28 * Math.sin((u / 0.07) * Math.PI);
+      } else {
+        const v = (u - 0.07) / 0.93;
+        pos = start + delta * Ease.outCubic(v);
+        if (v > 0.9) pos += 0.32 * Math.sin(((v - 0.9) / 0.1) * Math.PI);
+      }
+      reel.pos = pos;
+      slSetReel(reel);
+
+      if (u > 0.78) reel.el.classList.remove("spinning");
+      const symNow = Math.floor(pos);
+      if (u > 0.6 && symNow !== lastSym) Sound.play("tick", 0.6);
+      lastSym = symNow;
+
+      if (u >= 1) {
+        reel.pos = target;
+        slSetReel(reel);
+        reel.el.classList.remove("spinning");
+        reel.el.classList.remove("stopped");
+        void reel.el.offsetWidth;
+        reel.el.classList.add("stopped");
+        Sound.play("thud");
+        resolve();
+        return false;
+      }
+      return true;
+    });
+  });
+}
+
+function slPayline(reel) {
+  const n = reel.strip.length;
+  const p = ((Math.round(reel.pos) % n) + n) % n;
+  return reel.stripEl.children[n + p];
+}
+
+async function slSpin() {
+  if (sl.spinning) return;
+  if (sl.bet <= 0) {
+    setMessage(slEls.message, "Primero elegí la apuesta por giro con las fichas.", "push");
+    Sound.play("error");
+    return;
+  }
+  if (balance < sl.bet) {
+    setMessage(slEls.message, "No tenés saldo para esta apuesta. Bajala o esperá el bono de $5000.", "lose");
+    Sound.play("error");
+    return;
+  }
+
+  sl.spinning = true;
+  const bet = sl.bet;
+  balance -= bet;
+  sl.lastWin = 0;
+  updateBalance();
+  updateSlotsButtons();
+  slRenderInfo();
+
+  slEls.machine.classList.remove("win", "bigwin");
+  $$(".sym.win", slEls.machine).forEach(s => s.classList.remove("win"));
+  slEls.lever.classList.remove("pulled");
+  void slEls.lever.offsetWidth;
+  slEls.lever.classList.add("pulled");
+  Sound.play("whoosh");
+  setMessage(slEls.message, "Girando…");
+
+  const n = SL_STRIP.length;
+  const result = [0, 1, 2].map(() => Math.floor(Math.random() * n));
+  const symbols = result.map((idx, r) => sl.reels[r].strip[idx]);
+
+  await Promise.all(sl.reels.map((reel, r) => slAnimateReel(reel, result[r], T(1250 + r * 480), 3 + r)));
+
+  const mult = slMultiplier(symbols);
+  const payout = round2(bet * mult);
+  const net = round2(payout - bet);
+  balance += payout;
+  sl.lastWin = payout;
+
+  if (mult > 0) {
+    const three = symbols[0] === symbols[1] && symbols[1] === symbols[2];
+    sl.reels.forEach((reel, r) => {
+      if (three || symbols[r] === "cherry") {
+        const el = slPayline(reel);
+        if (el) el.classList.add("win");
+      }
+    });
+    slEls.machine.classList.add(mult >= 25 ? "bigwin" : "win");
+  }
+
+  const names = symbols.map(s => SL_SYMBOLS[s].name).join(" · ");
+  Stats.record("slots", bet, payout, names + (mult ? " · x" + mult : ""));
+
+  sl.history.unshift({ symbols, mult });
+  if (sl.history.length > 12) sl.history.length = 12;
+  slEls.history.innerHTML = sl.history.map(h => `<div class="sl-hist-row ${h.mult > 1 ? "pos" : h.mult > 0 ? "push" : ""}"><span class="pay-syms">${h.symbols.map(s => SL_SYMBOLS[s].svg).join("")}</span><b>${h.mult ? "x" + h.mult : "—"}</b></div>`).join("");
+
+  if (net > 0) {
+    Sound.play("cash");
+    FX.burstAt(slEls.machine.querySelector(".sm-window"), { count: mult >= 25 ? 40 : 20, colors: ["#fff1c4", "#f0c96b", "#ff4d6d"], speed: 220, gravity: 300 });
+    setMessage(slEls.message, names + ". ¡Premio x" + mult + "! Cobrás " + formatMoney(payout) + ".", "win");
+    const type = net >= 300 || mult >= 25 ? "bigwin" : "win";
+    later(() => showWinAnimation(type === "bigwin" ? (mult >= 150 ? "JACKPOT" : "BIG WIN") : "WIN", Math.round(net), type), 900);
+  } else if (payout > 0) {
+    setMessage(slEls.message, names + ". Una cereza: recuperás " + formatMoney(payout) + ".", "push");
+  } else {
+    setMessage(slEls.message, names + ". Sin premio esta vez.", "lose");
+  }
+
+  sl.spinning = false;
+  updateBalance();
+  slRenderInfo();
+  updateSlotsButtons();
+}
+
+function slReset() {
+  sl.spinning = false;
+  sl.lastWin = 0;
+  sl.bet = 0;
+  Store.set("slBet", 0);
+  sl.reels.forEach(reel => {
+    reel.pos = Math.round(reel.pos);
+    reel.el.classList.remove("spinning", "stopped");
+    slSetReel(reel);
+  });
+  slEls.machine.classList.remove("win", "bigwin");
+  slRenderInfo();
+  updateSlotsButtons();
+  setMessage(slEls.message, "Elegí tu apuesta por giro con las fichas y tirá de la palanca.");
+}
+
+slEls.chips.forEach(chip => chip.addEventListener("click", () => {
+  const value = chip.dataset.allin === "true" ? Math.max(0, Math.floor(balance) - sl.bet) : Number(chip.dataset.value);
+  slPlaceChip(value, chip);
+}));
+slEls.clear.addEventListener("click", slClearBet);
+slEls.spin.addEventListener("click", slSpin);
+slEls.lever.addEventListener("click", slSpin);
+
+screenHooks["slots-screen"] = {
+  show() {
+    sl.reels.forEach(slSetReel);
+    slRenderInfo();
+    updateSlotsButtons();
+  }
+};
+
+/* Cuando el saldo cambia desde afuera de un juego (bono, reinicio),
+   se recalculan las fichas habilitadas de todas las pantallas. */
+function refreshAllButtons() {
+  [updateBlackjackButtons, updatePokerButtons, updateRouletteButtons, updateCoinMinerButtons,
+    updateChickenButtons, updatePlinkoButtons, updateAviatorButtons, updateHorseButtons,
+    updateBaccaratButtons, updateSlotsButtons].forEach(fn => {
+    try { fn(); } catch (e) { console.error(e); }
+  });
+}
 
 /* ============================================================
    19. WIN CELEBRATION ANIMATION (original, sin cambios)

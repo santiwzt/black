@@ -9,7 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=3.1" />
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css?v=3.3" />
 </head>
 <body>
   <!-- Fondo ambiental -->
@@ -26,21 +27,7 @@
   <header class="casino-topbar">
     <div class="topbar-left">
       <button class="brand" id="brand-home" aria-label="Ir al lobby">
-        <span class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 48 48" width="40" height="40">
-            <defs>
-              <linearGradient id="brandGold" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0" stop-color="#fff1c4"/>
-                <stop offset=".45" stop-color="#e7b85a"/>
-                <stop offset="1" stop-color="#8a5a1c"/>
-              </linearGradient>
-            </defs>
-            <path d="M24 3 L44 14 V34 L24 45 L4 34 V14 Z" fill="none" stroke="url(#brandGold)" stroke-width="2.4"/>
-            <path d="M12 30 L14 18 L19.5 24 L24 15 L28.5 24 L34 18 L36 30 Z" fill="url(#brandGold)"/>
-            <rect x="12" y="32" width="24" height="3.4" rx="1.7" fill="url(#brandGold)"/>
-            <circle cx="24" cy="12.6" r="2" fill="#ff3d9a"/>
-          </svg>
-        </span>
+        <span class="brand-mark" aria-hidden="true"><img src="assets/logo.svg" width="42" height="42" alt="" /></span>
         <span class="brand-text">
           <span>Royal Neon</span>
           <strong>Casino</strong>
@@ -64,6 +51,11 @@
       <button class="topbar-icon" id="settings-open" title="Configuración" aria-label="Abrir configuración">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>
       </button>
+
+      <div class="bonus-pill" id="bonus-pill" title="Cada 5 minutos con la página abierta recibís $5000 ficticios">
+        <span class="bonus-ring" aria-hidden="true"></span>
+        <span class="bonus-text"><small>+$5K en</small><strong id="bonus-time">5:00</strong></span>
+      </div>
 
       <div class="topbar-wallet" id="wallet" aria-live="polite">
         <span class="wallet-label">Saldo ficticio</span>
@@ -91,6 +83,7 @@
 
         <div class="casino-title-block hero">
           <canvas id="hero-canvas" class="hero-canvas" aria-hidden="true"></canvas>
+          <div class="hero-main">
           <p class="casino-mini-label">Simulación recreativa · Dinero ficticio</p>
           <div class="hero-sign" aria-label="Royal Neon">
             <span class="sign-word sign-royal" data-text="ROYAL">ROYAL</span>
@@ -98,7 +91,7 @@
           </div>
           <h1>Casino Deluxe</h1>
           <div class="hero-meta">
-            <div class="hero-stat"><span>Juegos</span><strong>8</strong></div>
+            <div class="hero-stat"><span>Juegos</span><strong id="hero-games">10</strong></div>
             <div class="hero-stat"><span>Rondas jugadas</span><strong id="hero-rounds">0</strong></div>
             <div class="hero-stat"><span>Mejor premio</span><strong id="hero-best">$0</strong></div>
             <button class="btn primary hero-continue" id="hero-continue" hidden>
@@ -106,6 +99,20 @@
               <strong id="hero-continue-name"></strong>
             </button>
           </div>
+          </div>
+
+          <aside class="hero-side">
+            <div class="hero-emblem" aria-hidden="true">
+              <span class="emblem-ring"></span>
+              <span class="emblem-ring ring-2"></span>
+              <img src="assets/logo.svg" alt="" width="220" height="220" />
+            </div>
+            <div class="spotlight" id="spotlight" aria-live="polite">
+              <span class="mini-label">Juego destacado</span>
+              <div class="spotlight-body" id="spotlight-body"></div>
+              <div class="spotlight-dots" id="spotlight-dots" role="tablist" aria-label="Juegos destacados"></div>
+            </div>
+          </aside>
         </div>
 
         <div class="lobby-bar">
@@ -116,7 +123,12 @@
             <button class="filter-tab" data-filter="mesa" role="tab" aria-selected="false">Mesa y carreras</button>
             <button class="filter-tab" data-filter="arcade" role="tab" aria-selected="false">Arcade</button>
           </div>
-          <p class="lobby-count" id="lobby-count">8 juegos</p>
+          <p class="lobby-count" id="lobby-count">10 juegos</p>
+        </div>
+
+        <div class="recent-activity" id="recent-activity" hidden>
+          <span class="mini-label">Actividad reciente</span>
+          <div class="recent-list" id="recent-list"></div>
         </div>
 
         <div class="menu-grid modern-grid" id="menu-grid">
@@ -156,6 +168,41 @@
             </div>
           </article>
 
+          <article class="menu-card card-baccarat" data-screen="baccarat-screen" data-game="baccarat" data-cat="cartas" data-name="Baccarat" data-tags="baccarat punto banco banca jugador empate cartas" tabindex="0" role="button" aria-label="Jugar Baccarat">
+            <button class="fav-btn" data-fav="baccarat" aria-label="Favorito: Baccarat" aria-pressed="false">★</button>
+            <div class="tile-art art-baccarat" aria-hidden="true">
+              <div class="art-felt"></div>
+              <div class="bc-art-zone z-p">JUGADOR</div>
+              <div class="bc-art-zone z-b">BANCA</div>
+              <div class="mini-card mc-b1"><b>9</b><i>♠</i></div>
+              <div class="mini-card mc-b2 red"><b>K</b><i>♥</i></div>
+              <span class="bc-art-score">9</span>
+            </div>
+            <div class="tile-info">
+              <span class="tile-tag">Cartas</span>
+              <h3>Baccarat</h3>
+              <p>Jugador, Banca o Empate. El 9 manda.</p>
+              <span class="tile-cta">Jugar <i>→</i></span>
+            </div>
+          </article>
+
+          <article class="menu-card card-slots" data-screen="slots-screen" data-game="slots" data-cat="arcade" data-name="Tragamonedas Royal 7s" data-tags="tragamonedas slots tragaperras siete cerezas rodillos" tabindex="0" role="button" aria-label="Jugar Tragamonedas">
+            <button class="fav-btn" data-fav="slots" aria-label="Favorito: Tragamonedas" aria-pressed="false">★</button>
+            <div class="tile-art art-slots" aria-hidden="true">
+              <div class="slot-mini">
+                <div class="slot-mini-top">ROYAL 7s</div>
+                <div class="slot-mini-reels"><i>7</i><i>7</i><i>7</i></div>
+                <div class="slot-mini-lever"></div>
+              </div>
+            </div>
+            <div class="tile-info">
+              <span class="tile-tag">Arcade</span>
+              <h3>Tragamonedas</h3>
+              <p>Tres rodillos clásicos. Tres 7 pagan 150x.</p>
+              <span class="tile-cta">Jugar <i>→</i></span>
+            </div>
+          </article>
+
           <article class="menu-card card-roulette tile-wide" data-screen="roulette-screen" data-game="roulette" data-cat="mesa" data-name="Ruleta Deluxe" data-tags="ruleta numeros rojo negro docena" tabindex="0" role="button" aria-label="Jugar Ruleta">
             <button class="fav-btn" data-fav="roulette" aria-label="Favorito: Ruleta" aria-pressed="false">★</button>
             <div class="tile-art art-roulette" aria-hidden="true">
@@ -188,7 +235,7 @@
             </div>
           </article>
 
-          <article class="menu-card card-chicken tile-wide" data-screen="chicken-screen" data-game="chicken" data-cat="arcade" data-name="Chicken Road" data-tags="pollo calle autos cruzar" tabindex="0" role="button" aria-label="Jugar Chicken Road">
+          <article class="menu-card card-chicken" data-screen="chicken-screen" data-game="chicken" data-cat="arcade" data-name="Chicken Road" data-tags="pollo calle autos cruzar" tabindex="0" role="button" aria-label="Jugar Chicken Road">
             <button class="fav-btn" data-fav="chicken" aria-label="Favorito: Chicken Road" aria-pressed="false">★</button>
             <div class="tile-art art-chicken" aria-hidden="true">
               <div class="cr-lanes"><i></i><i></i><i></i><i></i></div>
@@ -274,7 +321,7 @@
             </div>
           </article>
 
-          <article class="menu-card card-horse tile-wide" data-screen="horse-screen" data-game="horse" data-cat="mesa" data-name="Carrera de Caballos" data-tags="caballos carrera podio hipodromo" tabindex="0" role="button" aria-label="Jugar Carrera de Caballos">
+          <article class="menu-card card-horse" data-screen="horse-screen" data-game="horse" data-cat="mesa" data-name="Carrera de Caballos" data-tags="caballos carrera podio hipodromo" tabindex="0" role="button" aria-label="Jugar Carrera de Caballos">
             <button class="fav-btn" data-fav="horse" aria-label="Favorito: Carrera" aria-pressed="false">★</button>
             <div class="tile-art art-horse" aria-hidden="true">
               <div class="hz-sun"></div>
@@ -351,6 +398,13 @@
               <h3>Jugador</h3>
               <p class="score-badge">Puntos: <span id="bj-player-score">0</span></p>
             </div>
+          </div>
+
+
+          <div class="bankroll" data-bankroll aria-hidden="true">
+            <span class="bankroll-title">Tus fichas</span>
+            <div class="bankroll-cols"></div>
+            <span class="bankroll-total"></span>
           </div>
 
           <div class="bet-spot" id="bj-bet-spot" aria-hidden="true">
@@ -479,6 +533,11 @@
               </div>
               <div class="turn-dot" aria-hidden="true"></div>
             </div>
+            <div class="bankroll" data-bankroll aria-hidden="true">
+              <span class="bankroll-title">Tus fichas</span>
+              <div class="bankroll-cols"></div>
+              <span class="bankroll-total"></span>
+            </div>
           </div>
 
           <div class="controls">
@@ -584,6 +643,14 @@
               <div class="roulette-box">
                 <span>Selecciones marcadas</span>
                 <strong id="rt-target">Ninguna</strong>
+              </div>
+            </div>
+
+            <div class="roulette-box bankroll-box">
+              <div class="bankroll bankroll-inline" data-bankroll aria-hidden="true">
+                <span class="bankroll-title">Tus fichas</span>
+                <div class="bankroll-cols"></div>
+                <span class="bankroll-total"></span>
               </div>
             </div>
 
@@ -1141,6 +1208,202 @@
         </div>
       </div>
     </section>
+    <!-- ===================== BACCARAT ===================== -->
+    <section id="baccarat-screen" class="screen game-screen theme-baccarat" data-game="baccarat" aria-label="Baccarat">
+      <div class="top-line">
+        <button class="back-btn"><span aria-hidden="true">←</span> Lobby</button>
+        <div class="game-title">
+          <p class="kicker">Cartas</p>
+          <h2>Baccarat</h2>
+        </div>
+        <nav class="game-switcher" aria-label="Cambiar de juego"></nav>
+      </div>
+
+      <div class="game-card bc-card">
+        <div class="status-row">
+          <p id="bc-message" class="message" aria-live="polite">Elegí dónde apostar (Jugador, Banca o Empate), poné fichas y repartí.</p>
+          <div class="bet-box">
+            <span>Apuesta total</span>
+            <strong id="bc-bet">$0</strong>
+          </div>
+        </div>
+
+        <div class="table felt-table bc-table" id="bc-table">
+          <div class="shoe" id="bc-shoe" aria-hidden="true"><div class="shoe-card"></div><div class="shoe-card"></div><div class="shoe-card"></div></div>
+
+          <div class="bc-hands">
+            <div class="bc-hand bc-hand-player" id="bc-hand-player">
+              <div class="hand-head">
+                <h3>Jugador</h3>
+                <p class="score-badge">Puntos: <span id="bc-player-score">0</span></p>
+              </div>
+              <div id="bc-player-cards" class="cards"></div>
+            </div>
+            <div class="bc-vs" aria-hidden="true">VS</div>
+            <div class="bc-hand bc-hand-banker" id="bc-hand-banker">
+              <div class="hand-head">
+                <h3>Banca</h3>
+                <p class="score-badge">Puntos: <span id="bc-banker-score">0</span></p>
+              </div>
+              <div id="bc-banker-cards" class="cards"></div>
+            </div>
+          </div>
+
+          <div class="bc-zones" role="radiogroup" aria-label="Dónde apostar">
+            <button class="bc-zone zone-player selected" data-zone="player" role="radio" aria-checked="true">
+              <span class="zone-name">Jugador</span>
+              <span class="zone-pay">paga 1 a 1</span>
+              <span class="zone-amount" id="bc-amount-player">$0</span>
+              <span class="chip-stack zone-stack" id="bc-stack-player"></span>
+            </button>
+            <button class="bc-zone zone-tie" data-zone="tie" role="radio" aria-checked="false">
+              <span class="zone-name">Empate</span>
+              <span class="zone-pay">paga 8 a 1</span>
+              <span class="zone-amount" id="bc-amount-tie">$0</span>
+              <span class="chip-stack zone-stack" id="bc-stack-tie"></span>
+            </button>
+            <button class="bc-zone zone-banker" data-zone="banker" role="radio" aria-checked="false">
+              <span class="zone-name">Banca</span>
+              <span class="zone-pay">paga 0,95 a 1</span>
+              <span class="zone-amount" id="bc-amount-banker">$0</span>
+              <span class="chip-stack zone-stack" id="bc-stack-banker"></span>
+            </button>
+          </div>
+
+          <div class="bankroll" data-bankroll aria-hidden="true">
+            <span class="bankroll-title">Tus fichas</span>
+            <div class="bankroll-cols"></div>
+            <span class="bankroll-total"></span>
+          </div>
+        </div>
+
+        <div class="bc-road-wrap">
+          <div class="bc-road-head">
+            <span class="mini-label">Historial de manos</span>
+            <div class="bc-tally" id="bc-tally"></div>
+          </div>
+          <div class="bc-road" id="bc-road" aria-label="Historial de resultados"></div>
+        </div>
+
+        <div class="controls">
+          <div class="panel">
+            <h4>Fichas <small class="panel-hint">Se apuestan en la zona marcada</small></h4>
+            <div class="chips">
+                <button class="chip bc-chip c25" data-value="25"><span>$25</span></button>
+                <button class="chip bc-chip c50" data-value="50"><span>$50</span></button>
+                <button class="chip bc-chip c100" data-value="100"><span>$100</span></button>
+                <button class="chip bc-chip c500" data-value="500"><span>$500</span></button>
+                <button class="chip bc-chip c1000" data-value="1000"><span>$1K</span></button>
+                <button class="chip bc-chip c5000" data-value="5000"><span>$5K</span></button>
+                <button class="chip bc-chip allin-chip" data-allin="true"><span>ALL IN</span></button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h4>Acciones</h4>
+            <div class="actions">
+              <button id="bc-clear" class="btn secondary">Limpiar</button>
+              <button id="bc-rebet" class="btn">Repetir apuesta</button>
+              <button id="bc-deal" class="btn primary">Repartir</button>
+            </div>
+          </div>
+        </div>
+
+        <details class="rules-card inline-rules">
+          <summary>Reglas del Baccarat</summary>
+          <p>Gana la mano que más se acerca a 9. Las figuras y el 10 valen 0, el As vale 1 y del total solo cuenta la última cifra (7 + 8 = 15 → 5). Si alguna mano suma 8 o 9 con dos cartas (natural), nadie pide más.</p>
+          <p>El Jugador pide tercera carta con 0 a 5. La Banca sigue la tabla clásica: con 0-2 pide siempre; con 3 pide salvo que la tercera del Jugador sea 8; con 4 si es 2-7; con 5 si es 4-7; con 6 si es 6-7; con 7 se planta. Si el Jugador no pidió, la Banca pide con 0 a 5.</p>
+          <p class="tip">Jugador paga 1 a 1, Banca paga 0,95 a 1 (5% de comisión) y Empate paga 8 a 1. Si hay empate, las apuestas a Jugador y Banca se devuelven.</p>
+        </details>
+      </div>
+    </section>
+
+    <!-- ===================== TRAGAMONEDAS ===================== -->
+    <section id="slots-screen" class="screen game-screen theme-slots" data-game="slots" aria-label="Tragamonedas">
+      <div class="top-line">
+        <button class="back-btn"><span aria-hidden="true">←</span> Lobby</button>
+        <div class="game-title">
+          <p class="kicker">Arcade</p>
+          <h2>Tragamonedas Royal 7s</h2>
+        </div>
+        <nav class="game-switcher" aria-label="Cambiar de juego"></nav>
+      </div>
+
+      <div class="slots-layout">
+        <div class="game-card slots-card">
+          <div class="status-row">
+            <p id="sl-message" class="message" aria-live="polite">Elegí tu apuesta por giro con las fichas y tirá de la palanca.</p>
+            <div class="bet-box">
+              <span>Apuesta por giro</span>
+              <strong id="sl-bet">$0</strong>
+            </div>
+          </div>
+
+          <div class="slot-machine" id="sl-machine">
+            <div class="sm-marquee">
+              <div class="sm-bulbs" aria-hidden="true"></div>
+              <h3>ROYAL <b>7</b>s</h3>
+            </div>
+
+            <div class="sm-body">
+              <div class="sm-window" id="sl-window">
+                <div class="reel" id="sl-reel-0"><div class="reel-strip"></div></div>
+                <div class="reel" id="sl-reel-1"><div class="reel-strip"></div></div>
+                <div class="reel" id="sl-reel-2"><div class="reel-strip"></div></div>
+                <div class="payline" aria-hidden="true"></div>
+                <div class="sm-glass" aria-hidden="true"></div>
+              </div>
+
+              <button class="sm-lever" id="sl-lever" aria-label="Tirar de la palanca">
+                <span class="lever-arm"><span class="lever-knob"></span></span>
+                <span class="lever-base"></span>
+              </button>
+            </div>
+
+            <div class="sm-displays">
+              <div class="sm-display"><span>Crédito</span><strong id="sl-credit">$0</strong></div>
+              <div class="sm-display"><span>Apuesta</span><strong id="sl-bet-display">$0</strong></div>
+              <div class="sm-display sm-win"><span>Premio</span><strong id="sl-win">$0</strong></div>
+            </div>
+          </div>
+
+          <div class="controls">
+            <div class="panel">
+              <h4>Fichas <small class="panel-hint">Definen la apuesta de cada giro</small></h4>
+              <div class="chips">
+                <button class="chip sl-chip c25" data-value="25"><span>$25</span></button>
+                <button class="chip sl-chip c50" data-value="50"><span>$50</span></button>
+                <button class="chip sl-chip c100" data-value="100"><span>$100</span></button>
+                <button class="chip sl-chip c500" data-value="500"><span>$500</span></button>
+                <button class="chip sl-chip c1000" data-value="1000"><span>$1K</span></button>
+                <button class="chip sl-chip c5000" data-value="5000"><span>$5K</span></button>
+                <button class="chip sl-chip allin-chip" data-allin="true"><span>ALL IN</span></button>
+              </div>
+            </div>
+
+            <div class="panel">
+              <h4>Acciones</h4>
+              <div class="actions">
+                <button id="sl-clear" class="btn secondary">Limpiar</button>
+                <button id="sl-spin" class="btn primary">Girar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="slots-side">
+          <div class="panel">
+            <h4>Tabla de pagos</h4>
+            <div class="paytable" id="sl-paytable"></div>
+            <p class="panel-note">Paga solo la línea central. Retorno teórico: 94,9% (lo apostado vuelve en promedio un 94,9%).</p>
+          </div>
+          <div class="panel">
+            <h4>Últimos giros</h4>
+            <div class="sl-history" id="sl-history"><span class="sl-empty">Todavía no giraste.</span></div>
+          </div>
+        </aside>
+      </div>
+    </section>
   </main>
 
   <!-- ===================== CONFIGURACIÓN ===================== -->
@@ -1307,7 +1570,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=3.1"></script>
+  <script src="script.js?v=3.3"></script>
 </body>
 
 </html>
