@@ -8666,14 +8666,14 @@ const Bonus = {
    18c-bis. INGRESO MIENTRAS NO ESTÁS (offline)
    ------------------------------------------------------------
    Por cada media hora completa fuera de la página (cerrada o en
-   otra pestaña) se suman $250 ficticios, hasta un tope de $6000
+   otra pestaña) se suman $1250 ficticios, hasta un tope de $30000
    (12 horas). Así nunca volvés con el saldo en cero, pero suma
    poco comparado con el bono online. Cada cuenta lleva su propio
    registro ("lastSeen").
    ============================================================ */
 const OfflineIncome = {
   period: 30 * 60 * 1000,
-  amount: 250,
+  amount: 1250,
   maxPeriods: 24,
   timer: null,
 
