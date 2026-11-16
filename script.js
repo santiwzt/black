@@ -387,7 +387,7 @@ const Settings = Object.assign(
     sound: true,
     music: false,
     master: 80,
-    sfx: 80,
+    sfx: 65,
     musicVol: 50,
     quality: detectQuality(),
     reduceMotion: !!prefersReduced,
@@ -691,86 +691,77 @@ const Sound = (() => {
     Object.keys(loops).forEach(stopLoop);
   }
 
+  /* Efectos con tono y filtrados en graves: nada de ruido blanco ni siseos agudos. */
   const fx = {
-    click() { tone({ freq: 1900, to: 1250, type: "triangle", dur: 0.05, vol: 0.06 }); },
+    click() { tone({ freq: 1500, to: 1100, type: "sine", dur: 0.04, vol: 0.035 }); },
     chip() {
-      noise({ freq: 3800, q: 6, dur: 0.05, vol: 0.22 });
-      noise({ freq: 2600, q: 5, dur: 0.06, vol: 0.16, delay: 0.035 });
-      tone({ freq: 2900, type: "sine", dur: 0.04, vol: 0.05, delay: 0.01 });
+      tone({ freq: 1750, to: 1250, type: "triangle", dur: 0.035, vol: 0.06 });
+      tone({ freq: 1250, to: 900, type: "triangle", dur: 0.04, vol: 0.045, delay: 0.03 });
     },
     chipsCollect() {
-      for (let i = 0; i < 5; i++) noise({ freq: rand(2600, 4200), q: 6, dur: 0.05, vol: 0.12, delay: i * 0.045 });
+      for (let i = 0; i < 4; i++) tone({ freq: 1500 - i * 90, to: 1050 - i * 60, type: "triangle", dur: 0.035, vol: 0.04, delay: i * 0.05 });
     },
     card() {
-      noise({ freq: 3200, to: 900, q: 0.8, dur: 0.14, vol: 0.22, filter: "bandpass" });
-      tone({ freq: 160, to: 90, type: "sine", dur: 0.06, vol: 0.06, delay: 0.1 });
+      tone({ freq: 520, to: 300, type: "sine", dur: 0.06, vol: 0.04 });
+      tone({ freq: 150, to: 90, type: "sine", dur: 0.06, vol: 0.05, delay: 0.05 });
     },
-    flip() {
-      noise({ freq: 2400, to: 4200, q: 1.5, dur: 0.08, vol: 0.18 });
-      tone({ freq: 700, to: 1100, type: "triangle", dur: 0.05, vol: 0.04 });
-    },
-    tick(v = 1) { tone({ freq: 3400, type: "triangle", dur: 0.018, vol: 0.05 * v }); noise({ freq: 5200, q: 8, dur: 0.015, vol: 0.06 * v }); },
-    whoosh() { noise({ freq: 300, to: 2400, q: 0.9, dur: 0.38, vol: 0.18, attack: 0.08 }); },
+    flip() { tone({ freq: 620, to: 940, type: "triangle", dur: 0.06, vol: 0.035 }); },
+    tick(v = 1) { tone({ freq: 2100, type: "sine", dur: 0.015, vol: 0.03 * v }); },
+    whoosh() { tone({ freq: 220, to: 520, type: "sine", dur: 0.28, vol: 0.05, attack: 0.06 }); },
     peg(row = 0) {
       const f = 520 + row * 48 + rand(-12, 12);
-      tone({ freq: f, type: "sine", dur: 0.14, vol: 0.05 });
-      tone({ freq: f * 2.01, type: "triangle", dur: 0.06, vol: 0.015 });
+      tone({ freq: f, type: "sine", dur: 0.12, vol: 0.04 });
     },
     slot(mult) {
       const base = mult >= 3 ? 880 : mult >= 1 ? 660 : 330;
-      tone({ freq: base, type: "triangle", dur: 0.22, vol: 0.09 });
-      tone({ freq: base * 1.5, type: "sine", dur: 0.25, vol: 0.05, delay: 0.05 });
+      tone({ freq: base, type: "triangle", dur: 0.22, vol: 0.07 });
+      tone({ freq: base * 1.5, type: "sine", dur: 0.25, vol: 0.04, delay: 0.05 });
     },
     coin() {
-      tone({ freq: 1320, type: "sine", dur: 0.16, vol: 0.1 });
-      tone({ freq: 1760, type: "sine", dur: 0.3, vol: 0.09, delay: 0.07 });
-      tone({ freq: 2640, type: "triangle", dur: 0.18, vol: 0.03, delay: 0.07 });
+      tone({ freq: 1320, type: "sine", dur: 0.16, vol: 0.08 });
+      tone({ freq: 1760, type: "sine", dur: 0.28, vol: 0.07, delay: 0.07 });
     },
     bomb() {
-      noise({ freq: 900, to: 60, q: 0.6, dur: 1.0, vol: 0.55, filter: "lowpass", attack: 0.004 });
-      tone({ freq: 130, to: 36, type: "sine", dur: 0.7, vol: 0.4 });
+      noise({ freq: 260, to: 50, q: 0.5, dur: 0.6, vol: 0.18, filter: "lowpass", attack: 0.004 });
+      tone({ freq: 120, to: 36, type: "sine", dur: 0.7, vol: 0.3 });
     },
-    hop() { tone({ freq: 480, to: 920, type: "triangle", dur: 0.11, vol: 0.06 }); },
-    land() { tone({ freq: 220, to: 140, type: "sine", dur: 0.07, vol: 0.06 }); },
+    hop() { tone({ freq: 480, to: 880, type: "triangle", dur: 0.1, vol: 0.05 }); },
+    land() { tone({ freq: 220, to: 140, type: "sine", dur: 0.07, vol: 0.05 }); },
     car() {
-      noise({ freq: 500, to: 1800, q: 0.7, dur: 0.45, vol: 0.2, attack: 0.1 });
-      tone({ freq: 410, type: "square", dur: 0.22, vol: 0.035, filter: "lowpass", ff: 1400 });
-      tone({ freq: 520, type: "square", dur: 0.22, vol: 0.03, filter: "lowpass", ff: 1400 });
+      tone({ freq: 140, to: 220, type: "sawtooth", dur: 0.4, vol: 0.04, filter: "lowpass", ff: 500 });
     },
     honk() {
-      tone({ freq: 392, type: "square", dur: 0.28, vol: 0.04, filter: "lowpass", ff: 1500 });
-      tone({ freq: 494, type: "square", dur: 0.28, vol: 0.035, filter: "lowpass", ff: 1500 });
+      tone({ freq: 392, type: "square", dur: 0.26, vol: 0.03, filter: "lowpass", ff: 1100 });
+      tone({ freq: 494, type: "square", dur: 0.26, vol: 0.025, filter: "lowpass", ff: 1100 });
     },
     crash() {
-      noise({ freq: 1600, to: 120, q: 0.5, dur: 0.6, vol: 0.45, filter: "lowpass" });
-      tone({ freq: 200, to: 50, type: "sawtooth", dur: 0.4, vol: 0.12, filter: "lowpass", ff: 700 });
+      noise({ freq: 300, to: 60, q: 0.5, dur: 0.45, vol: 0.14, filter: "lowpass" });
+      tone({ freq: 180, to: 50, type: "sine", dur: 0.45, vol: 0.18 });
     },
-    barrier() { noise({ freq: 1800, q: 3, dur: 0.07, vol: 0.12 }); tone({ freq: 300, type: "square", dur: 0.06, vol: 0.03, filter: "lowpass", ff: 900 }); },
+    barrier() { tone({ freq: 330, to: 260, type: "triangle", dur: 0.08, vol: 0.04 }); },
     cash() {
-      tone({ freq: 988, type: "triangle", dur: 0.12, vol: 0.07 });
-      tone({ freq: 1319, type: "triangle", dur: 0.2, vol: 0.07, delay: 0.08 });
-      for (let i = 0; i < 4; i++) noise({ freq: rand(3000, 4500), q: 7, dur: 0.04, vol: 0.08, delay: 0.12 + i * 0.05 });
+      tone({ freq: 988, type: "triangle", dur: 0.12, vol: 0.06 });
+      tone({ freq: 1319, type: "triangle", dur: 0.22, vol: 0.06, delay: 0.08 });
+      tone({ freq: 1976, type: "sine", dur: 0.25, vol: 0.025, delay: 0.16 });
     },
     thump(v = 1) {
-      tone({ freq: rand(80, 100), to: 48, type: "sine", dur: 0.09, vol: 0.09 * v });
-      noise({ freq: 380, q: 0.8, dur: 0.06, vol: 0.05 * v, filter: "lowpass" });
+      tone({ freq: rand(80, 100), to: 48, type: "sine", dur: 0.09, vol: 0.07 * v });
     },
     bell() {
-      tone({ freq: 1568, type: "sine", dur: 1.2, vol: 0.08 });
-      tone({ freq: 2093, type: "sine", dur: 1.0, vol: 0.05, delay: 0.02 });
-      tone({ freq: 3136, type: "sine", dur: 0.6, vol: 0.02, delay: 0.02 });
+      tone({ freq: 1568, type: "sine", dur: 1.0, vol: 0.06 });
+      tone({ freq: 2093, type: "sine", dur: 0.8, vol: 0.03, delay: 0.02 });
     },
-    thud() { tone({ freq: 150, to: 70, type: "sine", dur: 0.18, vol: 0.12 }); },
-    select() { tone({ freq: 1200, to: 1600, type: "sine", dur: 0.06, vol: 0.05 }); },
-    deselect() { tone({ freq: 1400, to: 1000, type: "sine", dur: 0.06, vol: 0.04 }); },
-    error() { tone({ freq: 220, type: "square", dur: 0.12, vol: 0.04, filter: "lowpass", ff: 900 }); }
+    thud() { tone({ freq: 150, to: 70, type: "sine", dur: 0.18, vol: 0.1 }); },
+    select() { tone({ freq: 1200, to: 1500, type: "sine", dur: 0.05, vol: 0.04 }); },
+    deselect() { tone({ freq: 1300, to: 1000, type: "sine", dur: 0.05, vol: 0.03 }); },
+    error() { tone({ freq: 220, type: "triangle", dur: 0.12, vol: 0.05 }); }
   };
 
   /* --- bucles --- */
   function engineLoop(c) {
     const out = c.createGain();
     out.gain.value = 0.0001;
-    out.gain.exponentialRampToValueAtTime(0.12, c.currentTime + 0.4);
+    out.gain.exponentialRampToValueAtTime(0.07, c.currentTime + 0.4);
     const lp = c.createBiquadFilter();
     lp.type = "lowpass";
     lp.frequency.value = 700;
@@ -790,7 +781,7 @@ const Sound = (() => {
     nf.frequency.value = 900;
     nf.Q.value = 0.8;
     const ng = c.createGain();
-    ng.gain.value = 0.5;
+    ng.gain.value = 0;
     o1.connect(lp);
     o2.connect(o2g);
     o2g.connect(lp);
@@ -932,10 +923,10 @@ const Sound = (() => {
     startEngine() { startLoop("engine", engineLoop); },
     setEngine(mult) { setLoop("engine", { mult }); },
     stopEngine() { stopLoop("engine"); },
-    startRoll() { startLoop("roll", noiseBedLoop(1800, 0.7, 0.08)); },
+    startRoll() { startLoop("roll", noiseBedLoop(260, 0.7, 0.03, "lowpass")); },
     setRoll(level, freq) { setLoop("roll", { level, freq }); },
     stopRoll() { stopLoop("roll"); },
-    startCrowd() { startLoop("crowd", noiseBedLoop(1100, 0.4, 0.05)); },
+    startCrowd() { startLoop("crowd", noiseBedLoop(380, 0.5, 0.018, "lowpass")); },
     setCrowd(level) { setLoop("crowd", { level }); },
     stopCrowd() { stopLoop("crowd"); },
     stopAllLoops,
@@ -1002,6 +993,20 @@ function updateBalance() {
 
   if (typeof renderBankrolls === "function") renderBankrolls();
   if (typeof refreshAllButtons === "function") refreshAllButtons();
+
+  /* aviso único al quedarse sin fichas */
+  if (balance < 25 && !walletView.brokeNotified && typeof Bonus !== "undefined") {
+    walletView.brokeNotified = true;
+    toast(noFundsMessage());
+  } else if (balance >= 25) {
+    walletView.brokeNotified = false;
+  }
+}
+
+function noFundsMessage() {
+  const r = typeof Bonus !== "undefined" ? Bonus.remaining : 300;
+  const time = Math.floor(r / 60) + ":" + String(r % 60).padStart(2, "0");
+  return "Te quedaste sin saldo: en " + time + " recibís $5000 por estar online, o reinicialo desde tu perfil.";
 }
 
 function walletTick(dt, now) {
@@ -4097,7 +4102,7 @@ function rouletteTick(dt, now) {
 
     /* sonido: rodado sobre la pista y golpes contra los trastes */
     const u = t / s.Tb;
-    if (u < 0.6) Sound.setRoll(clamp(1 - u * 1.3, 0.15, 1), 1500 + (1 - u) * 1200);
+    if (u < 0.6) Sound.setRoll(clamp(1 - u * 1.3, 0.15, 1), 200 + (1 - u) * 160);
     else Sound.stopRoll();
     if (u > 0.55 && u < 1) {
       const fret = Math.floor((psi + RT_SEG / 2) / RT_SEG);
@@ -4283,6 +4288,10 @@ function buildNumberBoard() {
 
     if (number === 0) {
       btn.classList.add("zero");
+    } else {
+      /* fila (1-12) y columna (0-2) para la mesa vertical del celular */
+      btn.style.setProperty("--vrow", String(Math.ceil(number / 3) + 1));
+      btn.style.setProperty("--vcol", String(((number - 1) % 3) + 1));
     }
 
     btn.addEventListener("click", () => {
@@ -8961,6 +8970,13 @@ function slRenderInfo() {
 }
 
 function updateSlotsButtons() {
+  /* si el saldo bajó (por ejemplo, después de un ALL IN perdido), la apuesta
+     por giro se ajusta a lo que queda en vez de dejar todo trabado */
+  if (!sl.spinning && sl.bet > Math.floor(balance)) {
+    sl.bet = Math.max(0, Math.floor(balance));
+    Store.set("slBet", sl.bet);
+    slRenderInfo();
+  }
   slEls.chips.forEach(chip => {
     const value = chip.dataset.allin === "true" ? Math.max(0, Math.floor(balance) - sl.bet) : Number(chip.dataset.value);
     chip.disabled = sl.spinning || value <= 0 || sl.bet + value > balance;
@@ -9054,7 +9070,7 @@ async function slSpin() {
     return;
   }
   if (balance < sl.bet) {
-    setMessage(slEls.message, "No tenés saldo para esta apuesta. Bajala o esperá el bono de $5000.", "lose");
+    setMessage(slEls.message, noFundsMessage(), "lose");
     Sound.play("error");
     return;
   }
@@ -9114,7 +9130,7 @@ async function slSpin() {
   } else if (payout > 0) {
     setMessage(slEls.message, names + ". Una cereza: recuperás " + formatMoney(payout) + ".", "push");
   } else {
-    setMessage(slEls.message, names + ". Sin premio esta vez.", "lose");
+    setMessage(slEls.message, names + ". Sin premio esta vez." + (balance < 1 ? " " + noFundsMessage() : ""), "lose");
   }
 
   sl.spinning = false;
