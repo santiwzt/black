@@ -2157,36 +2157,56 @@ function settleStack(stackEl, won, payout, towardEl) {
 }
 
 /* ============================================================
-   10. BLACKJACK
+   10. BLACKJACK — una o dos manos, doblar y dividir
+   ------------------------------------------------------------
+   - Podés jugar 1 o 2 manos a la vez contra el mismo dealer.
+   - Dividir (split): con dos cartas del mismo valor se separan
+     en dos manos con una apuesta igual cada una (hasta 4 manos).
+     Ases divididos reciben una sola carta. Un 21 después de
+     dividir paga 1 a 1 (no cuenta como Blackjack natural).
+   - Pagos sin cambios: Blackjack 3 a 2 (redondeo hacia abajo,
+     como antes), mano ganadora 1 a 1, empate devuelve la apuesta.
    ============================================================ */
+const BJ_MAX_HANDS = 4;
+
 const bj = {
   deck: [],
   dealer: [],
-  player: [],
+  hands: [],
+  current: -1,
+  seats: Number(Store.get("bjSeats", 1)) === 2 ? 2 : 1,
+  seat: 0,
+  seatBets: [0, 0],
   bet: 0,
   active: false,
   hidden: true,
   animating: false,
-  doubled: false
+
+  /* compatibilidad: cartas de la mano en juego */
+  get player() {
+    const h = this.hands[this.current] || this.hands[0];
+    return h ? h.cards : [];
+  }
 };
 
 const bjEls = {
   message: document.getElementById("bj-message"),
   bet: document.getElementById("bj-bet"),
   dealerCards: document.getElementById("bj-dealer-cards"),
-  playerCards: document.getElementById("bj-player-cards"),
   dealerScore: document.getElementById("bj-dealer-score"),
-  playerScore: document.getElementById("bj-player-score"),
+  hands: document.getElementById("bj-hands"),
   chips: document.querySelectorAll(".bj-chip"),
   clear: document.getElementById("bj-clear"),
   deal: document.getElementById("bj-deal"),
   hit: document.getElementById("bj-hit"),
   stand: document.getElementById("bj-stand"),
   double: document.getElementById("bj-double"),
+  split: document.getElementById("bj-split"),
   shoe: document.getElementById("bj-shoe"),
   table: document.getElementById("bj-table"),
-  stack: document.getElementById("bj-stack"),
-  betSpot: document.getElementById("bj-bet-spot")
+  seatBtns: document.querySelectorAll(".bj-seat-btn"),
+  spots: [document.getElementById("bj-bet-spot"), document.getElementById("bj-bet-spot-2")],
+  stacks: [document.getElementById("bj-stack"), document.getElementById("bj-stack-2")]
 };
 
 function bjValue(rank) {
@@ -2216,88 +2236,208 @@ function isBlackjack(hand) {
   return hand.length === 2 && bjScore(hand) === 21;
 }
 
+function bjSeatTotal() {
+  return round2(bj.seatBets[0] + bj.seatBets[1]);
+}
+
+function bjHandsTotal() {
+  return round2(bj.hands.reduce((s, h) => s + h.bet, 0));
+}
+
+function bjCurrentHand() {
+  return bj.active ? bj.hands[bj.current] || null : null;
+}
+
+function bjCanSplit(h) {
+  return !!h && h.cards.length === 2 && bjValue(h.cards[0].rank) === bjValue(h.cards[1].rank) &&
+    bj.hands.length < BJ_MAX_HANDS && balance >= h.bet;
+}
+
+function bjCanDouble(h) {
+  return !!h && h.cards.length === 2 && !h.splitAces && balance >= h.bet;
+}
+
+/* --- elementos de cada mano (se reutilizan para no re-animar cartas) --- */
+function bjHandElement(h) {
+  if (h.el) return h.el;
+  const el = document.createElement("div");
+  el.className = "bj-hand";
+  el.innerHTML = `
+    <div class="cards bj-hand-cards"></div>
+    <div class="hand-head">
+      <span class="hand-tag"></span>
+      <p class="score-badge">Puntos: <span class="bj-hand-score">0</span></p>
+    </div>
+    <div class="hand-foot"><span class="hand-bet"></span><span class="hand-result"></span></div>`;
+  h.el = el;
+  h.cardsEl = el.querySelector(".bj-hand-cards");
+  h.scoreEl = el.querySelector(".bj-hand-score");
+  h.tagEl = el.querySelector(".hand-tag");
+  h.betEl = el.querySelector(".hand-bet");
+  h.resultEl = el.querySelector(".hand-result");
+  return el;
+}
+
+function bjLayoutHands() {
+  bj.hands.forEach(h => bjHandElement(h));
+  const current = Array.from(bjEls.hands.children);
+  const wanted = bj.hands.map(h => h.el);
+  if (current.length !== wanted.length || current.some((el, i) => el !== wanted[i])) {
+    wanted.forEach(el => bjEls.hands.appendChild(el));
+    Array.from(bjEls.hands.children).forEach(el => { if (!wanted.includes(el)) el.remove(); });
+  }
+  bjEls.hands.classList.toggle("many", bj.hands.length >= 3);
+  bjEls.hands.classList.toggle("multi", bj.hands.length >= 2);
+}
+
 function bjUpdateScores() {
   let dealerScore = 0;
   if (bj.dealer.length > 0) {
     dealerScore = bj.hidden ? bjValue(bj.dealer[0].rank) : bjScore(bj.dealer);
   }
-  const playerScore = bjScore(bj.player);
-
   animateNumber(bjEls.dealerScore, dealerScore);
-  animateNumber(bjEls.playerScore, playerScore);
-
-  const pBadge = bjEls.playerScore.closest(".score-badge");
   const dBadge = bjEls.dealerScore.closest(".score-badge");
-  pBadge.classList.toggle("is-bust", playerScore > 21);
-  pBadge.classList.toggle("is-21", playerScore === 21);
   dBadge.classList.toggle("is-bust", !bj.hidden && dealerScore > 21);
   dBadge.classList.toggle("is-21", !bj.hidden && dealerScore === 21 && bj.dealer.length > 0);
+
+  bj.hands.forEach((h, i) => {
+    if (!h.el) return;
+    const score = bjScore(h.cards);
+    animateNumber(h.scoreEl, score);
+    const badge = h.scoreEl.closest(".score-badge");
+    badge.classList.toggle("is-bust", score > 21);
+    badge.classList.toggle("is-21", score === 21);
+    h.tagEl.textContent = bj.hands.length > 1 ? "Mano " + (i + 1) : "Jugador";
+    h.betEl.textContent = formatMoney(h.bet) + (h.doubled ? " · doblada" : "");
+    h.el.classList.toggle("is-turn", bj.active && i === bj.current && !bj.animating);
+    h.el.classList.toggle("is-done", bj.active && h.done && i !== bj.current);
+  });
 }
 
 function renderBlackjack(animate = false) {
   syncHand(bjEls.dealerCards, bj.dealer, index => bj.hidden && index === 1, { animate, shoe: bjEls.shoe });
-  syncHand(bjEls.playerCards, bj.player, () => false, {
-    animate,
-    shoe: bjEls.shoe,
-    decorate: (el, index) => {
-      if (bj.doubled && index === 2) el.classList.add("doubled");
-    }
+
+  bjLayoutHands();
+  bj.hands.forEach(h => {
+    syncHand(h.cardsEl, h.cards, () => false, {
+      animate,
+      shoe: bjEls.shoe,
+      decorate: (el, index) => {
+        if (h.doubled && index === 2) el.classList.add("doubled");
+      }
+    });
   });
 
   if (!animate) bjUpdateScores();
 
+  bj.bet = bj.active ? bjHandsTotal() : bjSeatTotal();
   bjEls.bet.textContent = formatMoney(bj.bet);
-  if (bj.bet > 0) renderChipStack(bjEls.stack, bj.bet);
-  else if (!bj.active) renderChipStack(bjEls.stack, 0);
+
+  /* círculos de apuesta: visibles mientras se apuesta */
+  bjEls.table.classList.toggle("in-play", bj.active);
+  bjEls.table.classList.toggle("two-seats", bj.seats === 2);
+  bjEls.spots.forEach((spot, i) => {
+    spot.classList.toggle("selected", bj.seats === 2 && bj.seat === i);
+    if (!bj.active) renderChipStack(bjEls.stacks[i], bj.seatBets[i]);
+  });
+  bjEls.seatBtns.forEach(b => {
+    const on = Number(b.dataset.seats) === bj.seats;
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-checked", String(on));
+  });
 }
 
 function updateBlackjackButtons() {
   const busy = bj.active || bj.animating;
+  const h = bjCurrentHand();
+  const playing = bj.active && !bj.animating && !!h;
 
   bjEls.chips.forEach(chip => {
     let value = chipAmount(chip);
     chip.disabled = busy || value <= 0 || balance < value;
   });
+  bjEls.seatBtns.forEach(b => { b.disabled = busy; });
+  bjEls.spots.forEach(s => { s.disabled = busy; });
 
-  bjEls.clear.disabled = busy || bj.bet === 0;
-  bjEls.deal.disabled = busy || bj.bet === 0;
-  bjEls.hit.disabled = !bj.active || bj.animating;
-  bjEls.stand.disabled = !bj.active || bj.animating;
-  bjEls.double.disabled = !bj.active || bj.animating || bj.player.length !== 2 || balance < bj.bet;
+  bjEls.clear.disabled = busy || bjSeatTotal() === 0;
+  bjEls.deal.disabled = busy || bjSeatTotal() === 0;
+  bjEls.hit.disabled = !playing;
+  bjEls.stand.disabled = !playing;
+  bjEls.double.disabled = !playing || !bjCanDouble(h);
+  bjEls.split.disabled = !playing || !bjCanSplit(h);
+  bjEls.split.classList.toggle("can-split", playing && bjCanSplit(h));
+}
+
+function bjBetSummary() {
+  if (bj.seats === 1) return "Apostaste " + formatMoney(bj.seatBets[0]) + ". Ya podés repartir.";
+  return "Mano 1: " + formatMoney(bj.seatBets[0]) + " · Mano 2: " + formatMoney(bj.seatBets[1]) +
+    (bj.seatBets[0] && bj.seatBets[1] ? ". Ya podés repartir." : ". Tocá un círculo para elegir la mano.");
+}
+
+function bjSetSeats(n) {
+  if (bj.active || bj.animating) return;
+  n = n === 2 ? 2 : 1;
+  if (n === 1 && bj.seatBets[1] > 0) {
+    balance += bj.seatBets[1];
+    FX.flyChip(bjEls.spots[1], walletEl, bj.seatBets[1]);
+    bj.seatBets[1] = 0;
+    updateBalance();
+  }
+  bj.seats = n;
+  bj.seat = n === 2 && bj.seatBets[0] > 0 && !bj.seatBets[1] ? 1 : 0;
+  Store.set("bjSeats", n);
+  Sound.play("select");
+  renderBlackjack();
+  updateBlackjackButtons();
+  setMessage(bjEls.message, n === 2 ? "Dos manos: tocá un círculo y poné fichas en cada una." : "Una mano: elegí fichas y tocá Repartir.");
+}
+
+function bjSelectSeat(i) {
+  if (bj.active || bj.animating || bj.seats !== 2) return;
+  bj.seat = i;
+  Sound.play("select");
+  renderBlackjack();
+  setMessage(bjEls.message, "Apostando en la mano " + (i + 1) + ". " + bjBetSummary());
 }
 
 function bjPlaceChip(value, chipEl) {
   if (bj.active || bj.animating || value <= 0 || balance < value) return;
 
+  const seat = bj.seats === 2 ? bj.seat : 0;
   balance -= value;
-  bj.bet = round2(bj.bet + value);
+  bj.seatBets[seat] = round2(bj.seatBets[seat] + value);
 
-  chipFeedback(chipEl, bjEls.betSpot, value);
+  chipFeedback(chipEl, bjEls.spots[seat], value);
   updateBalance();
-  renderChipStack(bjEls.stack, bj.bet, { force: true });
+  renderChipStack(bjEls.stacks[seat], bj.seatBets[seat], { force: true });
   renderBlackjack();
   updateBlackjackButtons();
-  setMessage(bjEls.message, "Apostaste " + formatMoney(bj.bet) + ". Ya podés repartir.");
+  setMessage(bjEls.message, bjBetSummary());
 }
 
 function bjClearBet() {
   if (bj.active || bj.animating) return;
 
-  balance += bj.bet;
-  if (bj.bet > 0) FX.flyChip(bjEls.betSpot, walletEl, bj.bet);
-  bj.bet = 0;
+  [0, 1].forEach(i => {
+    if (bj.seatBets[i] > 0) {
+      balance += bj.seatBets[i];
+      FX.flyChip(bjEls.spots[i], walletEl, bj.seatBets[i]);
+      bj.seatBets[i] = 0;
+      renderChipStack(bjEls.stacks[i], 0, { force: true });
+    }
+  });
 
   updateBalance();
-  renderChipStack(bjEls.stack, 0, { force: true });
   renderBlackjack();
   updateBlackjackButtons();
   setMessage(bjEls.message, "Apuesta limpiada.");
 }
 
-/* Reparte una carta con animación y actualiza los puntos cuando aterriza. */
+/* Reparte una carta con animación (al dealer o a una mano) y actualiza los puntos al aterrizar. */
 async function bjDealCard(target) {
   const card = bj.deck.pop();
-  bj[target].push(card);
+  if (target === "dealer") bj.dealer.push(card);
+  else target.cards.push(card);
   renderBlackjack(true);
   await sleep(T(340));
   bjUpdateScores();
@@ -2305,69 +2445,188 @@ async function bjDealCard(target) {
 }
 
 async function bjDeal() {
-  if (bj.bet <= 0 || bj.active || bj.animating) return;
+  if (bj.active || bj.animating || bjSeatTotal() <= 0) return;
 
   bj.animating = true;
   bj.active = true;
-  bj.doubled = false;
   updateBlackjackButtons();
   bjEls.table.classList.remove("dealer-turn");
   setMessage(bjEls.message, "Repartiendo cartas…");
 
-  await sweepCards([bjEls.dealerCards, bjEls.playerCards]);
+  await sweepCards([bjEls.dealerCards, bjEls.hands]);
 
   bj.deck = createDeck();
   bj.dealer = [];
-  bj.player = [];
   bj.hidden = true;
+  bj.current = -1;
+  bj.hands = [0, 1]
+    .filter(i => bj.seatBets[i] > 0)
+    .map(i => ({ cards: [], bet: bj.seatBets[i], seat: i, done: false, doubled: false, fromSplit: false, splitAces: false, natural: false }));
+  bj.seatBets = [0, 0];
+  bjEls.hands.innerHTML = "";
+  bjEls.stacks.forEach(s => renderChipStack(s, 0, { force: true }));
   renderBlackjack();
 
-  await bjDealCard("player");
-  await bjDealCard("dealer");
-  await bjDealCard("player");
-  await bjDealCard("dealer");
+  for (let round = 0; round < 2; round++) {
+    for (const h of bj.hands) await bjDealCard(h);
+    await bjDealCard("dealer");
+  }
 
   bj.animating = false;
-  updateBlackjackButtons();
 
-  let playerBJ = isBlackjack(bj.player);
-  let dealerBJ = isBlackjack(bj.dealer);
+  /* primero se marcan los Blackjack del jugador (si el dealer también tiene, es empate) */
+  bj.hands.forEach(h => {
+    if (isBlackjack(h.cards)) {
+      h.natural = true;
+      h.done = true;
+      h.resultEl.textContent = "¡Blackjack!";
+      h.el.classList.add("is-natural");
+    }
+  });
 
-  if (playerBJ && dealerBJ) {
-    bjFinish("push");
-  } else if (playerBJ) {
-    bjFinish("blackjack");
-  } else if (dealerBJ) {
-    bjFinish("dealerWin");
-  } else {
-    setMessage(bjEls.message, "Tu turno: pedí carta, plantate o doblá.");
+  if (isBlackjack(bj.dealer)) {
+    bjFinish("dealerBlackjack");
+    return;
   }
+
+  bjNextHand();
+}
+
+/* Pasa a la próxima mano sin terminar; si no queda ninguna, juega el dealer. */
+function bjNextHand() {
+  const next = bj.hands.findIndex(h => !h.done);
+  if (next === -1) {
+    bj.current = -1;
+    bjDealerPlay();
+    return;
+  }
+
+  bj.current = next;
+  const h = bj.hands[next];
+  const many = bj.hands.length > 1;
+  const name = many ? "Mano " + (next + 1) : "Tu turno";
+  const options = ["pedí", "plantate"];
+  if (bjCanDouble(h)) options.push("doblá");
+  if (bjCanSplit(h)) options.push("dividí");
+  setMessage(bjEls.message, name + " (" + bjScore(h.cards) + "): " + options.join(", ").replace(/, ([^,]*)$/, " o $1") + ".");
+
+  renderBlackjack();
+  updateBlackjackButtons();
+}
+
+/* Cierra la mano actual si se pasó o llegó a 21. Devuelve true si terminó. */
+function bjCheckHand(h) {
+  const score = bjScore(h.cards);
+  if (score > 21) {
+    h.done = true;
+    h.busted = true;
+    h.resultEl.textContent = "Se pasó";
+    h.el.classList.add("is-bust");
+    const last = h.cardsEl.lastElementChild;
+    if (last) last.classList.add("bust-card");
+    Sound.play("thud");
+    return true;
+  }
+  if (score === 21) {
+    h.done = true;
+    return true;
+  }
+  return false;
 }
 
 async function bjHit() {
-  if (!bj.active || bj.animating) return;
+  const h = bjCurrentHand();
+  if (!h || bj.animating) return;
 
   bj.animating = true;
   updateBlackjackButtons();
-
-  await bjDealCard("player");
-
+  await bjDealCard(h);
   bj.animating = false;
 
-  const score = bjScore(bj.player);
-  if (score > 21) {
-    bjEls.playerCards.lastElementChild && bjEls.playerCards.lastElementChild.classList.add("bust-card");
-    bjFinish("playerBust");
-  } else if (score === 21) {
-    setMessage(bjEls.message, "¡21! Te conviene plantarte.", "push");
-  } else {
-    setMessage(bjEls.message, "Podés pedir otra o plantarte.");
+  if (bjCheckHand(h)) {
+    await sleep(T(250));
+    bjNextHand();
+    return;
   }
 
+  setMessage(bjEls.message, (bj.hands.length > 1 ? "Mano " + (bj.current + 1) + ": " : "") + bjScore(h.cards) + ". Podés pedir otra o plantarte.");
+  renderBlackjack();
   updateBlackjackButtons();
 }
 
-/* Turno del dealer: revela la carta oculta y pide hasta 17 con animación. */
+function bjStand() {
+  const h = bjCurrentHand();
+  if (!h || bj.animating) return;
+  h.done = true;
+  Sound.play("tick", 2);
+  bjNextHand();
+}
+
+async function bjDouble() {
+  const h = bjCurrentHand();
+  if (!h || bj.animating || !bjCanDouble(h)) return;
+
+  balance -= h.bet;
+  chipFeedback(bjEls.double, h.el, h.bet);
+  h.bet = round2(h.bet * 2);
+  h.doubled = true;
+  updateBalance();
+  setMessage(bjEls.message, "Doblaste: una sola carta más.");
+
+  bj.animating = true;
+  updateBlackjackButtons();
+  await bjDealCard(h);
+  bj.animating = false;
+
+  bjCheckHand(h);
+  h.done = true;
+  await sleep(T(250));
+  bjNextHand();
+}
+
+async function bjSplit() {
+  const h = bjCurrentHand();
+  if (!h || bj.animating || !bjCanSplit(h)) return;
+
+  balance -= h.bet;
+  updateBalance();
+
+  const aces = h.cards[0].rank === "A";
+  const moved = h.cards.pop();
+  const twin = { cards: [moved], bet: h.bet, seat: h.seat, done: false, doubled: false, fromSplit: true, splitAces: aces, natural: false };
+  h.fromSplit = true;
+  h.splitAces = aces;
+
+  /* la segunda carta se muda a la mano nueva sin volver a repartirse */
+  const movedEl = h.cardsEl.lastElementChild;
+  bj.hands.splice(bj.current + 1, 0, twin);
+  bjLayoutHands();
+  if (movedEl) twin.cardsEl.appendChild(movedEl);
+
+  chipFeedback(bjEls.split, twin.el, twin.bet);
+  Sound.play("flip");
+  setMessage(bjEls.message, "Dividiste" + (aces ? " ases: cada uno recibe una sola carta." : ". Ahora jugás cada mano por separado."));
+
+  bj.animating = true;
+  updateBlackjackButtons();
+  renderBlackjack();
+  await sleep(T(300));
+  await bjDealCard(h);
+  await bjDealCard(twin);
+  bj.animating = false;
+
+  if (aces) {
+    h.done = true;
+    twin.done = true;
+  } else {
+    bjCheckHand(h);
+    bjCheckHand(twin);
+  }
+  await sleep(T(200));
+  bjNextHand();
+}
+
+/* Turno del dealer: revela la carta oculta y pide hasta 17 (si queda alguna mano viva). */
 async function bjDealerPlay() {
   bj.animating = true;
   updateBlackjackButtons();
@@ -2380,7 +2639,8 @@ async function bjDealerPlay() {
   await sleep(T(650));
   bjUpdateScores();
 
-  while (bjScore(bj.dealer) < 17) {
+  const alive = bj.hands.some(h => !h.busted && !h.natural);
+  while (alive && bjScore(bj.dealer) < 17) {
     await sleep(T(320));
     setMessage(bjEls.message, "El dealer pide carta (" + bjScore(bj.dealer) + ").");
     await bjDealCard("dealer");
@@ -2388,55 +2648,13 @@ async function bjDealerPlay() {
 
   await sleep(T(250));
   bj.animating = false;
-
-  let dealerScore = bjScore(bj.dealer);
-  let playerScore = bjScore(bj.player);
-
-  if (dealerScore > 21) {
-    bjFinish("dealerBust");
-  } else if (playerScore > dealerScore) {
-    bjFinish("playerWin");
-  } else if (playerScore < dealerScore) {
-    bjFinish("dealerWin");
-  } else {
-    bjFinish("push");
-  }
+  bjFinish();
 }
 
-function bjStand() {
-  if (!bj.active || bj.animating) return;
-  setMessage(bjEls.message, "Te plantaste con " + bjScore(bj.player) + ".");
-  bjDealerPlay();
-}
-
-async function bjDouble() {
-  if (!bj.active || bj.animating || bj.player.length !== 2 || balance < bj.bet) return;
-
-  balance -= bj.bet;
-  chipFeedback(bjEls.double, bjEls.betSpot, bj.bet);
-  bj.bet = round2(bj.bet * 2);
-  bj.doubled = true;
-
-  updateBalance();
-  renderChipStack(bjEls.stack, bj.bet, { force: true });
-  bjEls.bet.textContent = formatMoney(bj.bet);
-  setMessage(bjEls.message, "Doblaste: una sola carta más.");
-
-  bj.animating = true;
-  updateBlackjackButtons();
-  await bjDealCard("player");
-  bj.animating = false;
-
-  if (bjScore(bj.player) > 21) {
-    bjFinish("playerBust");
-  } else {
-    bjDealerPlay();
-  }
-}
-
-async function bjFinish(result) {
+async function bjFinish(reason) {
   bj.active = false;
   bj.animating = true;
+  bj.current = -1;
   updateBlackjackButtons();
 
   if (bj.hidden) {
@@ -2448,92 +2666,102 @@ async function bjFinish(result) {
   bjUpdateScores();
   bjEls.table.classList.remove("dealer-turn");
 
-  const betPlaced = bj.bet;
-  let payout = 0;
+  const dealerScore = bjScore(bj.dealer);
+  const dealerBJ = reason === "dealerBlackjack" || isBlackjack(bj.dealer);
+  const totalBet = bjHandsTotal();
+  let totalPayout = 0;
+  let naturalWins = 0;
+  const lines = [];
 
-  if (result === "blackjack") {
-    let pay = Math.floor(bj.bet * 2.5);
-    let profit = pay - bj.bet;
-    payout = pay;
-    balance += pay;
-    setMessage(bjEls.message, "¡Blackjack! Ganaste $" + profit, "win");
-    later(() => showWinAnimation("¡BLACKJACK!", profit, "bigwin"), 1000);
+  bj.hands.forEach((h, i) => {
+    const score = bjScore(h.cards);
+    let outcome;
+    let pay = 0;
+
+    if (h.natural && !h.fromSplit) {
+      if (dealerBJ) { outcome = "push"; pay = h.bet; }
+      else { outcome = "blackjack"; pay = Math.floor(h.bet * 2.5); naturalWins++; }
+    } else if (h.busted || score > 21) {
+      outcome = "bust";
+    } else if (dealerBJ) {
+      outcome = "lose";
+    } else if (dealerScore > 21 || score > dealerScore) {
+      outcome = "win"; pay = h.bet * 2;
+    } else if (score < dealerScore) {
+      outcome = "lose";
+    } else {
+      outcome = "push"; pay = h.bet;
+    }
+
+    h.outcome = outcome;
+    h.payout = pay;
+    totalPayout += pay;
+
+    const labels = { blackjack: "¡Blackjack!", win: "Ganó", push: "Empate", lose: "Perdió", bust: "Se pasó" };
+    h.resultEl.textContent = labels[outcome] + (pay > h.bet ? " +" + formatMoney(pay - h.bet) : "");
+    h.el.classList.remove("is-turn", "is-done");
+    h.el.classList.add("res-" + (pay > h.bet ? "win" : pay === h.bet ? "push" : "lose"));
+    if (pay > 0) FX.flyChip(h.el, walletEl, pay);
+    lines.push((bj.hands.length > 1 ? "Mano " + (i + 1) + ": " : "") + labels[outcome].toLowerCase());
+  });
+
+  totalPayout = round2(totalPayout);
+  balance += totalPayout;
+  const net = round2(totalPayout - totalBet);
+
+  /* mensajes: con una sola mano se mantienen los textos clásicos */
+  if (bj.hands.length === 1) {
+    const h = bj.hands[0];
+    const texts = {
+      blackjack: ["¡Blackjack! Ganaste " + formatMoney(h.payout - h.bet), "win"],
+      win: [dealerScore > 21 ? "El dealer se pasó. Ganaste " + formatMoney(h.payout) : "Ganaste. Cobrás " + formatMoney(h.payout), "win"],
+      push: ["Empate. Recuperás tu apuesta.", "push"],
+      bust: ["Te pasaste de 21. Perdiste.", "lose"],
+      lose: ["Gana el dealer. Perdiste.", "lose"]
+    };
+    setMessage(bjEls.message, texts[h.outcome][0], texts[h.outcome][1]);
+  } else {
+    const summary = lines.join(" · ") + ". " + (net > 0 ? "Ganancia " + formatMoney(net) : net < 0 ? "Perdiste " + formatMoney(-net) : "Quedás igual") + ".";
+    setMessage(bjEls.message, summary, net > 0 ? "win" : net < 0 ? "lose" : "push");
   }
 
-  if (result === "playerWin") {
-    let pay = bj.bet * 2;
-    let profit = bj.bet;
-    payout = pay;
-    balance += pay;
-    setMessage(bjEls.message, "Ganaste. Cobrás " + formatMoney(pay), "win");
-    const wType  = profit >= 300 ? "bigwin" : "win";
-    const wTitle = profit >= 300 ? "BIG WIN" : "WIN";
-    later(() => showWinAnimation(wTitle, Math.round(profit), wType), 1000);
+  if (net > 0) {
+    Sound.play("cash");
+    const big = net >= 300 || naturalWins > 0;
+    const title = naturalWins > 0 && bj.hands.length === 1 ? "¡BLACKJACK!" : big ? "BIG WIN" : "WIN";
+    later(() => showWinAnimation(title, Math.round(net), big ? "bigwin" : "win"), 1000);
+  } else if (net < 0) {
+    Sound.play("thud");
+    later(() => showWinAnimation("GAME OVER", Math.round(-net), "lose"), 1000);
   }
 
-  if (result === "dealerBust") {
-    let pay = bj.bet * 2;
-    let profit = bj.bet;
-    payout = pay;
-    balance += pay;
-    setMessage(bjEls.message, "El dealer se pasó. Ganaste " + formatMoney(pay), "win");
-    const wType  = profit >= 300 ? "bigwin" : "win";
-    const wTitle = profit >= 300 ? "BIG WIN" : "WIN";
-    later(() => showWinAnimation(wTitle, Math.round(profit), wType), 1000);
-  }
+  const detail = bj.hands.map(h => bjScore(h.cards)).join(" / ") + " vs " + dealerScore +
+    (bj.hands.length > 1 ? " · " + bj.hands.length + " manos" : "");
+  Stats.record("blackjack", totalBet, totalPayout, detail);
 
-  if (result === "push") {
-    payout = bj.bet;
-    balance += bj.bet;
-    setMessage(bjEls.message, "Empate. Recuperás tu apuesta.", "push");
-  }
-
-  if (result === "playerBust") {
-    let lost = bj.bet;
-    setMessage(bjEls.message, "Te pasaste de 21. Perdiste.", "lose");
-    later(() => showWinAnimation("GAME OVER", Math.round(lost), "lose"), 1000);
-  }
-
-  if (result === "dealerWin") {
-    let lost = bj.bet;
-    setMessage(bjEls.message, "Gana el dealer. Perdiste.", "lose");
-    later(() => showWinAnimation("GAME OVER", Math.round(lost), "lose"), 1000);
-  }
-
-  const labels = {
-    blackjack: "Blackjack natural",
-    playerWin: "Mano ganadora",
-    dealerBust: "Dealer pasado",
-    push: "Empate",
-    playerBust: "Te pasaste",
-    dealerWin: "Ganó el dealer"
-  };
-  Stats.record("blackjack", betPlaced, payout, labels[result] + " · " + bjScore(bj.player) + " vs " + bjScore(bj.dealer));
-
-  if (payout > betPlaced) Sound.play("cash");
-  else if (payout === 0) Sound.play("thud");
-
-  settleStack(bjEls.stack, payout > 0, payout, bjEls.dealerCards);
-
-  bj.bet = 0;
   bj.animating = false;
+  bj.bet = 0;
 
   updateBalance();
   renderBlackjack();
+  bjEls.hands.querySelectorAll(".bj-hand").forEach(el => el.classList.remove("is-turn"));
   updateBlackjackButtons();
 }
 
 function bjReset() {
   bj.deck = [];
   bj.dealer = [];
-  bj.player = [];
+  bj.hands = [];
+  bj.current = -1;
+  bj.seatBets = [0, 0];
+  bj.seat = 0;
   bj.bet = 0;
   bj.active = false;
   bj.hidden = true;
   bj.animating = false;
-  bj.doubled = false;
+  bjEls.hands.innerHTML = "";
   bjEls.table.classList.remove("dealer-turn");
-  renderChipStack(bjEls.stack, 0, { force: true });
+  bjEls.stacks.forEach(s => renderChipStack(s, 0, { force: true }));
   renderBlackjack();
   updateBlackjackButtons();
   setMessage(bjEls.message, "Elegí fichas y tocá Repartir.");
@@ -2542,12 +2770,15 @@ function bjReset() {
 bjEls.chips.forEach(chip => {
   chip.addEventListener("click", () => bjPlaceChip(chipAmount(chip), chip));
 });
+bjEls.seatBtns.forEach(b => b.addEventListener("click", () => bjSetSeats(Number(b.dataset.seats))));
+bjEls.spots.forEach((spot, i) => spot.addEventListener("click", () => bjSelectSeat(i)));
 
 bjEls.clear.addEventListener("click", bjClearBet);
 bjEls.deal.addEventListener("click", bjDeal);
 bjEls.hit.addEventListener("click", bjHit);
 bjEls.stand.addEventListener("click", bjStand);
 bjEls.double.addEventListener("click", bjDouble);
+bjEls.split.addEventListener("click", bjSplit);
 
 /* ============================================================
    11. POKER TEXAS HOLD'EM

@@ -5030,3 +5030,161 @@ body.auth-open { overflow: hidden; }
   #global-balance { font-size: 12.5px; }
   .brand-mark img { width: 32px; height: 32px; }
 }
+
+
+/* ============================================================
+   30. BLACKJACK: dos manos y dividir
+   ============================================================ */
+.bj-seats {
+  position: absolute;
+  top: 18px;
+  left: 20px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 4px 4px 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.38);
+  border: 1px solid rgba(240, 201, 107, 0.3);
+}
+.bj-seats > span { font-size: 10px; font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase; color: rgba(255, 255, 255, 0.7); margin-right: 4px; }
+.bj-seat-btn {
+  width: 32px; height: 28px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.bj-seat-btn.active { background: var(--gold-grad); color: #1b1206; box-shadow: 0 0 12px rgba(240, 201, 107, 0.4); }
+.bj-seat-btn:disabled { opacity: 0.5; }
+
+.bj-table .bet-spot {
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: default;
+  transition: opacity var(--t-mid), transform var(--t-mid);
+}
+.bj-table.two-seats .bet-spot { cursor: pointer; }
+.bj-table .bet-spot-2 { left: calc(6% + 104px); }
+.bj-table:not(.two-seats) .bet-spot-2 { display: none; }
+.bj-table:not(.two-seats) .bet-spot-num { display: none; }
+.bet-spot-num {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  width: 22px; height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(240, 201, 107, 0.6);
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--gold-1);
+}
+.bj-table.two-seats .bet-spot.selected .bet-spot-ring {
+  border-style: solid;
+  border-color: var(--gold-2);
+  box-shadow: 0 0 0 3px rgba(240, 201, 107, 0.25), 0 0 24px rgba(240, 201, 107, 0.45);
+}
+.bj-table.two-seats .bet-spot:not(.selected):hover .bet-spot-ring { border-color: rgba(240, 201, 107, 0.9); }
+.bj-table.in-play .bet-spot { opacity: 0; pointer-events: none; transform: scale(0.9); }
+.bj-table.in-play .bj-seats { opacity: 0.45; }
+
+.bj-hands {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 14px 18px;
+  min-height: calc(var(--card-w) * 1.4 + 70px);
+}
+.bj-hands.multi { --card-w: clamp(54px, 5.6vw, 80px); }
+.bj-hands.many { --card-w: clamp(46px, 4.6vw, 68px); gap: 10px 12px; }
+.bj-hand {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 12px 8px;
+  border-radius: 20px;
+  border: 1px solid transparent;
+  transition: border-color var(--t-mid), background var(--t-mid), box-shadow var(--t-mid), opacity var(--t-mid), transform var(--t-mid);
+}
+.bj-hands.multi .bj-hand { background: rgba(0, 0, 0, 0.12); border-color: rgba(255, 255, 255, 0.08); }
+.bj-hand .hand-head { margin: 6px 0 2px; gap: 8px; }
+.hand-tag { font-size: 11px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: rgba(255, 255, 255, 0.8); }
+.hand-foot { display: flex; gap: 8px; align-items: center; min-height: 18px; }
+.hand-bet { font-size: 11.5px; font-weight: 800; color: var(--gold-1); }
+.hand-result { font-size: 11.5px; font-weight: 900; letter-spacing: 0.4px; }
+.bj-hand.is-turn {
+  border-color: rgba(240, 201, 107, 0.75) !important;
+  background: rgba(240, 201, 107, 0.08) !important;
+  box-shadow: 0 0 0 3px rgba(240, 201, 107, 0.15), 0 0 30px rgba(240, 201, 107, 0.25);
+  transform: translateY(-4px);
+}
+.bj-hand.is-turn .hand-tag { color: var(--gold-1); }
+.bj-hand.is-done { opacity: 0.72; }
+.bj-hand.is-bust .hand-result { color: var(--lose-color); }
+.bj-hand.is-natural .hand-result { color: var(--gold-1); }
+.bj-hand.res-win { border-color: rgba(52, 232, 158, 0.6) !important; box-shadow: 0 0 26px rgba(52, 232, 158, 0.25); }
+.bj-hand.res-win .hand-result { color: var(--win-color); }
+.bj-hand.res-lose { opacity: 0.6; }
+.bj-hand.res-lose .hand-result { color: var(--lose-color); }
+.bj-hand.res-push .hand-result { color: var(--push-color); }
+
+#bj-split.can-split:not(:disabled) {
+  --btn-border: rgba(45, 226, 230, 0.6);
+  color: #d9fbfc;
+  background: rgba(45, 226, 230, 0.14);
+  box-shadow: 0 0 18px rgba(45, 226, 230, 0.3);
+  animation: readyGlow 1.8s ease-in-out infinite;
+}
+
+@media (max-width: 700px) {
+  .bj-seats { top: 12px; left: 12px; padding: 3px 3px 3px 10px; }
+  .bj-seats > span { font-size: 9px; }
+  .bj-seat-btn { width: 30px; height: 26px; }
+  .bj-table .bet-spot { left: 14px; top: 58px; bottom: auto; transform: scale(0.72); transform-origin: top left; }
+  .bj-table .bet-spot-2 { left: 82px; }
+  .bj-table.in-play .bet-spot { transform: scale(0.65); transform-origin: top left; }
+  .bj-hands { gap: 8px; }
+  .bj-hands.multi { --card-w: clamp(44px, 13vw, 58px); }
+  .bj-hands.many { --card-w: clamp(38px, 10.5vw, 50px); }
+  .bj-hand { padding: 8px 6px 6px; }
+  .hand-tag { font-size: 9.5px; letter-spacing: 1.2px; }
+}
+
+/* acciones del blackjack: 6 botones en 3 columnas */
+.bj-card .controls .actions { display: grid; grid-template-columns: repeat(3, 1fr); }
+.bj-card .controls .actions .btn { min-width: 0; }
+
+@media (max-width: 700px) {
+  /* círculos de apuesta abajo, en la zona del jugador */
+  .bj-table .bet-spot,
+  .bj-table .bet-spot-2 {
+    top: auto;
+    bottom: 26px;
+    left: calc(50% - 46px);
+    transform: scale(0.8);
+    transform-origin: bottom center;
+    z-index: 4;
+  }
+  .bj-table.two-seats .bet-spot { left: calc(50% - 96px); }
+  .bj-table.two-seats .bet-spot-2 { left: calc(50% + 4px); }
+  .bj-table:not(.in-play) .bj-hands { opacity: 0.3; transition: opacity var(--t-mid); }
+  .bj-table.in-play .bet-spot { transform: scale(0.7); transform-origin: bottom center; }
+}
+@media (max-width: 700px) {
+  /* encima del recuadro "Tus fichas", que en celular va al final de la mesa */
+  .bj-table .bet-spot, .bj-table .bet-spot-2 { bottom: 182px; }
+  .bj-table:not(.in-play) .hand-player { min-height: 120px; }
+}
