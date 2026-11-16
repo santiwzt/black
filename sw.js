@@ -2,12 +2,12 @@
    Estrategia "red primero": siempre intenta bajar la versión nueva y
    solo usa la copia guardada si no hay conexión. Así nunca queda
    pegada una versión vieja de los archivos. */
-const CACHE = "royal-neon-v5-7";
+const CACHE = "royal-neon-v5-8";
 const FILES = [
   "./",
   "./index.html",
-  "./styles.css?v=5.7",
-  "./script.js?v=5.7",
+  "./styles.css?v=5.8",
+  "./script.js?v=5.8",
   "./manifest.webmanifest",
   "./assets/logo.svg",
   "./assets/icon-192.png",
@@ -30,7 +30,9 @@ self.addEventListener("fetch", event => {
   const req = event.request;
   if (req.method !== "GET" || new URL(req.url).origin !== location.origin) return;
   event.respondWith(
-    fetch(req)
+    /* "no-cache": siempre pregunta al servidor si hay versión nueva,
+       en vez de usar la copia que el navegador guarda hasta 10 minutos */
+    fetch(req, { cache: "no-cache" })
       .then(res => {
         const copy = res.clone();
         caches.open(CACHE).then(cache => cache.put(req, copy));
