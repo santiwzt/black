@@ -16,7 +16,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Royal Neon" />
-  <link rel="stylesheet" href="styles.css?v=4.0" />
+  <link rel="stylesheet" href="styles.css?v=5.0" />
 </head>
 <body>
   <!-- Fondo ambiental -->
@@ -1490,6 +1490,11 @@
             <span class="switch-label">Alto contraste</span>
           </label>
           <label class="switch row-switch">
+            <input type="checkbox" id="set-haptics" />
+            <span class="switch-ui" aria-hidden="true"></span>
+            <span class="switch-label">Vibración al apostar y cobrar</span>
+          </label>
+          <label class="switch row-switch">
             <input type="checkbox" id="set-large" />
             <span class="switch-ui" aria-hidden="true"></span>
             <span class="switch-label">Texto más grande</span>
@@ -1539,7 +1544,53 @@
             </div>
           </div>
         </div>
-        <p class="panel-note">La foto y el nombre se guardan solo en este navegador.</p>
+
+        <section class="account-box" id="account-box">
+          <div class="account-status">
+            <span class="mini-label">Cuenta</span>
+            <strong id="account-label">Invitado</strong>
+            <small id="account-since"></small>
+          </div>
+          <div class="account-actions">
+            <button class="btn primary" type="button" id="acc-login">Ingresar o crear cuenta</button>
+            <button class="btn" type="button" id="acc-switch">Cambiar de cuenta</button>
+            <button class="btn secondary" type="button" id="acc-logout">Cerrar sesión</button>
+            <button class="btn secondary" type="button" id="acc-reset">Reiniciar saldo ficticio</button>
+          </div>
+
+          <details class="account-more" id="acc-security">
+            <summary>Seguridad de la cuenta</summary>
+            <form class="acc-form" id="acc-pass-form" autocomplete="off">
+              <h4>Cambiar contraseña</h4>
+              <input type="password" id="acc-pass-cur" placeholder="Contraseña actual" autocomplete="current-password" required />
+              <input type="password" id="acc-pass-new" placeholder="Nueva contraseña (mínimo 6)" autocomplete="new-password" required />
+              <button class="btn" type="submit">Guardar contraseña</button>
+              <p class="acc-msg" id="acc-pass-msg"></p>
+            </form>
+            <form class="acc-form" id="acc-del-form" autocomplete="off">
+              <h4>Eliminar cuenta</h4>
+              <p class="panel-note">Borra el saldo, las estadísticas y la configuración de esta cuenta en este dispositivo. No se puede deshacer.</p>
+              <input type="password" id="acc-del-pass" placeholder="Confirmá con tu contraseña" autocomplete="current-password" required />
+              <button class="btn danger" type="submit">Eliminar mi cuenta</button>
+              <p class="acc-msg" id="acc-del-msg"></p>
+            </form>
+          </details>
+        </section>
+
+        <p class="panel-note">Las cuentas, la foto y el progreso se guardan solo en este dispositivo y navegador.</p>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- ===================== SELECTOR DE JUEGOS (CELULAR) ===================== -->
+  <dialog id="games-sheet" class="modal sheet" aria-labelledby="games-sheet-title">
+    <div class="modal-shell">
+      <header class="modal-head">
+        <h2 id="games-sheet-title">Juegos</h2>
+        <button class="modal-close" data-close aria-label="Cerrar">✕</button>
+      </header>
+      <div class="modal-body">
+        <div class="games-sheet-grid" id="games-sheet-grid"></div>
       </div>
     </div>
   </dialog>
@@ -1590,6 +1641,44 @@
     </button>
   </nav>
 
+  <!-- ===================== INGRESO / CUENTAS ===================== -->
+  <div class="auth-screen" id="auth-screen" role="dialog" aria-modal="true" aria-labelledby="auth-title" hidden>
+    <div class="auth-card">
+      <button class="modal-close auth-close" id="auth-close" type="button" aria-label="Cerrar">✕</button>
+      <img class="auth-logo" src="assets/logo.svg" alt="" width="96" height="96" />
+      <h2 id="auth-title">Royal Neon Casino</h2>
+      <p class="auth-sub">Simulación recreativa · dinero ficticio</p>
+
+      <div class="auth-accounts" id="auth-accounts" hidden></div>
+
+      <div class="auth-tabs" role="tablist">
+        <button type="button" class="auth-tab active" data-auth-tab="login" role="tab" aria-selected="true">Ingresar</button>
+        <button type="button" class="auth-tab" data-auth-tab="register" role="tab" aria-selected="false">Crear cuenta</button>
+      </div>
+
+      <form class="auth-form" id="auth-login" autocomplete="on">
+        <label class="field"><span>Usuario</span><input type="text" id="login-user" autocomplete="username" autocapitalize="off" spellcheck="false" required /></label>
+        <label class="field"><span>Contraseña</span><input type="password" id="login-pass" autocomplete="current-password" required /></label>
+        <label class="check-row"><input type="checkbox" id="login-remember" checked /> Mantener la sesión iniciada</label>
+        <p class="auth-error" id="login-error" role="alert"></p>
+        <button class="btn primary auth-submit" type="submit">Ingresar</button>
+      </form>
+
+      <form class="auth-form" id="auth-register" autocomplete="on" hidden>
+        <label class="field"><span>Usuario</span><input type="text" id="reg-user" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="3 a 20 letras o números" required /></label>
+        <label class="field"><span>Nombre visible</span><input type="text" id="reg-name" maxlength="24" placeholder="Cómo te ven en el casino" /></label>
+        <label class="field"><span>Contraseña</span><input type="password" id="reg-pass" autocomplete="new-password" placeholder="Mínimo 6 caracteres" required /></label>
+        <label class="field"><span>Repetir contraseña</span><input type="password" id="reg-pass2" autocomplete="new-password" required /></label>
+        <label class="check-row" id="reg-import-row" hidden><input type="checkbox" id="reg-import" checked /> Pasar mi progreso de invitado a esta cuenta</label>
+        <p class="auth-error" id="reg-error" role="alert"></p>
+        <button class="btn primary auth-submit" type="submit">Crear cuenta y jugar</button>
+      </form>
+
+      <button class="btn secondary auth-guest" id="auth-guest" type="button">Jugar como invitado</button>
+      <p class="auth-note">Las cuentas se guardan en este dispositivo: cada una tiene su propio saldo ficticio, estadísticas y configuración. La contraseña se guarda cifrada (hash SHA-256 con sal), nunca en texto.</p>
+    </div>
+  </div>
+
   <div class="toast-stack" id="toast-stack" aria-live="polite"></div>
   <div class="fx-layer" id="fx-layer" aria-hidden="true"></div>
 
@@ -1606,7 +1695,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=4.0"></script>
+  <script src="script.js?v=5.0"></script>
 </body>
 
 </html>

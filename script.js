@@ -124,6 +124,254 @@ const Store = {
   }
 };
 
+
+/* ============================================================
+   1b. CUENTAS (locales, en este dispositivo)
+   ------------------------------------------------------------
+   Cada cuenta guarda TODO lo suyo (saldo, estadísticas,
+   historial, favoritos, configuración, bono) con su propio
+   prefijo en localStorage: "rnc:u:<id>:". El invitado usa el
+   prefijo histórico "rnc:", así no se pierde el progreso que
+   ya existía. Las contraseñas nunca se guardan: se guarda un
+   hash SHA-256 con sal aplicado 2000 veces.
+
+   Al iniciar o cerrar sesión se recarga la página para que
+   todos los juegos lean los datos de la cuenta correcta desde
+   cero (sin mezclar estados).
+   ============================================================ */
+const ACC_KEYS = { list: "rnc:accounts", session: "rnc:session", mode: "rnc:mode" };
+const ACC_CONTROL_KEYS = new Set([ACC_KEYS.list, ACC_KEYS.session, ACC_KEYS.mode]);
+
+/* SHA-256 en JavaScript puro: funciona también sin contexto seguro
+   (por ejemplo, Live Server abierto desde el celular por la IP local). */
+function sha256Hex(text) {
+  const bytes = new TextEncoder().encode(text);
+  const K = [
+    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+  ];
+  const H = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
+  const len = bytes.length;
+  const total = ((len + 9 + 63) >> 6) << 6;
+  const m = new Uint8Array(total);
+  m.set(bytes);
+  m[len] = 0x80;
+  const dv = new DataView(m.buffer);
+  dv.setUint32(total - 8, Math.floor((len * 8) / 0x100000000));
+  dv.setUint32(total - 4, (len * 8) >>> 0);
+  const W = new Uint32Array(64);
+  const rotr = (x, n) => (x >>> n) | (x << (32 - n));
+
+  for (let i = 0; i < total; i += 64) {
+    for (let t = 0; t < 16; t++) W[t] = dv.getUint32(i + t * 4);
+    for (let t = 16; t < 64; t++) {
+      const s0 = rotr(W[t - 15], 7) ^ rotr(W[t - 15], 18) ^ (W[t - 15] >>> 3);
+      const s1 = rotr(W[t - 2], 17) ^ rotr(W[t - 2], 19) ^ (W[t - 2] >>> 10);
+      W[t] = (W[t - 16] + s0 + W[t - 7] + s1) | 0;
+    }
+    let [a, b, c, d, e, f, g, h] = H;
+    for (let t = 0; t < 64; t++) {
+      const S1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
+      const ch = (e & f) ^ (~e & g);
+      const t1 = (h + S1 + ch + K[t] + W[t]) | 0;
+      const S0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
+      const maj = (a & b) ^ (a & c) ^ (b & c);
+      const t2 = (S0 + maj) | 0;
+      h = g; g = f; f = e; e = (d + t1) | 0;
+      d = c; c = b; b = a; a = (t1 + t2) | 0;
+    }
+    H[0] = (H[0] + a) | 0; H[1] = (H[1] + b) | 0; H[2] = (H[2] + c) | 0; H[3] = (H[3] + d) | 0;
+    H[4] = (H[4] + e) | 0; H[5] = (H[5] + f) | 0; H[6] = (H[6] + g) | 0; H[7] = (H[7] + h) | 0;
+  }
+  return H.map(v => (v >>> 0).toString(16).padStart(8, "0")).join("");
+}
+
+const Accounts = {
+  list: [],
+  current: null,
+  mode: null,
+
+  read(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw === null ? fallback : JSON.parse(raw);
+    } catch (e) {
+      return fallback;
+    }
+  },
+
+  write(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  },
+
+  load() {
+    this.list = this.read(ACC_KEYS.list, []);
+    if (!Array.isArray(this.list)) this.list = [];
+    let sid = null;
+    try {
+      sid = sessionStorage.getItem(ACC_KEYS.session) || localStorage.getItem(ACC_KEYS.session);
+    } catch (e) { /* sin almacenamiento */ }
+    this.current = this.list.find(a => a.id === sid) || null;
+    let guest = false;
+    try { guest = localStorage.getItem(ACC_KEYS.mode) === "guest"; } catch (e) { /* nada */ }
+    this.mode = this.current ? "account" : guest ? "guest" : null;
+    if (this.current) Store.prefix = this.prefixOf(this.current.id);
+  },
+
+  prefixOf(id) {
+    return "rnc:u:" + id + ":";
+  },
+
+  save() {
+    this.write(ACC_KEYS.list, this.list);
+  },
+
+  hashPassword(password, salt) {
+    let h = sha256Hex(salt + ":" + password);
+    for (let i = 0; i < 2000; i++) h = sha256Hex(h + salt);
+    return h;
+  },
+
+  newSalt() {
+    const arr = new Uint8Array(16);
+    (window.crypto || window.msCrypto).getRandomValues(arr);
+    return Array.from(arr, b => b.toString(16).padStart(2, "0")).join("");
+  },
+
+  findByUser(user) {
+    const u = String(user || "").trim().toLowerCase();
+    return this.list.find(a => a.user.toLowerCase() === u) || null;
+  },
+
+  validUser(user) {
+    return /^[a-zA-Z0-9_.]{3,20}$/.test(user);
+  },
+
+  /* claves del invitado (prefijo histórico, sin las de control ni las de cuentas) */
+  guestKeys() {
+    const keys = [];
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith("rnc:") && !k.startsWith("rnc:u:") && !ACC_CONTROL_KEYS.has(k)) keys.push(k);
+      }
+    } catch (e) { /* nada */ }
+    return keys;
+  },
+
+  hasGuestProgress() {
+    return this.guestKeys().some(k => k === "rnc:balance" || k === "rnc:stats");
+  },
+
+  setSession(id, remember) {
+    try {
+      localStorage.removeItem(ACC_KEYS.session);
+      sessionStorage.removeItem(ACC_KEYS.session);
+      if (id) (remember ? localStorage : sessionStorage).setItem(ACC_KEYS.session, id);
+      localStorage.removeItem(ACC_KEYS.mode);
+    } catch (e) { /* nada */ }
+  },
+
+  register({ user, name, password, importGuest, remember }) {
+    user = String(user || "").trim();
+    name = String(name || "").trim().slice(0, 24) || user;
+    if (!this.validUser(user)) return "El usuario debe tener entre 3 y 20 caracteres: letras, números, punto o guion bajo.";
+    if (this.findByUser(user)) return "Ese usuario ya existe en este dispositivo.";
+    if (String(password || "").length < 6) return "La contraseña debe tener al menos 6 caracteres.";
+
+    const id = "a" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const salt = this.newSalt();
+    const account = { id, user, name, salt, hash: this.hashPassword(password, salt), created: Date.now(), lastLogin: Date.now() };
+
+    const prefix = this.prefixOf(id);
+    if (importGuest) {
+      this.guestKeys().forEach(k => {
+        try { localStorage.setItem(prefix + k.slice(4), localStorage.getItem(k)); } catch (e) { /* nada */ }
+      });
+    }
+    const profile = this.read(prefix + "profile", {}) || {};
+    profile.name = name;
+    this.write(prefix + "profile", profile);
+
+    this.list.push(account);
+    this.save();
+    this.setSession(id, remember);
+    return null;
+  },
+
+  login(user, password, remember) {
+    const account = this.findByUser(user);
+    if (!account || this.hashPassword(password, account.salt) !== account.hash) return "Usuario o contraseña incorrectos.";
+    account.lastLogin = Date.now();
+    this.save();
+    this.setSession(account.id, remember);
+    return null;
+  },
+
+  playAsGuest() {
+    this.setSession(null);
+    try { localStorage.setItem(ACC_KEYS.mode, "guest"); } catch (e) { /* nada */ }
+  },
+
+  logout() {
+    this.setSession(null);
+  },
+
+  changePassword(current, next) {
+    const a = this.current;
+    if (!a) return "No hay una cuenta abierta.";
+    if (this.hashPassword(current, a.salt) !== a.hash) return "La contraseña actual no es correcta.";
+    if (String(next || "").length < 6) return "La nueva contraseña debe tener al menos 6 caracteres.";
+    a.salt = this.newSalt();
+    a.hash = this.hashPassword(next, a.salt);
+    this.save();
+    return null;
+  },
+
+  deleteCurrent(password) {
+    const a = this.current;
+    if (!a) return "No hay una cuenta abierta.";
+    if (this.hashPassword(password, a.salt) !== a.hash) return "La contraseña no es correcta.";
+    const prefix = this.prefixOf(a.id);
+    try {
+      const doomed = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith(prefix)) doomed.push(k);
+      }
+      doomed.forEach(k => localStorage.removeItem(k));
+    } catch (e) { /* nada */ }
+    this.list = this.list.filter(x => x.id !== a.id);
+    this.save();
+    this.logout();
+    return null;
+  },
+
+  renameCurrent(name) {
+    if (!this.current) return;
+    this.current.name = String(name || "").slice(0, 24) || this.current.user;
+    this.save();
+  },
+
+  balanceOf(id) {
+    const b = this.read(this.prefixOf(id) + "balance", null);
+    return typeof b === "number" ? b : 5000;
+  }
+};
+
+Accounts.load();
+
 function detectQuality() {
   const cores = navigator.hardwareConcurrency || 4;
   const mem = navigator.deviceMemory || 4;
@@ -8019,6 +8267,9 @@ function initCasino() {
   renderBankrolls();
   MobileDock.attach(currentScreen);
   startSpotlight();
+  buildGamesSheet();
+  renderAccountBox();
+  if (Accounts.mode === null) showAuth();
   renderRecentActivity();
   Bonus.start();
 
@@ -9049,6 +9300,294 @@ $$(".filter-tab").forEach(tab => tab.addEventListener("click", updateBottomNav))
 if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("sw.js").catch(() => { /* sin modo offline */ });
+  });
+}
+
+/* ============================================================
+   18h. CUENTAS: pantalla de ingreso y panel de cuenta
+   ============================================================ */
+const authEls = {
+  screen: document.getElementById("auth-screen"),
+  accounts: document.getElementById("auth-accounts"),
+  tabs: document.querySelectorAll("[data-auth-tab]"),
+  login: document.getElementById("auth-login"),
+  register: document.getElementById("auth-register"),
+  loginUser: document.getElementById("login-user"),
+  loginPass: document.getElementById("login-pass"),
+  loginRemember: document.getElementById("login-remember"),
+  loginError: document.getElementById("login-error"),
+  regUser: document.getElementById("reg-user"),
+  regName: document.getElementById("reg-name"),
+  regPass: document.getElementById("reg-pass"),
+  regPass2: document.getElementById("reg-pass2"),
+  regImport: document.getElementById("reg-import"),
+  regImportRow: document.getElementById("reg-import-row"),
+  regError: document.getElementById("reg-error"),
+  guest: document.getElementById("auth-guest"),
+  close: document.getElementById("auth-close")
+};
+
+function setAuthTab(tab) {
+  authEls.tabs.forEach(t => {
+    const on = t.dataset.authTab === tab;
+    t.classList.toggle("active", on);
+    t.setAttribute("aria-selected", String(on));
+  });
+  authEls.login.hidden = tab !== "login";
+  authEls.register.hidden = tab !== "register";
+  authEls.loginError.textContent = "";
+  authEls.regError.textContent = "";
+  (tab === "login" ? authEls.loginUser : authEls.regUser).focus({ preventScroll: true });
+}
+
+function renderAuthAccounts() {
+  const list = [...Accounts.list].sort((a, b) => (b.lastLogin || 0) - (a.lastLogin || 0));
+  authEls.accounts.hidden = list.length === 0;
+  authEls.accounts.innerHTML = list.length
+    ? '<span class="mini-label">Cuentas en este dispositivo</span><div class="auth-acc-list">' +
+      list.map(a => {
+        const current = Accounts.current && Accounts.current.id === a.id;
+        return `<button type="button" class="auth-acc${current ? " current" : ""}" data-user="${a.user}">
+          <span class="auth-acc-avatar">${initialsOf(a.name)}</span>
+          <span class="auth-acc-info"><b>${a.name}</b><small>@${a.user}${current ? " · sesión actual" : ""}</small></span>
+          <span class="auth-acc-bal">${formatMoney(Accounts.balanceOf(a.id))}</span>
+        </button>`;
+      }).join("") + "</div>"
+    : "";
+  $$(".auth-acc", authEls.accounts).forEach(b => b.addEventListener("click", () => {
+    setAuthTab("login");
+    authEls.loginUser.value = b.dataset.user;
+    authEls.loginPass.value = "";
+    authEls.loginPass.focus();
+  }));
+}
+
+function showAuth(tab) {
+  renderAuthAccounts();
+  authEls.regImportRow.hidden = !(Accounts.mode !== "account" && Accounts.hasGuestProgress());
+  authEls.close.hidden = Accounts.mode === null;
+  authEls.screen.hidden = false;
+  document.body.classList.add("auth-open");
+  setAuthTab(tab || (Accounts.list.length ? "login" : "register"));
+}
+
+function hideAuth() {
+  authEls.screen.hidden = true;
+  document.body.classList.remove("auth-open");
+}
+
+/* Recarga para que todos los juegos lean los datos de la cuenta elegida. */
+function reloadIntoSession() {
+  try { saveBalance(); } catch (e) { /* nada */ }
+  location.reload();
+}
+
+authEls.tabs.forEach(t => t.addEventListener("click", () => setAuthTab(t.dataset.authTab)));
+
+authEls.login.addEventListener("submit", e => {
+  e.preventDefault();
+  const err = Accounts.login(authEls.loginUser.value, authEls.loginPass.value, authEls.loginRemember.checked);
+  if (err) {
+    authEls.loginError.textContent = err;
+    authEls.loginPass.select();
+    Sound.play("error");
+    return;
+  }
+  reloadIntoSession();
+});
+
+authEls.register.addEventListener("submit", e => {
+  e.preventDefault();
+  if (authEls.regPass.value !== authEls.regPass2.value) {
+    authEls.regError.textContent = "Las contraseñas no coinciden.";
+    return;
+  }
+  const err = Accounts.register({
+    user: authEls.regUser.value,
+    name: authEls.regName.value,
+    password: authEls.regPass.value,
+    importGuest: !authEls.regImportRow.hidden && authEls.regImport.checked,
+    remember: true
+  });
+  if (err) {
+    authEls.regError.textContent = err;
+    Sound.play("error");
+    return;
+  }
+  reloadIntoSession();
+});
+
+authEls.guest.addEventListener("click", () => {
+  const wasAccount = Accounts.mode === "account";
+  Accounts.playAsGuest();
+  if (wasAccount) {
+    reloadIntoSession();
+  } else {
+    Accounts.mode = "guest";
+    hideAuth();
+    renderAccountBox();
+    toast("Jugando como invitado");
+  }
+});
+
+authEls.close.addEventListener("click", hideAuth);
+
+/* --- panel de cuenta dentro del perfil --- */
+const accEls = {
+  label: document.getElementById("account-label"),
+  since: document.getElementById("account-since"),
+  switchBtn: document.getElementById("acc-switch"),
+  loginBtn: document.getElementById("acc-login"),
+  logoutBtn: document.getElementById("acc-logout"),
+  resetBtn: document.getElementById("acc-reset"),
+  security: document.getElementById("acc-security"),
+  passForm: document.getElementById("acc-pass-form"),
+  passCur: document.getElementById("acc-pass-cur"),
+  passNew: document.getElementById("acc-pass-new"),
+  passMsg: document.getElementById("acc-pass-msg"),
+  delForm: document.getElementById("acc-del-form"),
+  delPass: document.getElementById("acc-del-pass"),
+  delMsg: document.getElementById("acc-del-msg")
+};
+
+function renderAccountBox() {
+  const a = Accounts.current;
+  if (a) {
+    accEls.label.textContent = a.name + " (@" + a.user + ")";
+    accEls.since.textContent = "Cuenta creada el " + new Date(a.created).toLocaleDateString("es-AR");
+  } else {
+    accEls.label.textContent = "Invitado";
+    accEls.since.textContent = "Creá una cuenta para guardar tu progreso con usuario y contraseña.";
+  }
+  accEls.loginBtn.hidden = !!a;
+  accEls.logoutBtn.hidden = !a;
+  accEls.switchBtn.hidden = Accounts.list.length === 0;
+  accEls.security.hidden = !a;
+  const chip = document.getElementById("profile-btn");
+  if (chip) chip.classList.toggle("is-guest", !a);
+}
+
+accEls.switchBtn.addEventListener("click", () => {
+  closeModal(document.getElementById("profile-modal"));
+  showAuth("login");
+});
+
+accEls.loginBtn.addEventListener("click", () => {
+  closeModal(document.getElementById("profile-modal"));
+  showAuth(Accounts.list.length ? "login" : "register");
+});
+
+accEls.logoutBtn.addEventListener("click", () => {
+  Accounts.logout();
+  reloadIntoSession();
+});
+
+accEls.resetBtn.addEventListener("click", () => {
+  closeModal(document.getElementById("profile-modal"));
+  openModal("confirm-modal");
+});
+
+accEls.passForm.addEventListener("submit", e => {
+  e.preventDefault();
+  const err = Accounts.changePassword(accEls.passCur.value, accEls.passNew.value);
+  accEls.passMsg.textContent = err || "Contraseña actualizada.";
+  accEls.passMsg.className = "acc-msg " + (err ? "neg" : "pos");
+  if (!err) {
+    accEls.passCur.value = "";
+    accEls.passNew.value = "";
+  }
+});
+
+accEls.delForm.addEventListener("submit", e => {
+  e.preventDefault();
+  const err = Accounts.deleteCurrent(accEls.delPass.value);
+  if (err) {
+    accEls.delMsg.textContent = err;
+    accEls.delMsg.className = "acc-msg neg";
+    return;
+  }
+  location.reload();
+});
+
+/* el nombre del perfil también es el nombre visible de la cuenta */
+document.getElementById("profile-name").addEventListener("input", e => Accounts.renameCurrent(e.target.value));
+document.getElementById("profile-btn").addEventListener("click", renderAccountBox);
+
+/* ============================================================
+   18i. CELULAR: selector de juegos, gestos y vibración
+   ============================================================ */
+function buildGamesSheet() {
+  const grid = document.getElementById("games-sheet-grid");
+  if (!grid) return;
+  const cats = { blackjack: "Cartas", poker: "Cartas", baccarat: "Cartas", slots: "Arcade", roulette: "Mesa", miner: "Arcade", chicken: "Arcade", plinko: "Arcade", aviator: "Crash", horse: "Carreras" };
+  grid.innerHTML = Object.entries(GAME_META).map(([key, meta]) => `
+    <button class="sheet-game" data-go="${meta.screen}" style="--g-rgb:${meta.accent}">
+      <span class="sheet-icon">${SWITCH_ICONS[key]}</span>
+      <b>${meta.name}</b>
+      <small>${cats[key] || ""}</small>
+    </button>`).join("");
+  $$(".sheet-game", grid).forEach(b => b.addEventListener("click", () => {
+    closeModal(document.getElementById("games-sheet"));
+    showScreen(b.dataset.go);
+  }));
+
+  $$(".game-screen .top-line").forEach(line => {
+    if (line.querySelector(".games-btn")) return;
+    const btn = document.createElement("button");
+    btn.className = "games-btn";
+    btn.type = "button";
+    btn.setAttribute("aria-label", "Ver todos los juegos");
+    btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg><span>Juegos</span>';
+    btn.addEventListener("click", () => {
+      $$(".sheet-game").forEach(g => g.classList.toggle("current", g.dataset.go === currentScreen));
+      openModal("games-sheet");
+    });
+    line.appendChild(btn);
+  });
+}
+
+/* deslizar el juego destacado con el dedo */
+(function spotlightSwipe() {
+  const el = document.getElementById("spotlight");
+  if (!el) return;
+  let x0 = null;
+  el.addEventListener("touchstart", e => { x0 = e.touches[0].clientX; }, { passive: true });
+  el.addEventListener("touchend", e => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0;
+    x0 = null;
+    if (Math.abs(dx) < 40) return;
+    renderSpotlight(Spotlight.index + (dx < 0 ? 1 : -1));
+    restartSpotlightTimer();
+  }, { passive: true });
+})();
+
+/* vibración corta al apostar y al cobrar (solo en dispositivos que la soportan) */
+const Haptics = {
+  supported: typeof navigator.vibrate === "function" && window.matchMedia("(pointer: coarse)").matches,
+  buzz(pattern) {
+    if (!this.supported || Settings.haptics === false) return;
+    try { navigator.vibrate(pattern); } catch (e) { /* nada */ }
+  }
+};
+
+const _playSound = Sound.play;
+Sound.play = function (name, ...args) {
+  if (name === "chip") Haptics.buzz(8);
+  else if (name === "cash") Haptics.buzz([18, 40, 28]);
+  else if (name === "bomb" || name === "crash") Haptics.buzz(70);
+  else if (name === "card" || name === "flip") Haptics.buzz(4);
+  return _playSound.call(this, name, ...args);
+};
+
+const hapticsToggle = document.getElementById("set-haptics");
+if (hapticsToggle) {
+  hapticsToggle.checked = Settings.haptics !== false;
+  hapticsToggle.closest(".switch").hidden = !Haptics.supported;
+  hapticsToggle.addEventListener("change", () => {
+    Settings.haptics = hapticsToggle.checked;
+    saveSettings();
+    Haptics.buzz(20);
   });
 }
 
