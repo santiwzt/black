@@ -366,7 +366,7 @@ const Accounts = {
 
   balanceOf(id) {
     const b = this.read(this.prefixOf(id) + "balance", null);
-    return typeof b === "number" ? b : 5000;
+    return typeof b === "number" ? b : 25000;
   }
 };
 
@@ -947,7 +947,7 @@ const Sound = (() => {
 /* ============================================================
    4. SALDO COMPARTIDO
    ============================================================ */
-const INITIAL_BALANCE = 5000;
+const INITIAL_BALANCE = 25000;
 let balance = INITIAL_BALANCE;
 
 const globalBalanceEl = document.getElementById("global-balance");
