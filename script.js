@@ -1006,7 +1006,7 @@ function updateBalance() {
 function noFundsMessage() {
   const r = typeof Bonus !== "undefined" ? Bonus.remaining : 300;
   const time = Math.floor(r / 60) + ":" + String(r % 60).padStart(2, "0");
-  return "Te quedaste sin saldo: en " + time + " recibís $5000 por estar online, o reinicialo desde tu perfil.";
+  return "Te quedaste sin saldo: en " + time + " recibís $25000 por estar online, o reinicialo desde tu perfil.";
 }
 
 function walletTick(dt, now) {
@@ -8606,12 +8606,12 @@ function bankrollSource(value) {
    18c. BONO POR ESTAR ONLINE
    ------------------------------------------------------------
    Cada 5 minutos con la página abierta y visible se suman
-   $5000 ficticios. El tiempo solo corre con la pestaña
+   $25000 ficticios. El tiempo solo corre con la pestaña
    visible y se guarda, así que recargar no lo reinicia.
    ============================================================ */
 const Bonus = {
   period: 300,
-  amount: 5000,
+  amount: 25000,
   remaining: 300,
   timer: null,
 
@@ -8721,8 +8721,8 @@ const OfflineIncome = {
     document.getElementById("offline-away").textContent = "Estuviste afuera " + parts.join(" ") + ".";
     document.getElementById("offline-amount").textContent = "+" + formatMoney(gain);
     document.getElementById("offline-note").textContent = capped
-      ? "Llegaste al máximo de " + formatMoney(this.maxPeriods * this.amount) + " por tiempo fuera. Jugando sumás $5000 cada 5 minutos."
-      : "Sumás " + formatMoney(this.amount) + " por cada media hora fuera (hasta " + formatMoney(this.maxPeriods * this.amount) + "). Jugando, $5000 cada 5 minutos.";
+      ? "Llegaste al máximo de " + formatMoney(this.maxPeriods * this.amount) + " por tiempo fuera. Jugando sumás $25000 cada 5 minutos."
+      : "Sumás " + formatMoney(this.amount) + " por cada media hora fuera (hasta " + formatMoney(this.maxPeriods * this.amount) + "). Jugando, $25000 cada 5 minutos.";
     Sound.play("cash");
     const show = () => openModal("offline-modal");
     /* si está abierta la pantalla de ingreso, se muestra después */
