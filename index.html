@@ -16,7 +16,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Royal Neon" />
-  <link rel="stylesheet" href="styles.css?v=5.1" />
+  <link rel="stylesheet" href="styles.css?v=5.4" />
 </head>
 <body>
   <!-- Fondo ambiental -->
@@ -58,7 +58,7 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>
       </button>
 
-      <div class="bonus-pill" id="bonus-pill" title="Cada 5 minutos con la página abierta recibís $5000 ficticios">
+      <div class="bonus-pill" id="bonus-pill" title="Cada 5 minutos con la página abierta recibís $5000 ficticios. Fuera de la página sumás $250 cada media hora (hasta $6000).">
         <span class="bonus-ring" aria-hidden="true"></span>
         <span class="bonus-text"><small>+$5K en</small><strong id="bonus-time">5:00</strong></span>
       </div>
@@ -399,11 +399,13 @@
           <div class="divider"></div>
 
           <div class="hand-zone hand-player">
-            <div id="bj-player-cards" class="cards"></div>
-            <div class="hand-head">
-              <h3>Jugador</h3>
-              <p class="score-badge">Puntos: <span id="bj-player-score">0</span></p>
-            </div>
+            <div id="bj-hands" class="bj-hands" aria-live="polite"></div>
+          </div>
+
+          <div class="bj-seats" role="radiogroup" aria-label="Cantidad de manos">
+            <span>Manos</span>
+            <button type="button" class="bj-seat-btn active" data-seats="1" role="radio" aria-checked="true">1</button>
+            <button type="button" class="bj-seat-btn" data-seats="2" role="radio" aria-checked="false">2</button>
           </div>
 
 
@@ -413,10 +415,16 @@
             <span class="bankroll-total"></span>
           </div>
 
-          <div class="bet-spot" id="bj-bet-spot" aria-hidden="true">
-            <div class="chip-stack" id="bj-stack"></div>
+          <button type="button" class="bet-spot" id="bj-bet-spot" aria-label="Apostar en la mano 1">
+            <span class="bet-spot-num">1</span>
+            <span class="chip-stack" id="bj-stack"></span>
             <span class="bet-spot-ring"></span>
-          </div>
+          </button>
+          <button type="button" class="bet-spot bet-spot-2" id="bj-bet-spot-2" aria-label="Apostar en la mano 2">
+            <span class="bet-spot-num">2</span>
+            <span class="chip-stack" id="bj-stack-2"></span>
+            <span class="bet-spot-ring"></span>
+          </button>
         </div>
 
         <div class="controls">
@@ -441,6 +449,7 @@
               <button id="bj-hit" class="btn">Pedir</button>
               <button id="bj-stand" class="btn">Plantarse</button>
               <button id="bj-double" class="btn">Doblar</button>
+              <button id="bj-split" class="btn">Dividir</button>
             </div>
           </div>
         </div>
@@ -448,6 +457,8 @@
         <details class="rules-card inline-rules">
           <summary>Reglas del Blackjack</summary>
           <p>Sumá lo más cerca posible de 21 sin pasarte. Figuras valen 10 y el As vale 1 u 11. El dealer pide hasta 16 y se planta en 17. Blackjack natural paga 3 a 2, una mano ganadora paga 1 a 1 y el empate devuelve la apuesta. Doblar duplica la apuesta y recibís exactamente una carta más.</p>
+          <p><strong>Dos manos:</strong> elegí "Manos: 2" en la mesa, tocá cada círculo y poné fichas. Se juega primero la mano 1 y después la 2, y el dealer juega una sola vez contra las dos.</p>
+          <p><strong>Dividir:</strong> si tus dos primeras cartas valen lo mismo (por ejemplo 8 y 8, o K y Q), podés separarlas en dos manos poniendo una apuesta igual. Se puede llegar hasta 4 manos. Los ases divididos reciben una sola carta cada uno, y un 21 después de dividir paga 1 a 1 (no 3 a 2).</p>
         </details>
       </div>
     </section>
@@ -1595,6 +1606,20 @@
     </div>
   </dialog>
 
+  <!-- ===================== BIENVENIDA (ingreso offline) ===================== -->
+  <dialog id="offline-modal" class="modal modal-small offline-modal" aria-labelledby="offline-title">
+    <div class="modal-shell">
+      <div class="modal-body offline-body">
+        <div class="offline-coins" aria-hidden="true"><i></i><i></i><i></i></div>
+        <h2 id="offline-title">¡Bienvenido de vuelta!</h2>
+        <p class="offline-away" id="offline-away"></p>
+        <strong class="offline-amount" id="offline-amount">+$0</strong>
+        <p class="panel-note" id="offline-note"></p>
+        <button class="btn primary offline-ok" data-close type="button">A jugar</button>
+      </div>
+    </div>
+  </dialog>
+
   <!-- ===================== CONFIRMACIÓN ===================== -->
   <dialog id="confirm-modal" class="modal modal-small" aria-labelledby="confirm-title">
     <div class="modal-shell">
@@ -1695,7 +1720,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=5.1"></script>
+  <script src="script.js?v=5.4"></script>
 </body>
 
 </html>
