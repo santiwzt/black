@@ -754,7 +754,28 @@ const Sound = (() => {
     thud() { tone({ freq: 150, to: 70, type: "sine", dur: 0.18, vol: 0.1 }); },
     select() { tone({ freq: 1200, to: 1500, type: "sine", dur: 0.05, vol: 0.04 }); },
     deselect() { tone({ freq: 1300, to: 1000, type: "sine", dur: 0.05, vol: 0.03 }); },
-    error() { tone({ freq: 220, type: "triangle", dur: 0.12, vol: 0.05 }); }
+    error() { tone({ freq: 220, type: "triangle", dur: 0.12, vol: 0.05 }); },
+    /* fanfarria de premio: más notas y más brillo cuanto mayor el nivel */
+    hype(level = 1, streak = 0) {
+      const up = Math.pow(2, Math.min(streak, 6) / 12);
+      const notes = [523, 659, 784, 1047, 1319, 1568, 2093].slice(0, 3 + level);
+      notes.forEach((f, i) => {
+        tone({ freq: f * up, type: "triangle", dur: 0.16, vol: 0.06, delay: i * 0.07 });
+        tone({ freq: f * up * 2, type: "sine", dur: 0.12, vol: 0.02, delay: i * 0.07 + 0.02 });
+      });
+      const end = notes.length * 0.07;
+      tone({ freq: notes[notes.length - 1] * up, type: "sine", dur: 0.9, vol: 0.05, delay: end });
+      if (level >= 3) {
+        tone({ freq: 98, to: 196, type: "sine", dur: 0.5, vol: 0.12 });
+        tone({ freq: notes[notes.length - 1] * up * 1.5, type: "triangle", dur: 1.1, vol: 0.035, delay: end + 0.05 });
+      }
+    },
+    streak(n = 2) {
+      const f = 660 * Math.pow(2, Math.min(n, 10) / 12);
+      tone({ freq: f, to: f * 1.5, type: "square", dur: 0.12, vol: 0.025, filter: "lowpass", ff: 2400 });
+      tone({ freq: f * 1.5, type: "triangle", dur: 0.25, vol: 0.05, delay: 0.1 });
+    },
+    countTick(p = 0) { tone({ freq: 900 + p * 900, type: "sine", dur: 0.03, vol: 0.025 }); }
   };
 
   /* --- bucles --- */
@@ -8666,14 +8687,13 @@ const Bonus = {
    18c-bis. INGRESO MIENTRAS NO ESTÁS (offline)
    ------------------------------------------------------------
    Por cada media hora completa fuera de la página (cerrada o en
-   otra pestaña) se suman $1250 ficticios, hasta un tope de $30000
-   (12 horas). Así nunca volvés con el saldo en cero, pero suma
-   poco comparado con el bono online. Cada cuenta lleva su propio
-   registro ("lastSeen").
+   otra pestaña) se suman $150000 ficticios, el mismo ritmo que el
+   bono online ($25000 cada 5 minutos), hasta un tope de 12 horas
+   ($3.600.000). Cada cuenta lleva su propio registro ("lastSeen").
    ============================================================ */
 const OfflineIncome = {
   period: 30 * 60 * 1000,
-  amount: 1250,
+  amount: 150000,
   maxPeriods: 24,
   timer: null,
 
@@ -10042,5 +10062,202 @@ if (hapticsToggle) {
     if (e.target === overlay) closeWin();
   });
 })();
+
+/* ============================================================
+   19b. HYPE: rachas, niveles de premio y celebraciones extra
+   ------------------------------------------------------------
+   Se suma ENCIMA de showWinAnimation (que queda intacta): la
+   envuelve para contar el monto desde $0 y mostrar el nivel del
+   premio. No toca pagos ni probabilidades: solo lee el resultado
+   que cada juego ya registró en Stats.
+   ============================================================ */
+const Hype = {
+  streak: 0,
+  last: null,
+
+  tierFor(mult, net) {
+    if (net <= 0) return null;
+    if (mult >= 10) return { level: 4, name: "EPIC WIN", cls: "epic" };
+    if (mult >= 5) return { level: 3, name: "MEGA WIN", cls: "mega" };
+    if (mult >= 2.5) return { level: 2, name: "SUPER WIN", cls: "super" };
+    return { level: 1, name: "NICE WIN", cls: "nice" };
+  },
+
+  onRound(game, bet, payout) {
+    const net = payout - bet;
+    if (net < 0) { this.setStreak(0); return; }
+    if (net === 0) return;
+    const mult = payout / bet;
+    const tier = this.tierFor(mult, net);
+    this.setStreak(this.streak + 1);
+    this.last = { tier, mult, at: Date.now() };
+    Sound.play("hype", tier.level, this.streak - 1);
+    this.coinFountain(tier.level);
+    if (tier.level >= 2) this.flash(tier.level);
+    if (tier.level >= 3) this.shake(tier.level);
+    if (walletEl) setTimeout(() => FX.burstAt(walletEl, { count: 10 + tier.level * 6, colors: ["#fff1c4", "#f0c96b", "#34e89e"], speed: 150, gravity: 200 }), T(700));
+  },
+
+  setStreak(n) {
+    const prev = this.streak;
+    this.streak = n;
+    const el = document.getElementById("streak-badge");
+    if (!el) return;
+    if (n >= 2) {
+      el.querySelector("b").textContent = "x" + n;
+      el.className = "streak-badge show" + (n >= 5 ? " hot" : "");
+      void el.offsetWidth;
+      el.classList.add("bump");
+      if (n > prev) setTimeout(() => Sound.play("streak", n), 120);
+    } else {
+      el.className = "streak-badge" + (prev >= 2 ? " broken" : "");
+    }
+  },
+
+  coinFountain(level) {
+    if (!FX.layer) return;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const shots = Settings.reduceMotion ? 1 : 1 + level;
+    for (let i = 0; i < shots; i++) {
+      setTimeout(() => FX.burst(w * (0.2 + Math.random() * 0.6), h + 10, {
+        count: 14 + level * 8,
+        colors: ["#fff1c4", "#f0c96b", "#ffd84d", "#34e89e", "#ff3d9a"],
+        speed: 520 + level * 90,
+        angle: -Math.PI / 2,
+        spread: 0.55,
+        gravity: 620,
+        size: 9,
+        life: 1300
+      }), i * 140);
+    }
+  },
+
+  flash(level) {
+    if (Settings.reduceMotion) return;
+    const f = document.createElement("div");
+    f.className = "hype-flash lvl-" + level;
+    document.body.appendChild(f);
+    setTimeout(() => f.remove(), 900);
+  },
+
+  shake(level) {
+    if (Settings.reduceMotion) return;
+    const app = document.getElementById("app");
+    if (!app) return;
+    app.classList.remove("hype-shake", "hype-shake-big");
+    void app.offsetWidth;
+    app.classList.add(level >= 4 ? "hype-shake-big" : "hype-shake");
+    setTimeout(() => app.classList.remove("hype-shake", "hype-shake-big"), 700);
+  },
+
+  /* cuenta un número desde 0 hasta "to" escribiéndolo en el elemento */
+  countUp(el, to, fmt, ms = 1200, sound = true) {
+    if (!el) return;
+    const dur = Settings.reduceMotion ? 1 : ms;
+    const start = performance.now();
+    let lastTick = 0;
+    const step = now => {
+      const p = Math.min(1, (now - start) / dur);
+      const e = 1 - Math.pow(1 - p, 3);
+      el.textContent = fmt(Math.round(to * e));
+      if (sound && now - lastTick > 70 && p < 1) { lastTick = now; Sound.play("countTick", p); }
+      if (p < 1) requestAnimationFrame(step);
+      else el.textContent = fmt(to);
+    };
+    requestAnimationFrame(step);
+  },
+
+  /* cartel grande para bonos (online y offline) */
+  banner(title, amount) {
+    let el = document.getElementById("hype-banner");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "hype-banner";
+      el.className = "hype-banner";
+      el.innerHTML = '<span class="hb-title"></span><strong class="hb-amount"></strong>';
+      document.body.appendChild(el);
+    }
+    el.querySelector(".hb-title").textContent = title;
+    el.classList.remove("show");
+    void el.offsetWidth;
+    el.classList.add("show");
+    this.countUp(el.querySelector(".hb-amount"), amount, v => "+" + formatMoney(v), 1100);
+    Sound.play("hype", 3, 0);
+    this.coinFountain(3);
+    this.flash(2);
+    clearTimeout(this.bannerTimer);
+    this.bannerTimer = setTimeout(() => el.classList.remove("show"), 3200);
+  }
+};
+
+/* engancha el registro de rondas (sin cambiar lo que guarda) */
+(function () {
+  const record = Stats.record;
+  Stats.record = function (game, bet, payout, detail) {
+    const r = record.apply(this, arguments);
+    const b = round2(bet || 0);
+    if (b > 0) {
+      try { Hype.onRound(game, b, round2(payout || 0)); } catch (e) { /* efecto no crítico */ }
+    }
+    return r;
+  };
+})();
+
+/* envuelve showWinAnimation: el original corre igual, después se agrega
+   el conteo del monto y el nivel del premio */
+(function () {
+  const original = window.showWinAnimation;
+  const amountEl = document.getElementById("win-amount");
+  const card = document.querySelector("#win-overlay .win-card");
+  let tierEl = null;
+  if (card) {
+    tierEl = document.createElement("div");
+    tierEl.className = "win-tier";
+    card.insertBefore(tierEl, card.firstChild);
+  }
+  window.showWinAnimation = function (title, amount, type) {
+    original.apply(this, arguments);
+    if (type === "lose") {
+      if (tierEl) tierEl.className = "win-tier";
+      return;
+    }
+    const last = Hype.last && Date.now() - Hype.last.at < 4000 ? Hype.last : null;
+    if (tierEl) {
+      if (last) {
+        tierEl.textContent = last.tier.name + " · x" + (Math.round(last.mult * 100) / 100) + (Hype.streak >= 2 ? " · 🔥 " + Hype.streak : "");
+        tierEl.className = "win-tier show " + last.tier.cls;
+      } else {
+        tierEl.className = "win-tier";
+      }
+    }
+    Hype.countUp(amountEl, Math.max(0, amount || 0), v => "+$" + v.toLocaleString("es-AR"), 1300);
+  };
+})();
+
+/* bono online: cartel grande + aviso en los últimos 10 segundos */
+(function () {
+  const grant = Bonus.grant;
+  Bonus.grant = function () {
+    grant.apply(this, arguments);
+    Hype.banner("🎁 BONO ONLINE", this.amount);
+  };
+  const render = Bonus.render;
+  Bonus.render = function () {
+    render.apply(this, arguments);
+    const pill = document.getElementById("bonus-pill");
+    if (pill) pill.classList.toggle("soon", this.remaining <= 10);
+  };
+  /* ingreso offline: el monto sube contando */
+  const welcome = OfflineIncome.welcome;
+  OfflineIncome.welcome = function (awayMs, gain) {
+    welcome.apply(this, arguments);
+    setTimeout(() => {
+      Hype.countUp(document.getElementById("offline-amount"), gain, v => "+" + formatMoney(v), 1600);
+      Hype.coinFountain(3);
+    }, 250);
+  };
+})();
+
 /* Arranque: después de definir showWinAnimation */
 initCasino();
