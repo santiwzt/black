@@ -1079,10 +1079,16 @@ const CHIP_COLORS = {
   c500: ["#7b3fe4", "#f7f2e6"],
   c1000: ["#d9a634", "#fff7df"],
   c5000: ["#c2183a", "#ffd6de"],
+  c10000: ["#0fb5c9", "#e6fdff"],
+  c50000: ["#141018", "#ff3d9a"],
+  c100000: ["#f2f2f7", "#b07cff"],
   cx: ["#8a8aa0", "#f7f2e6"]
 };
 
 function chipClassFor(value) {
+  if (value >= 100000) return "c100000";
+  if (value >= 50000) return "c50000";
+  if (value >= 10000) return "c10000";
   if (value >= 5000) return "c5000";
   if (value >= 1000) return "c1000";
   if (value >= 500) return "c500";
@@ -1093,7 +1099,7 @@ function chipClassFor(value) {
 }
 
 function decomposeChips(amount, max = 10) {
-  const denoms = [5000, 1000, 500, 100, 50, 25];
+  const denoms = [100000, 50000, 10000, 5000, 1000, 500, 100, 50, 25];
   let rest = Math.floor(amount);
   const out = [];
   for (const d of denoms) {
@@ -8552,8 +8558,8 @@ function initCasino() {
    Se reparte como en un casino: algunas fichas chicas para
    apostar y el resto en fichas grandes.
    ============================================================ */
-const BANKROLL_ORDER = [25, 50, 100, 500, 1000, 5000];
-const BANKROLL_CAPS = { 25: 6, 50: 6, 100: 10, 500: 6, 1000: 8 };
+const BANKROLL_ORDER = [25, 50, 100, 500, 1000, 5000, 10000, 50000, 100000];
+const BANKROLL_CAPS = { 25: 6, 50: 6, 100: 10, 500: 6, 1000: 8, 5000: 6, 10000: 5, 50000: 2 };
 const BANKROLL_VISIBLE = 12;
 
 function bankrollBreakdown(amount) {
@@ -8572,7 +8578,7 @@ function bankrollBreakdown(amount) {
     counts[d] = c;
     rest -= c * d;
   }
-  counts[5000] = rest / 5000;
+  counts[100000] = rest / 100000;
   return { counts, loose };
 }
 
@@ -8687,13 +8693,13 @@ const Bonus = {
    18c-bis. INGRESO MIENTRAS NO ESTÁS (offline)
    ------------------------------------------------------------
    Por cada media hora completa fuera de la página (cerrada o en
-   otra pestaña) se suman $150000 ficticios, el mismo ritmo que el
-   bono online ($25000 cada 5 minutos), hasta un tope de 12 horas
-   ($3.600.000). Cada cuenta lleva su propio registro ("lastSeen").
+   otra pestaña) se suman $25000 ficticios (un bono online por
+   media hora), hasta un tope de 12 horas ($600000). Cada cuenta
+   lleva su propio registro ("lastSeen").
    ============================================================ */
 const OfflineIncome = {
   period: 30 * 60 * 1000,
-  amount: 150000,
+  amount: 25000,
   maxPeriods: 24,
   timer: null,
 
