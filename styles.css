@@ -1683,6 +1683,19 @@ select:disabled, input:disabled { opacity: 0.5; }
 .c1000 { --chip-c: #d9a634; --chip-d: #7c5410; --chip-edge: #fff7df; }
 .c1000 span { color: #2a1b04; text-shadow: none; }
 .c5000 { --chip-c: #c2183a; --chip-d: #650a1d; --chip-edge: #ffd6de; }
+.c10000 { --chip-c: #0fb5c9; --chip-d: #075a66; --chip-edge: #e6fdff; }
+.c50000 { --chip-c: #141018; --chip-d: #000; --chip-edge: #ff3d9a; }
+.c50000 span { color: #ff8fc8; }
+.c100000 {
+  --chip-c: #f2f2f7;
+  --chip-d: #6a5a8a;
+  --chip-edge: #b07cff;
+  background: conic-gradient(from 0deg, #ff3d9a, #ffd84d, #34e89e, #2de2e6, #b07cff, #ff3d9a);
+}
+.chip.c100000:not(:disabled):not(.chip-pop) { animation: chip100k 4s linear infinite; }
+.c100000 span { background: rgba(14, 10, 30, 0.82); color: #fff1c4; font-size: 10px; letter-spacing: -0.3px; }
+@keyframes chip100k { to { filter: hue-rotate(360deg); } }
+.c10000 span, .c50000 span { font-size: 11px; }
 
 .allin-chip {
   --chip-c: #ff3d9a;
@@ -1731,6 +1744,9 @@ select:disabled, input:disabled { opacity: 0.5; }
 .stack-chip.c500  { --chip-c: #7b3fe4; }
 .stack-chip.c1000 { --chip-c: #d9a634; --chip-edge: #fff7df; }
 .stack-chip.c5000 { --chip-c: #c2183a; --chip-edge: #ffd6de; }
+.stack-chip.c10000 { --chip-c: #0fb5c9; --chip-edge: #e6fdff; }
+.stack-chip.c50000 { --chip-c: #141018; --chip-edge: #ff3d9a; }
+.stack-chip.c100000 { --chip-c: #b07cff; --chip-edge: #fff1c4; }
 .stack-chip.cx    { --chip-c: #8a8aa0; }
 .stack-label {
   position: absolute;
