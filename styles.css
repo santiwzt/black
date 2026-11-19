@@ -5368,3 +5368,299 @@ body.auth-open { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .streak-badge.hot, .win-tier.mega, .win-tier.epic, .bonus-pill.soon { animation: none; }
 }
+
+
+/* ============================================================
+   33. PULIDO "PRO"
+   ============================================================ */
+/* Inicio: las tarjetas de datos miden lo mismo aunque el título ocupe
+   dos renglones, y "Seguir jugando" queda junto a ellas */
+.hero-meta { align-items: stretch; }
+.hero-stat { display: flex; flex-direction: column; justify-content: space-between; gap: 2px; }
+.hero-stat span { line-height: 1.25; }
+.hero-continue { margin-left: 4px; justify-content: center; }
+
+/* números que cambian (saldo, apuestas, contadores) sin saltos de ancho */
+#global-balance, .bankroll-total, .wallet-delta, .bonus-time, #bonus-time,
+.win-amount, .hb-amount, .offline-amount, .stat-value, .hero-stat strong {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+/* foco del teclado más prolijo en botones redondeados y fichas */
+.btn:focus-visible { outline-offset: 2px; border-radius: inherit; }
+.chip:focus-visible { outline: 2px solid var(--cyan); outline-offset: 4px; border-radius: 50%; }
+
+/* selección de texto en la paleta del casino */
+::selection { background: rgba(240, 201, 107, 0.35); color: #fff; }
+
+/* barras de desplazamiento finas y oscuras (PC) */
+@media (hover: hover) and (pointer: fine) {
+  * { scrollbar-width: thin; scrollbar-color: rgba(240, 201, 107, 0.35) transparent; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(240, 201, 107, 0.28); border-radius: 999px; border: 3px solid transparent; background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(240, 201, 107, 0.5); background-clip: padding-box; }
+}
+
+/* fichas deshabilitadas: más limpias, sin quedar "sucias" */
+.chip:disabled { filter: grayscale(1) brightness(0.62) contrast(0.9); opacity: 0.42; }
+.chip:disabled span { border-color: rgba(255, 255, 255, 0.25); }
+
+@media (max-width: 700px) {
+  .hero-meta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .hero-stat { min-width: 0; }
+  .hero-stat span { white-space: normal; }
+  .hero-continue { margin-left: 0; }
+}
+
+
+/* ============================================================
+   34. TEMA SOBRIO (v6.2)
+   ------------------------------------------------------------
+   Capa final que reemplaza el look "neón" por uno de producto
+   real: neutros oscuros, un solo acento dorado plano, tipografía
+   Inter, sin brillos, sin degradados en el texto y sin fondos
+   animados. El overlay de victoria original no se toca.
+   ============================================================ */
+:root {
+  --ink: #0b0c0f;
+  --ink-2: #111318;
+  --ink-3: #171a20;
+  --surface: #13151a;
+  --surface-2: #171a20;
+  --surface-3: rgba(255, 255, 255, 0.03);
+  --surface-solid: #13151a;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-2: rgba(255, 255, 255, 0.05);
+  --line-gold: rgba(230, 184, 79, 0.35);
+  --text: #eceef2;
+  --muted: #9aa0ab;
+  --faint: #6a707b;
+  --gold-1: #f2d27e;
+  --gold-2: #e6b84f;
+  --gold-3: #c99a35;
+  --gold: #e6b84f;
+  --gold-grad: linear-gradient(#e6b84f, #e6b84f);
+  --gold-line: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+  --magenta: #e6b84f;
+  --cyan: #4c9aff;
+  --violet: #8a8fa0;
+  --green: #2fbf71;
+  --win-color: #2fbf71;
+  --lose-color: #e5484d;
+  --push-color: #d9b45a;
+  --accent: #e6b84f;
+  --accent-2: #4c9aff;
+  --accent-rgb: 230, 184, 79;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.4);
+  --inset-hi: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --font-display: 'Inter Tight', 'Inter', system-ui, sans-serif;
+  --font-ui: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+}
+
+body { background: var(--ink); letter-spacing: -0.005em; }
+
+/* sin brillos de texto en la interfaz (el overlay de victoria queda igual) */
+:where(body) :not(.win-overlay, .win-overlay *) { text-shadow: none !important; }
+
+/* fondo liso */
+.ambient { background: var(--ink); }
+.ambient-orb, .ambient-grid { display: none; }
+
+/* etiquetas: sin mayúsculas espaciadas exageradas */
+.auth-sub, .bankroll-title, .bet-box span, .info-pill span, .roulette-box > span,
+.chicken-topbar span, .plinko-result-box span, .bj-seats > span, .community-area h3,
+.hand-head h3, .hand-tag, .hero-continue span, .hero-stat span, .kicker, .mini-label,
+.pot-label, .sm-display span, .stats-summary span, .tile-tag, .wallet-label, h4,
+.casino-mini-label, .wheel-center small {
+  letter-spacing: 0.04em !important;
+  font-weight: 600 !important;
+}
+.brand-text strong { letter-spacing: 0.02em !important; }
+
+/* ---- barra superior ---- */
+.casino-topbar {
+  background: rgba(11, 12, 15, 0.92) !important;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line) !important;
+  box-shadow: none !important;
+}
+.casino-topbar::after, .casino-topbar::before { display: none !important; }
+.topbar-icon { border-radius: 10px; background: transparent; }
+.topbar-icon:hover { transform: none; background: rgba(255, 255, 255, 0.06); }
+.topbar-icon[aria-pressed="true"] { border-color: var(--line); box-shadow: none; background: rgba(255, 255, 255, 0.05); }
+.topbar-icon[aria-pressed="true"] svg { stroke: var(--text); }
+.topbar-icon[aria-pressed="true"] .ico-fill { color: var(--text); }
+#music-toggle[aria-pressed="true"] svg { animation: none; }
+.topbar-wallet {
+  border-radius: 10px;
+  border-color: var(--line);
+  background: var(--surface);
+  box-shadow: none;
+}
+#global-balance {
+  font-family: var(--font-ui);
+  font-weight: 700;
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  color: var(--text);
+}
+.bonus-pill { box-shadow: none !important; border-radius: 10px !important; }
+.profile-chip { box-shadow: none !important; }
+
+/* ---- inicio ---- */
+.hero {
+  background: var(--surface);
+  border-radius: 16px;
+  box-shadow: none;
+}
+.hero::before, .hero::after { display: none; }
+.hero-canvas { display: none; }
+.casino-mini-label { font-size: 12px; color: var(--muted); }
+.casino-mini-label::before { box-shadow: none; animation: none; }
+.hero-sign {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(40px, 6vw, 76px);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  gap: 0 0.22em;
+}
+.sign-royal, .sign-neon {
+  background: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  filter: none !important;
+  animation: none !important;
+  opacity: 1 !important;
+}
+.sign-royal { color: var(--text) !important; }
+.sign-neon { color: var(--gold) !important; }
+.sign-royal::after, .sign-neon::after, .sign-word::before, .sign-word::after { display: none !important; }
+.hero h1 {
+  margin-top: 10px;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--muted);
+  opacity: 1;
+}
+.hero-stat {
+  border-radius: 10px;
+  background: var(--ink-2);
+  backdrop-filter: none;
+}
+.hero-stat span { font-size: 11px; text-transform: none; color: var(--muted); }
+.hero-stat strong { font-family: var(--font-ui); font-weight: 700; }
+
+/* ---- botones ---- */
+.btn { border-radius: 10px; box-shadow: none; }
+.btn::before, .btn::after { display: none !important; }
+.btn.primary {
+  background: var(--gold) !important;
+  color: #17130a !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  animation: none !important;
+}
+.btn.primary:not(:disabled):hover { background: #efc562 !important; filter: none; box-shadow: none !important; transform: none; }
+.btn.primary:disabled { background: #2a2d33 !important; color: #6a707b !important; }
+.btn:not(:disabled):hover { transform: none; }
+
+/* ---- filtros y tarjetas de juegos ---- */
+.filter-tabs { border-radius: 10px; background: var(--surface); box-shadow: none; }
+.filter-tab { border-radius: 8px; }
+.filter-tab.active { background: var(--text) !important; color: #0b0c0f !important; box-shadow: none !important; }
+.menu-card {
+  border-radius: 14px;
+  background: var(--surface) !important;
+  box-shadow: none !important;
+}
+.menu-card::before, .menu-card::after { box-shadow: none !important; }
+.menu-card:hover, .menu-card:focus-visible { transform: translateY(-2px); border-color: rgba(255, 255, 255, 0.16) !important; box-shadow: none !important; }
+.menu-card h3, .menu-card h2 { font-family: var(--font-display); letter-spacing: -0.02em; }
+.tile-tag { font-size: 10.5px; border-radius: 6px; }
+
+/* ---- paneles de juego ---- */
+.game-card, .panel, .stat-card, .modal-shell, .bankroll, .message {
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+.game-card { background: var(--surface) !important; border-radius: 16px; }
+.panel { background: var(--surface-2) !important; border-radius: 12px; }
+h2, .screen-title, .top-line h2 { letter-spacing: -0.025em; }
+
+/* fichas: sin animaciones de color */
+.allin-chip, .c100000 { animation: none !important; }
+.allin-chip { background: #2a2d33 !important; --chip-c: #2a2d33; --chip-d: #121418; --chip-edge: #e6b84f; }
+.allin-chip span { background: transparent !important; color: var(--gold-1); }
+.c100000 { background: radial-gradient(circle at 50% 50%, #ece6d6 0 55%, transparent 56%), repeating-conic-gradient(from 8deg, #8a6a2a 0 14deg, #ece6d6 14deg 45deg) !important; --chip-c: #ece6d6; --chip-d: #8a7a5a; --chip-edge: #8a6a2a; }
+.c100000 span { background: #ece6d6 !important; color: #3a2c10; border-color: rgba(60, 40, 10, 0.35) !important; }
+
+/* capa de celebraciones: más sobria */
+.streak-badge, .streak-badge.hot {
+  background: var(--surface) !important;
+  border: 1px solid var(--line-gold);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45) !important;
+  color: var(--text);
+  font-family: var(--font-ui);
+  letter-spacing: 0.02em;
+  animation: none;
+}
+.streak-badge b { color: var(--gold); }
+.streak-badge.bump { animation: streakBump 0.4s var(--ease-out); }
+.hype-flash { background: radial-gradient(circle at 50% 55%, rgba(255, 255, 255, 0.12), transparent 70%) !important; }
+.hype-banner {
+  background: var(--surface) !important;
+  border: 1px solid var(--line-gold);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5) !important;
+}
+.hb-title { font-weight: 600; letter-spacing: 0.02em; color: var(--muted); font-size: 14px; }
+.hb-amount { background: none !important; color: var(--gold) !important; filter: none !important; font-family: var(--font-ui); font-weight: 800; }
+.offline-amount { background: none !important; color: var(--gold) !important; filter: none !important; font-family: var(--font-ui); }
+.win-tier, .win-tier.super, .win-tier.mega, .win-tier.epic {
+  background: rgba(0, 0, 0, 0.55) !important;
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: none !important;
+  font-family: var(--font-ui);
+  letter-spacing: 0.08em;
+}
+.win-tier.show, .win-tier.mega.show, .win-tier.epic.show { animation: tierIn 0.4s var(--ease-out) 0.2s both !important; }
+.bonus-pill.soon { animation: none; border-color: rgba(47, 191, 113, 0.6) !important; }
+
+/* toasts y modales */
+.toast { border-radius: 10px !important; background: #1b1e24 !important; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45) !important; }
+.modal-shell { border-radius: 16px !important; background: var(--surface) !important; }
+
+/* marca: monograma plano en vez del logo neón */
+.brand-mark { filter: none !important; width: 36px; height: 36px; border-radius: 9px; background: var(--gold); position: relative; }
+.brand-mark img { display: none !important; }
+.brand-mark::before { content: "RN"; font-family: var(--font-display); font-weight: 800; font-size: 15px; letter-spacing: -0.04em; color: #17130a; }
+.brand:hover .brand-mark { transform: none; }
+.brand-text span { background: none !important; -webkit-background-clip: border-box !important; background-clip: border-box !important; color: var(--text) !important; font-family: var(--font-display); font-weight: 700; letter-spacing: -0.01em; font-size: 16px; }
+.brand-text strong { color: var(--muted) !important; font-weight: 500 !important; font-size: 11px !important; letter-spacing: 0 !important; text-transform: none !important; }
+
+/* inicio: sin emblema animado, el destacado ocupa su lugar */
+.hero-emblem { display: none !important; }
+.hero { padding: clamp(24px, 4vw, 44px) !important; }
+.spotlight {
+  border-radius: 12px;
+  border-color: var(--line) !important;
+  background: var(--ink-2) !important;
+  box-shadow: none !important;
+}
+.spot-icon { border-radius: 10px; border-color: var(--line) !important; background: var(--surface-2); }
+.spot-dot.active { background: var(--text); }
+.hero-continue { background: transparent !important; color: var(--text) !important; border: 1px solid rgba(255, 255, 255, 0.2) !important; }
+.hero-continue:not(:disabled):hover { background: rgba(255, 255, 255, 0.06) !important; }
+.hero-continue span { color: var(--muted); text-transform: none !important; font-size: 11px !important; opacity: 1 !important; }
+
+/* etiquetas de categoría neutras */
+.tile-tag { background: rgba(255, 255, 255, 0.06) !important; color: var(--muted) !important; border-color: transparent !important; text-transform: none !important; font-size: 11.5px !important; }

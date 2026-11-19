@@ -2,12 +2,12 @@
    Estrategia "red primero": siempre intenta bajar la versión nueva y
    solo usa la copia guardada si no hay conexión. Así nunca queda
    pegada una versión vieja de los archivos. */
-const CACHE = "royal-neon-v6-0";
+const CACHE = "royal-neon-v6-2";
 const FILES = [
   "./",
   "./index.html",
-  "./styles.css?v=6.0",
-  "./script.js?v=6.0",
+  "./styles.css?v=6.2",
+  "./script.js?v=6.2",
   "./manifest.webmanifest",
   "./assets/logo.svg",
   "./assets/icon-192.png",
