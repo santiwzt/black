@@ -5368,3 +5368,48 @@ body.auth-open { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .streak-badge.hot, .win-tier.mega, .win-tier.epic, .bonus-pill.soon { animation: none; }
 }
+
+
+/* ============================================================
+   33. PULIDO "PRO"
+   ============================================================ */
+/* Inicio: las tarjetas de datos miden lo mismo aunque el título ocupe
+   dos renglones, y "Seguir jugando" queda junto a ellas */
+.hero-meta { align-items: stretch; }
+.hero-stat { display: flex; flex-direction: column; justify-content: space-between; gap: 2px; }
+.hero-stat span { line-height: 1.25; }
+.hero-continue { margin-left: 4px; justify-content: center; }
+
+/* números que cambian (saldo, apuestas, contadores) sin saltos de ancho */
+#global-balance, .bankroll-total, .wallet-delta, .bonus-time, #bonus-time,
+.win-amount, .hb-amount, .offline-amount, .stat-value, .hero-stat strong {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+/* foco del teclado más prolijo en botones redondeados y fichas */
+.btn:focus-visible { outline-offset: 2px; border-radius: inherit; }
+.chip:focus-visible { outline: 2px solid var(--cyan); outline-offset: 4px; border-radius: 50%; }
+
+/* selección de texto en la paleta del casino */
+::selection { background: rgba(240, 201, 107, 0.35); color: #fff; }
+
+/* barras de desplazamiento finas y oscuras (PC) */
+@media (hover: hover) and (pointer: fine) {
+  * { scrollbar-width: thin; scrollbar-color: rgba(240, 201, 107, 0.35) transparent; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(240, 201, 107, 0.28); border-radius: 999px; border: 3px solid transparent; background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(240, 201, 107, 0.5); background-clip: padding-box; }
+}
+
+/* fichas deshabilitadas: más limpias, sin quedar "sucias" */
+.chip:disabled { filter: grayscale(1) brightness(0.62) contrast(0.9); opacity: 0.42; }
+.chip:disabled span { border-color: rgba(255, 255, 255, 0.25); }
+
+@media (max-width: 700px) {
+  .hero-meta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .hero-stat { min-width: 0; }
+  .hero-stat span { white-space: normal; }
+  .hero-continue { margin-left: 0; }
+}

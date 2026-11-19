@@ -55,14 +55,20 @@ function smoothstep(a, b, x) {
   return t * t * (3 - 2 * t);
 }
 
+/* Montos con separador de miles al estilo argentino: $187.450 · $12,50.
+   Se arma a mano (sin toLocaleString) para que se vea igual en todos
+   los navegadores y celulares. */
+function groupThousands(intStr) {
+  return intStr.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
 function formatMoney(value) {
-  let rounded = Number(Number(value || 0).toFixed(2));
-
-  if (Number.isInteger(rounded)) {
-    return "$" + rounded;
-  }
-
-  return "$" + rounded.toFixed(2);
+  const rounded = Number(Number(value || 0).toFixed(2));
+  const sign = rounded < 0 ? "-" : "";
+  const abs = Math.abs(rounded);
+  const [int, dec] = abs.toFixed(2).split(".");
+  const body = groupThousands(int);
+  return sign + "$" + (Number.isInteger(abs) ? body : body + "," + dec);
 }
 
 /* Alias conservados del código original (cada juego tenía su propio formateador). */
@@ -71,13 +77,13 @@ function rouletteMoney(value) { return formatMoney(value); }
 function plMoney(value) { return formatMoney(value); }
 function avMoney(value) { return formatMoney(value); }
 function hrMoney(value) { return formatMoney(value); }
-function crMoney(value) { return "$" + Math.round(value); }
+function crMoney(value) { return formatMoney(Math.round(value)); }
 
 function shortMoney(value) {
   const v = Math.abs(value);
-  if (v >= 1e6) return "$" + round2(value / 1e6) + "M";
+  if (v >= 1e6) return "$" + String(round2(value / 1e6)).replace(".", ",") + "M";
   if (v >= 10000) return "$" + Math.round(value / 1000) + "K";
-  if (v >= 1000) return "$" + (Math.round(value / 100) / 10) + "K";
+  if (v >= 1000) return "$" + String(Math.round(value / 100) / 10).replace(".", ",") + "K";
   return formatMoney(value);
 }
 
@@ -1027,7 +1033,7 @@ function updateBalance() {
 function noFundsMessage() {
   const r = typeof Bonus !== "undefined" ? Bonus.remaining : 300;
   const time = Math.floor(r / 60) + ":" + String(r % 60).padStart(2, "0");
-  return "Te quedaste sin saldo: en " + time + " recibís $25000 por estar online, o reinicialo desde tu perfil.";
+  return "Te quedaste sin saldo: en " + time + " recibís " + formatMoney(25000) + " por estar online, o reinicialo desde tu perfil.";
 }
 
 function walletTick(dt, now) {
@@ -8747,8 +8753,8 @@ const OfflineIncome = {
     document.getElementById("offline-away").textContent = "Estuviste afuera " + parts.join(" ") + ".";
     document.getElementById("offline-amount").textContent = "+" + formatMoney(gain);
     document.getElementById("offline-note").textContent = capped
-      ? "Llegaste al máximo de " + formatMoney(this.maxPeriods * this.amount) + " por tiempo fuera. Jugando sumás $25000 cada 5 minutos."
-      : "Sumás " + formatMoney(this.amount) + " por cada media hora fuera (hasta " + formatMoney(this.maxPeriods * this.amount) + "). Jugando, $25000 cada 5 minutos.";
+      ? "Llegaste al máximo de " + formatMoney(this.maxPeriods * this.amount) + " por tiempo fuera. Jugando sumás " + formatMoney(25000) + " cada 5 minutos."
+      : "Sumás " + formatMoney(this.amount) + " por cada media hora fuera (hasta " + formatMoney(this.maxPeriods * this.amount) + "). Jugando, " + formatMoney(25000) + " cada 5 minutos.";
     Sound.play("cash");
     const show = () => openModal("offline-modal");
     /* si está abierta la pantalla de ingreso, se muestra después */
@@ -10237,7 +10243,7 @@ const Hype = {
         tierEl.className = "win-tier";
       }
     }
-    Hype.countUp(amountEl, Math.max(0, amount || 0), v => "+$" + v.toLocaleString("es-AR"), 1300);
+    Hype.countUp(amountEl, Math.max(0, amount || 0), v => "+" + formatMoney(v), 1300);
   };
 })();
 
