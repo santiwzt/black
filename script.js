@@ -8681,7 +8681,7 @@ const Bonus = {
     }
     Sound.play("cash");
     refreshAllButtons();
-    toast("🎁 +" + formatMoney(this.amount) + " ficticios por estar online");
+    toast("Bono online: +" + formatMoney(this.amount) + " ficticios");
   },
 
   render() {
@@ -10237,7 +10237,7 @@ const Hype = {
     const last = Hype.last && Date.now() - Hype.last.at < 4000 ? Hype.last : null;
     if (tierEl) {
       if (last) {
-        tierEl.textContent = last.tier.name + " · x" + (Math.round(last.mult * 100) / 100) + (Hype.streak >= 2 ? " · 🔥 " + Hype.streak : "");
+        tierEl.textContent = last.tier.name + " · x" + (Math.round(last.mult * 100) / 100) + (Hype.streak >= 2 ? " · racha " + Hype.streak : "");
         tierEl.className = "win-tier show " + last.tier.cls;
       } else {
         tierEl.className = "win-tier";
@@ -10252,7 +10252,7 @@ const Hype = {
   const grant = Bonus.grant;
   Bonus.grant = function () {
     grant.apply(this, arguments);
-    Hype.banner("🎁 BONO ONLINE", this.amount);
+    Hype.banner("Bono online", this.amount);
   };
   const render = Bonus.render;
   Bonus.render = function () {
